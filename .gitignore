@@ -1,0 +1,9 @@
+node_modules
+data
+dist
+.env
+.netlify
+.DS_Store
+# unpacked from collection/*.tar.gz by the build (src/assets.js)
+collection/images
+collection/thumbs

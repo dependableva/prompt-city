@@ -1,0 +1,36 @@
+{
+  "name": "prompt-city",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prompt City: the first city inside your AI. 5,555 pixel Citizens you mint and trade in Claude, ChatGPT and Grok, with USDC/USDT deposits on Solana. Fork of MCP Market (MIT).",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/src/index.js",
+    "build": "node server/scripts/build.js",
+    "test": "node --test --test-concurrency=1 server/test/*.test.js",
+    "demo": "node --env-file-if-exists=.env server/scripts/demo-data.js",
+    "smoke": "node server/scripts/smoke.js",
+    "deposit-pool": "node server/scripts/deposit-pool.js",
+    "sweep": "node server/scripts/sweep.js",
+    "citizens": "python3 collection/generator/citizens.py collection/out"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "1.7.5",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@netlify/blobs": "^11.1.7",
+    "@noble/curves": "^1.9.7",
+    "@scure/base": "^1.2.6",
+    "@scure/bip39": "^1.6.0",
+    "express": "^5.3.0",
+    "pg": "^8.23.1",
+    "serverless-http": "^4.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.10"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

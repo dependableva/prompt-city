@@ -1,0 +1,1818 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prompt City</title>
+<meta name="description" content="The first city inside your AI: 5,555 pixel Citizens. Browse them here, mint and trade them in Claude, ChatGPT or Grok.">
+<link rel="icon" href="/favicon.png">
+<link rel="preload" href="/fonts/anton-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* fonts are served from /fonts (SIL Open Font License, see /fonts/OFL-*.txt) */
+@font-face { font-family: Anton; src: url(/fonts/anton-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: Yellowtail; src: url(/fonts/yellowtail-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url(/fonts/space-grotesk-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url(/fonts/space-grotesk-latin-500-normal.woff2) format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url(/fonts/space-grotesk-latin-700-normal.woff2) format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url(/fonts/jetbrains-mono-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url(/fonts/jetbrains-mono-latin-700-normal.woff2) format('woff2'); font-weight: 700; font-display: swap; }
+:root {
+  /* Prompt City: night sky, neon sign pink, ocean cyan, sunset gold. --red is the main accent (pink here). */
+  --bg: #120626; --panel: #1B0B33; --edge: #2E1A4D; --line: #4A2E70;
+  --cream: #FFF3E6; --dim: #B9A8C9; --red: #FF4FA3; --red-d: #D63C8F; --cyan: #2DE2E6; --gold: #FFD23F; --orange: #FF8A3D;
+  --sunset: linear-gradient(180deg, #2A0B4F 0%, #6B1A7A 34%, #D63C8F 58%, #FF8A3D 82%, #FFD23F 100%);
+  --r-street: #B9A8C9; --r-hustler: #2DE2E6; --r-boss: #FF8A3D; --r-kingpin: #FF4FA3; --r-legend: #FFD23F;
+  --r-common: var(--r-street); --r-rare: var(--r-hustler); --r-epic: var(--r-boss); --r-legendary: var(--r-kingpin); --r-ultra: var(--r-legend);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--bg); color: var(--cream); }
+body { font: 15px/1.55 'Space Grotesk', system-ui, sans-serif; min-height: 100vh;
+  background-image: radial-gradient(#22103D 1px, transparent 1px); background-size: 24px 24px; }
+code, .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+.script { font-family: Yellowtail, cursive; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.stars { color: var(--gold); letter-spacing: .08em; white-space: nowrap; }
+a { color: inherit; }
+.px { font-family: Anton, Impact, sans-serif; font-weight: 400; letter-spacing: .02em; text-transform: uppercase; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+img.pix { image-rendering: pixelated; display: block; }
+img.smooth { image-rendering: auto; display: block; }
+
+header.top { position: sticky; top: 0; z-index: 5; background: rgba(18,6,38,.92); backdrop-filter: blur(6px); border-bottom: 2px solid var(--edge); }
+header.top .wrap { display: flex; align-items: center; gap: 14px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand img { width: 36px; height: 36px; }
+.brand b { font-size: 26px; line-height: 1; } .brand b .script { color: var(--red); font-size: 30px; margin-right: 4px; }
+.spacer { flex: 1; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border: 2px solid var(--cream);
+  background: var(--cream); color: var(--bg); font: 700 13px 'Space Grotesk', sans-serif; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.btn:hover { background: #fff; }
+.btn.red { background: var(--red); border-color: var(--red); color: var(--bg); box-shadow: 4px 4px 0 var(--gold); }
+.btn.red:hover { background: #ff6fb5; }
+.btn.ghost { background: transparent; color: var(--cream); border-color: var(--line); }
+.btn.ghost:hover { border-color: var(--cream); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:focus-visible, select:focus-visible, .tab:focus-visible, .card:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+.hero { padding: 48px 0 28px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; align-items: end; }
+.hero { position: relative; z-index: 1; }
+.hero h1 { margin: 0; font-size: clamp(40px, 6vw, 84px); line-height: .94; text-shadow: 4px 4px 0 #000; }
+.hero h1 span { color: var(--cream); }
+.hero .welcome, .mint-top .welcome { display: block; margin: -2px 0 0 4px; color: var(--cyan); text-shadow: 3px 3px 0 #000; transform: rotate(-4deg); transform-origin: left; line-height: 1.05; }
+.hero .welcome { font-size: clamp(32px, 4vw, 56px); }
+.hero p { color: var(--cream); max-width: 540px; margin: 18px 0 0; background: rgba(18,6,38,.78); padding: 12px 14px; }
+.sunset.short .sun { width: 360px; height: 360px; margin-left: -180px; bottom: 10px; }
+.sunset.short .palm.l { height: 360px; width: 180px; } .sunset.short .palm.r { height: 280px; width: 140px; }
+.sunset .stats { box-shadow: 8px 8px 0 rgba(0,0,0,.4); }
+.sunset .btn.ghost { background: rgba(18,6,38,.88); border-color: var(--cream); color: var(--cream); }
+.sunset .btn.ghost:hover { background: var(--bg); border-color: var(--gold); }
+.hero .cta { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--edge); border: 2px solid var(--edge); }
+.stat { background: var(--panel); padding: 14px 16px; }
+.stat .k { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+.stat .v { font-size: 22px; margin-top: 2px; }
+.stat .v small { font-size: 12px; color: var(--dim); }
+
+.ticker { border-top: 2px solid var(--edge); border-bottom: 2px solid var(--edge); background: var(--panel); overflow: hidden; white-space: nowrap; }
+.ticker .row { display: inline-block; padding: 10px 0; animation: scroll 40s linear infinite; }
+.ticker span { margin: 0 28px; color: var(--dim); }
+.ticker span b { color: var(--cream); font-weight: 400; }
+.ticker span i { color: var(--red); font-style: normal; }
+@keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ticker .row { animation: none; } }
+
+.bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 22px 0 16px; }
+.tabs { display: flex; border: 2px solid var(--edge); }
+.tab { padding: 8px 14px; background: transparent; color: var(--dim); border: 0; font: inherit; cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--cream); color: var(--bg); font-weight: 700; }
+.tx-filter { flex-wrap: wrap; }
+select { background: var(--panel); color: var(--cream); border: 2px solid var(--edge); padding: 8px 10px; font: inherit; }
+.count { color: var(--dim); margin-left: auto; }
+.bar-title { margin: 0 6px 0 0; font-size: 18px; }
+.refresh { padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px; }
+.refresh .spin { display: inline-block; font-size: 16px; line-height: 1; }
+.refresh.busy .spin { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .refresh.busy .spin { animation: none; } }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; padding-bottom: 60px; }
+.card { background: var(--panel); border: 2px solid var(--edge); text-decoration: none; display: flex; flex-direction: column; transition: transform .08s, border-color .08s; }
+.card:hover { border-color: var(--red); transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--red); }
+.card img { width: 100%; aspect-ratio: 1; }
+.card .meta { padding: 10px 12px 12px; display: grid; gap: 2px; }
+.card .name { font-weight: 700; }
+.card .row2 { display: flex; justify-content: space-between; gap: 8px; color: var(--dim); font-size: 12px; }
+.card .price { font-size: 15px; margin-top: 4px; }
+.card .price.na { color: var(--dim); font-size: 13px; }
+.rar { text-transform: uppercase; font-size: 11px; letter-spacing: .06em; }
+.rar.street { color: var(--r-street); } .rar.hustler { color: var(--r-hustler); } .rar.boss { color: var(--r-boss); }
+.rar.kingpin { color: var(--r-kingpin); } .rar.legend { color: var(--r-legend); }
+.empty { color: var(--dim); padding: 40px 0; grid-column: 1 / -1; text-align: center; }
+
+/* the mint page (home): a sunset band across the page, palms on both sides, the counter as a wanted poster */
+.sunset { position: relative; overflow: hidden; background: var(--sunset); border-bottom: 4px solid #000; }
+.sunset .sun { position: absolute; left: 50%; bottom: 46px; width: 460px; height: 460px; margin-left: -230px; border-radius: 50%;
+  background: linear-gradient(180deg, #FFE66B 0%, #FF9E4A 55%, #FF4FA3 100%); opacity: .8;
+  -webkit-mask: linear-gradient(180deg, #000 0 56%, transparent 56% 59%, #000 59% 68%, transparent 68% 72%, #000 72% 80%, transparent 80% 85%, #000 85% 100%);
+          mask: linear-gradient(180deg, #000 0 56%, transparent 56% 59%, #000 59% 68%, transparent 68% 72%, #000 72% 80%, transparent 80% 85%, #000 85% 100%); }
+.sunset .palm { position: absolute; bottom: 0; width: 220px; height: 440px; color: #1A0830; pointer-events: none; }
+.sunset .palm.l { left: -20px; } .sunset .palm.r { right: -30px; width: 170px; height: 340px; transform: scaleX(-1); }
+.mint-top { position: relative; z-index: 1; padding: 56px 0 64px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 36px; align-items: center; }
+.mint-top .tag { display: inline-block; background: var(--bg); color: var(--gold); font-weight: 700; letter-spacing: .18em; font-size: 12px; text-transform: uppercase; padding: 7px 11px; }
+.mint-top h1 { margin: 14px 0 0; font-size: clamp(46px, 6.6vw, 100px); line-height: .92; text-shadow: 5px 5px 0 #000; }
+.mint-top h1 span { color: var(--cream); }
+.mint-top .welcome { font-size: clamp(38px, 5.4vw, 76px); }
+.mint-top p { color: var(--cream); max-width: 560px; margin: 22px 0 0; background: rgba(18,6,38,.78); padding: 14px 16px; }
+.mint-top p b { color: var(--gold); }
+.mint-top .cta { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+.mint-top .hint { margin-top: 16px; color: var(--cream); font-size: 13px; background: rgba(18,6,38,.78); display: inline-block; padding: 6px 10px; }
+.mint-top .hint code { color: var(--gold); font-weight: 700; }
+.mintbox { background: var(--bg); border: 3px solid var(--cream); box-shadow: 10px 10px 0 rgba(0,0,0,.45); padding: 22px; display: grid; gap: 14px; }
+.mintbox .wanted { display: flex; justify-content: space-between; align-items: center; font: 400 22px Anton, sans-serif; letter-spacing: .12em; color: var(--red); }
+.mintbox .wanted .stars { font-size: 20px; }
+.mintbox .k { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; display: flex; align-items: center; gap: 8px; }
+.mintbox .count { margin: 0; font-size: clamp(30px, 4.4vw, 44px); line-height: 1; color: var(--cream); }
+.mintbox .count small { font-size: .45em; color: var(--dim); }
+.blocks { display: flex; align-items: center; gap: 8px; }
+.blocks i { flex: 1; height: 34px; border-radius: 3px; background: var(--edge); position: relative; overflow: hidden; }
+.blocks i::after { content: ''; position: absolute; inset: 0 auto 0 0; width: var(--f, 0%); background: linear-gradient(90deg, var(--red), var(--gold)); transition: width .6s ease; }
+.blocks .pct { flex: 0 0 auto; min-width: 4.2ch; text-align: right; font: 22px Anton, sans-serif; color: var(--dim); }
+.mintbox .row2 { display: flex; justify-content: space-between; gap: 10px; color: var(--dim); font-size: 13px; flex-wrap: wrap; }
+.mintbox .row2 b { color: var(--cream); font-weight: 700; }
+.live { width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 0 rgba(255,79,163,.6); animation: pulse 1.6s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(255,79,163,0); } 100% { box-shadow: 0 0 0 0 rgba(255,79,163,0); } }
+.feed-head { display: flex; align-items: center; gap: 10px; padding: 8px 0 14px; border-top: 2px solid var(--edge); margin-top: 6px; }
+.feed-head h2 { margin: 14px 0 0; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+.feed-head .note { margin: 14px 0 0 auto; color: var(--dim); font-size: 12px; }
+.feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; padding-bottom: 30px; }
+.feed .card img { height: auto; }
+.feed .card .meta { padding: 7px 9px 9px; }
+.feed .card .name { font-size: 13px; }
+.feed .card.new { animation: pop .5s ease-out; border-color: var(--red); }
+@keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.feed-end { height: 40px; }
+@media (prefers-reduced-motion: reduce) { .feed .card.new, .live { animation: none; } .blocks i::after { transition: none; } }
+@media (max-width: 820px) {
+  .mint-top { grid-template-columns: 1fr; padding-top: 24px; gap: 22px; }
+  .sunset .palm { opacity: .5; } .sunset .sun { width: 320px; height: 320px; margin-left: -160px; }
+  .mintbox { order: -1; } /* on a phone the progress comes first */
+  .blocks { gap: 5px; } .blocks i { height: 26px; } .blocks .pct { font-size: 16px; }
+  .feed { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+  .feed .card .meta { padding: 5px 7px 7px; } .feed .card .row2 { display: none; }
+}
+
+.detail { display: grid; grid-template-columns: 1fr 1fr; }
+.detail img { width: 100%; aspect-ratio: 1; }
+.detail .info { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.detail h2 { margin: 0; font-size: 30px; }
+.traits { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--edge); border: 2px solid var(--edge); }
+.traits div { background: var(--bg); padding: 8px 10px; }
+.traits .k { color: var(--dim); font-size: 11px; text-transform: uppercase; }
+.pricebox { border: 2px solid var(--edge); padding: 14px; }
+.pricebox .big { font-size: 26px; }
+.pricebox .acts { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.cmd { display: flex; gap: 8px; align-items: center; margin-top: 10px; color: var(--dim); font-size: 12px; }
+.cmd code { flex: 1; background: var(--bg); padding: 6px 8px; color: var(--cream); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist { font-size: 12px; color: var(--dim); }
+.hist div { display: flex; justify-content: space-between; border-bottom: 1px solid var(--edge); padding: 5px 0; }
+.url { display: flex; gap: 8px; }
+.url code { flex: 1; background: var(--bg); border: 2px solid var(--edge); padding: 10px; font-size: 13px; overflow-x: auto; white-space: nowrap; }
+.say { background: var(--bg); border-left: 3px solid var(--red); padding: 10px 14px; color: var(--dim); }
+.connect { padding-top: 28px; padding-bottom: 40px; display: grid; gap: 18px; }
+.connect h1 { margin: 0; font-size: clamp(28px, 5vw, 44px); }
+.connect .lead { margin: 0; color: var(--dim); max-width: 680px; }
+.ai-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
+.ai { background: var(--panel); border: 2px solid var(--edge); padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ai-head { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 2px solid var(--edge); }
+.ai-logo { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 10px; background: #fff; object-fit: cover; display: grid; place-items: center; color: #111; font: 700 20px monospace; }
+.ai-head h2 { margin: 0; font-size: 22px; line-height: 1.1; }
+.ai-head .note { margin-top: 3px; }
+.ai .lbl { font: 11px Anton, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-top: 6px; display: flex; align-items: center; gap: 8px; }
+.ai .lbl::after { content: ''; flex: 1; height: 1px; background: var(--edge); }
+.ai-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: st; }
+.ai-steps li { counter-increment: st; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; padding: 9px 0; border-top: 1px solid var(--edge); font-size: 13.5px; line-height: 1.55; }
+.ai-steps li:first-child { border-top: 0; padding-top: 2px; }
+.ai-steps li::before { content: counter(st); width: 24px; height: 24px; display: grid; place-items: center; background: var(--bg); border: 2px solid var(--line); font: 12px Anton, sans-serif; color: var(--cream); }
+.ai-steps b { color: var(--cream); font-weight: 700; }
+.ai .hint { font-size: 12px; color: var(--dim); background: var(--bg); border-left: 3px solid var(--line); padding: 7px 10px; }
+.ai .url code { font-size: 13px; padding: 9px 10px; }
+.ai .quick { margin-top: auto; display: grid; gap: 8px; padding-top: 4px; }
+.btn.big { width: 100%; justify-content: space-between; padding: 14px 16px; font-size: 15px; }
+.btn.big .arr { font-size: 18px; line-height: 1; }
+@media (max-width: 960px) { .ai-grid { grid-template-columns: 1fr; } }
+.connect h2.cmds-title { margin: 10px 0 0; font-size: 24px; }
+.cmds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; background: var(--panel); border: 2px solid var(--edge); padding: 6px 18px; }
+.cmds div { display: grid; grid-template-columns: minmax(0, 19em) minmax(0, 1fr); gap: 12px; padding: 9px 0; border-top: 1px solid var(--edge); font-size: 13.5px; align-items: baseline; }
+.cmds div:nth-child(-n+2) { border-top: 0; }
+.cmds button { all: unset; cursor: pointer; color: var(--cream); font-weight: 700; overflow-wrap: anywhere; }
+.cmds button:hover { text-decoration: underline; }
+.cmds span { color: var(--dim); }
+@media (max-width: 960px) { .cmds { grid-template-columns: 1fr; } .cmds div:nth-child(2) { border-top: 1px solid var(--edge); } }
+@media (max-width: 600px) { .cmds div { grid-template-columns: 1fr; gap: 2px; } }
+.say b { color: var(--cream); font-weight: 400; }
+.profile { padding: 34px 0 6px; display: flex; gap: 16px; align-items: center; }
+.profile img { width: 64px; height: 64px; border: 2px solid var(--edge); }
+.profile h1 { margin: 0; font-size: 32px; }
+.testbar { background: var(--red); color: var(--cream); text-align: center; font-size: 12px; padding: 6px 16px; }
+.testbar b { font-weight: 700; }
+footer { border-top: 2px solid var(--edge); color: var(--dim); padding: 22px 0 40px; font-size: 12px; }
+.lost { max-width: 720px; padding-bottom: 50px; }
+.lost h1 { margin: 26px 0 8px; }
+.lost .lead { color: var(--dim); line-height: 1.55; margin: 0; }
+.lost-form { display: grid; gap: 16px; margin-top: 18px; }
+.lf { display: grid; gap: 6px; }
+.lf .lbl { font-weight: 700; color: var(--cream); }
+.lf input { background: var(--bg); color: var(--cream); border: 2px solid var(--edge); padding: 11px 12px; font: inherit; font-family: ui-monospace, Menlo, monospace; font-size: 14px; min-width: 0; }
+.lf input:focus-visible { outline: 2px solid var(--cream); outline-offset: 1px; }
+.err-text { color: var(--red); margin: 0; }
+.lost-form .btn { justify-content: center; padding: 12px; }
+.lost-done { margin-top: 18px; line-height: 1.5; }
+.lost-tips { margin-top: 26px; }
+.lost-tips h2 { font-size: 16px; margin: 0 0 8px; }
+.mono-link { font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+.lost-tips ul { margin: 0 0 10px; padding-left: 18px; color: var(--dim); line-height: 1.6; }
+nav.main { display: flex; gap: 4px; }
+nav.main a { padding: 8px 12px; color: var(--dim); text-decoration: none; border: 2px solid transparent; }
+nav.main a:hover { color: var(--cream); }
+nav.main a[aria-current="page"] { color: var(--cream); border-color: var(--edge); }
+.addr { font-family: 'JetBrains Mono', monospace; color: var(--cream); text-decoration: none; border-bottom: 1px dotted var(--line); }
+.addr:hover { border-bottom-color: var(--cream); }
+.addr.tre { color: #FFE600; }
+.ex-head { padding: 34px 0 10px; display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.ex-head h1 { margin: 0; font-size: clamp(26px, 4vw, 40px); }
+.ex-head p { margin: 6px 0 0; color: var(--dim); max-width: 640px; }
+.search { display: flex; gap: 8px; margin-left: auto; min-width: min(420px, 100%); }
+.search input { flex: 1; min-width: 0; background: var(--panel); color: var(--cream); border: 2px solid var(--edge); padding: 9px 10px; font: inherit; }
+.search input:focus { outline: none; border-color: var(--cream); }
+.tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; background: var(--edge); border: 2px solid var(--edge); margin: 18px 0; }
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.panel { background: var(--panel); border: 2px solid var(--edge); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.panel h2 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+.panel .lead { font-size: 30px; line-height: 1.1; }
+.panel .lead small { font-size: 13px; color: var(--dim); }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; font-size: 13px; }
+.kv > span:nth-child(odd) { color: var(--dim); }
+.kv > span:nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; }
+.note { color: var(--dim); font-size: 12px; margin: 0; }
+.pill { display: inline-block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border: 1px solid var(--line); color: var(--dim); }
+.pill.ok { color: #7AE582; border-color: #2f6b3a; }
+.pill.bad { color: var(--red); border-color: var(--red-d); }
+.pill.wait { color: #FFE600; border-color: #6b5f00; }
+.hash { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--dim); word-break: break-all; }
+table.txs { width: 100%; border-collapse: collapse; background: var(--panel); border: 2px solid var(--edge); font-size: 13px; }
+table.txs th { text-align: left; color: var(--dim); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 10px 12px; border-bottom: 2px solid var(--edge); }
+table.txs td { padding: 10px 12px; border-bottom: 1px solid var(--edge); vertical-align: top; }
+table.txs tr:last-child td { border-bottom: 0; }
+table.txs td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.txs a.tx { color: var(--cream); }
+.type { text-transform: uppercase; font-size: 11px; letter-spacing: .06em; }
+.type.deposit { color: #7AE582; } .type.withdrawal { color: var(--red); } .type.buy { color: #FFE600; }
+.type.mint { color: var(--cream); } .type.refund, .type.faucet { color: var(--dim); } .type.payout { color: #7AE582; } .type.transfer { color: #8AB4FF; }
+.type.burn { color: #FF7A1A; } .type.claim { color: var(--dim); }
+.plus { color: #7AE582; } .minus { color: var(--cream); }
+.more { display: flex; justify-content: center; padding: 16px 0 50px; }
+.wallets { display: grid; gap: 4px; font-size: 12px; max-height: 180px; overflow: auto; }
+.wallets div { display: flex; justify-content: space-between; gap: 10px; }
+.idbox { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.idbox code { font-size: 18px; background: var(--panel); border: 2px solid var(--edge); padding: 6px 10px; }
+/* collections, a collection's page, an NFT's page */
+.cols { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; padding: 18px 0 60px; }
+.col { background: var(--panel); border: 2px solid var(--edge); text-decoration: none; display: flex; flex-direction: column; transition: transform .08s, border-color .08s; }
+.col:hover { border-color: var(--cream); transform: translateY(-2px); }
+.col img { width: 100%; aspect-ratio: 1; }
+.col .body { padding: 14px 16px 16px; display: grid; gap: 8px; }
+.col h2 { margin: 0; font-size: 22px; }
+.col p { margin: 0; color: var(--dim); font-size: 13px; }
+.progress { height: 8px; background: var(--bg); border: 1px solid var(--edge); }
+.progress i { display: block; height: 100%; background: var(--red); }
+.c-head { display: grid; grid-template-columns: 220px 1fr; gap: 24px; padding: 30px 0 8px; align-items: end; }
+.c-head img { width: 220px; height: 220px; border: 2px solid var(--edge); }
+.c-head h1 { margin: 0; font-size: clamp(30px, 5vw, 52px); line-height: 1; }
+.c-head p { margin: 10px 0 0; color: var(--dim); max-width: 620px; }
+.c-head .cta { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.c-tiles { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; background: var(--edge); border: 2px solid var(--edge); margin: 18px 0 6px; }
+.c-body { display: grid; grid-template-columns: 250px 1fr; gap: 18px; align-items: start; }
+.filters { position: sticky; top: 78px; max-height: calc(100vh - 90px); overflow: auto; background: var(--panel); border: 2px solid var(--edge); }
+.filters .fh { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 2px solid var(--edge); }
+.filters details { border-bottom: 1px solid var(--edge); }
+.filters summary { cursor: pointer; padding: 9px 12px; display: flex; justify-content: space-between; gap: 8px; list-style: none; }
+.filters summary::-webkit-details-marker { display: none; }
+.filters summary small { color: var(--dim); }
+.filters summary b { color: var(--red); font-weight: 400; }
+.filters label { display: flex; gap: 8px; align-items: center; padding: 4px 12px 4px 14px; font-size: 12px; cursor: pointer; }
+.filters label:hover { background: var(--bg); }
+.filters label span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filters label small { color: var(--dim); font-variant-numeric: tabular-nums; }
+.filters input[type=checkbox] { accent-color: var(--red); margin: 0; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: var(--bg); color: var(--cream); font: 12px 'JetBrains Mono', monospace; padding: 3px 8px; cursor: pointer; }
+.chip:hover { border-color: var(--red); }
+.crumbs { padding: 22px 0 0; color: var(--dim); font-size: 12px; }
+.crumbs a { color: var(--dim); }
+.nftpage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; padding: 14px 0 22px; }
+.nftpage .art img { width: 100%; aspect-ratio: 1; border: 2px solid var(--edge); background: var(--panel); }
+/* the Tokens page: $HEIST on the left, its airdrop live on the right */
+.tk-grid { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); gap: 28px; padding: 30px 0 60px; align-items: start; }
+.tk-side { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 14px; }
+.tk-coin { width: 168px; height: 168px; }
+.tk-coin img { width: 100%; height: 100%; image-rendering: pixelated; filter: drop-shadow(8px 8px 0 rgba(0,0,0,.55)); animation: bob 3.2s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-6px); } }
+.tk-side h1 { margin: 0; font-size: clamp(40px, 6vw, 64px); line-height: 1; color: var(--red); }
+.tk-sub { margin: 0; color: var(--dim); }
+.tk-state .pill { font-size: 12px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 8px; }
+.tk-clock { font: 700 13px 'JetBrains Mono', monospace; color: var(--cream); letter-spacing: .04em; }
+.live.ok { background: #7AE582; box-shadow: none; animation: none; }
+.tk-ca { background: var(--panel); border: 2px solid var(--edge); padding: 12px; display: grid; gap: 8px; }
+.tk-ca .k { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+.tk-ca-row { display: flex; gap: 8px; align-items: stretch; }
+.tk-ca-val { flex: 1; min-width: 0; background: var(--bg); border: 2px solid var(--edge); padding: 9px 10px; font-size: 13px; word-break: break-all; line-height: 1.4; cursor: text; user-select: all; }
+.tk-ca-val.dim { color: var(--dim); user-select: none; cursor: default; word-break: normal; }
+.tk-ca .btn { padding: 8px 14px; }
+.tk-ca .note:empty { display: none; }
+a.btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+.tk-steps { display: grid; gap: 0; border: 2px solid var(--edge); background: var(--panel); }
+.tk-steps div { display: grid; grid-template-columns: 24px 1fr; gap: 10px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--edge); font-size: 13px; }
+.tk-steps div:first-child { border-top: 0; }
+.tk-steps b { width: 22px; height: 22px; display: grid; place-items: center; background: var(--bg); border: 2px solid var(--line); font: 11px Anton, sans-serif; }
+.tk-cmd { all: unset; cursor: pointer; font-weight: 700; color: var(--cream); border-bottom: 1px dotted var(--line); }
+.tk-cmd:hover { border-bottom-color: var(--cream); }
+.tk-warn { border-left: 3px solid var(--red); padding: 4px 0 4px 10px; }
+.tk-main { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.tk-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.tk-head h2 { margin: 0; font-size: 22px; display: flex; align-items: center; gap: 10px; }
+.tk-head .note { margin-left: auto; }
+.tk-tiles { grid-template-columns: repeat(4, 1fr); margin: 0; }
+.tk-tiles .v { font-size: 20px; white-space: nowrap; }
+.tk-prog { display: grid; gap: 6px; }
+.tk-prog .blocks i { height: 22px; }
+.tk-prog .blocks .pct { font-size: 16px; }
+.tk-search { margin: 0; min-width: 0; }
+.tk-search .btn { padding: 9px 18px; }
+.tk-card { background: var(--panel); border: 2px solid var(--cream); padding: 12px 14px; display: grid; gap: 10px; }
+.tk-card.note, .tk-card.bad { border-color: var(--edge); }
+.tk-card.bad { color: var(--red); }
+.tk-card-h { display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.tk-card-h a { text-transform: none; letter-spacing: 0; color: var(--cream); }
+.tk-x { all: unset; cursor: pointer; margin-left: auto; font-size: 20px; line-height: 1; color: var(--dim); padding: 0 4px; }
+.tk-x:hover { color: var(--cream); }
+.tk-st { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-size: 13.5px; }
+.tk-st .pill { white-space: nowrap; margin-top: 1px; }
+.tk-st:not(:has(.pill)) { grid-template-columns: 1fr; }
+.tk-st a { color: var(--cream); }
+.tk-now { border: 2px solid var(--edge); background: var(--panel); }
+.tk-now-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; }
+.tk-now-top b { font-size: 16px; }
+.tk-now-top span:last-child { color: var(--dim); font-size: 13px; }
+.tk-stripes { height: 6px; background: repeating-linear-gradient(-45deg, var(--red) 0 10px, var(--red-d) 10px 20px); background-size: 28px 28px; animation: stripes 1s linear infinite; }
+@keyframes stripes { to { background-position: 28px 0; } }
+.tk-next { font-size: 13px; color: var(--cream); margin-top: 8px; }
+.tk-next .note { display: inline; }
+.tk-bar { padding: 4px 0 0; }
+.tk-list { display: grid; align-content: start; border: 2px solid var(--edge); background: var(--panel); max-height: min(70vh, 680px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.tk-list .empty { padding: 34px 16px; }
+.tk-row { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto 92px 16px; gap: 12px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--edge); text-decoration: none; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tk-row:first-child { border-top: 0; }
+.tk-row:hover { background: var(--bg); }
+.tk-row .tk-b { color: var(--dim); font-size: 12px; }
+.tk-row .tk-w { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk-row .tk-w small { color: var(--red); font-weight: 400; text-transform: uppercase; font-size: 10px; letter-spacing: .08em; margin-left: 4px; }
+.tk-row .tk-a { color: #7AE582; text-align: right; }
+.tk-row.q .tk-a { color: var(--cream); }
+.tk-row .tk-t { color: var(--dim); font-size: 12px; text-align: right; white-space: nowrap; }
+.tk-row.q { grid-template-columns: 54px minmax(0, 1fr) auto minmax(92px, auto) 16px; }
+.tk-row .tk-go { color: var(--dim); }
+.tk-row:hover .tk-go { color: var(--cream); }
+.tk-row.mine { background: rgba(255,79,163,.1); box-shadow: inset 3px 0 0 var(--red); }
+.tk-row.new { animation: tkin .7s ease-out; }
+@keyframes tkin { from { background: rgba(122,229,130,.22); transform: translateX(-8px); opacity: .3; } to { background: transparent; transform: none; opacity: 1; } }
+.tk-sub-h { padding: 8px 12px; font: 11px Anton, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); border-top: 1px solid var(--edge); background: var(--bg); }
+.tk-sub-h:first-child { border-top: 0; }
+.tk-more { padding: 8px 12px; border-top: 1px solid var(--edge); }
+.tk-batch { padding: 12px; border-top: 1px solid var(--edge); display: grid; gap: 8px; }
+.tk-batch:first-child { border-top: 0; }
+.tk-batch.open { background: rgba(255,230,0,.04); }
+.tk-batch-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tk-batch-n { font-size: 13px; }
+.tk-batch-t { margin-left: auto; }
+.tk-txs { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 12px; }
+.tk-txs details { width: 100%; }
+.tk-txs summary { cursor: pointer; }
+.tk-tx { color: var(--cream); }
+@media (prefers-reduced-motion: reduce) { .tk-coin img, .tk-stripes, .tk-row.new { animation: none; } }
+@media (max-width: 900px) {
+  .tk-grid { grid-template-columns: 1fr; gap: 22px; padding-top: 20px; }
+  .tk-side { position: static; }
+  .tk-coin { width: 120px; height: 120px; }
+  .tk-tiles { grid-template-columns: repeat(2, 1fr); }
+  .tk-list { max-height: 62vh; }
+}
+@media (max-width: 520px) {
+  .tk-row, .tk-row.q { grid-template-columns: 40px minmax(0, 1fr) auto 16px; gap: 8px; }
+  .tk-row .tk-t { grid-column: 2 / 4; grid-row: 2; text-align: left; margin-top: -4px; }
+  .tk-row .tk-go { grid-column: 4; grid-row: 1; }
+  .tk-head .note { margin-left: 0; width: 100%; }
+}
+.nftpage .art .dl { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.nftpage .art .dl .note { font-size: 12px; }
+.nftpage .info { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.nftpage h1 { margin: 0; font-size: clamp(28px, 4vw, 44px); line-height: 1.05; }
+.ttable { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); border-top: 1px solid var(--edge); border-left: 1px solid var(--edge); }
+.ttable a { background: var(--bg); padding: 8px 10px; text-decoration: none; display: grid; gap: 1px; border-right: 1px solid var(--edge); border-bottom: 1px solid var(--edge); }
+.ttable a:hover { background: var(--panel); }
+.ttable .k { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.ttable .p { color: var(--dim); font-size: 11px; }
+a.nftl { display: inline-flex; align-items: center; gap: 6px; vertical-align: middle; }
+a.nftl img { width: 22px; height: 22px; border: 1px solid var(--edge); }
+@media (max-width: 1000px) { .c-tiles { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 820px) {
+  .c-head { grid-template-columns: 1fr; }
+  .c-head img { width: 140px; height: 140px; }
+  .c-tiles { grid-template-columns: repeat(2, 1fr); }
+  .c-tiles .stat:last-child:nth-child(odd) { grid-column: span 2; }
+  .c-body { grid-template-columns: 1fr; }
+  .filters { position: static; max-height: none; }
+  .nftpage { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 820px) {
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+  .tiles .stat:last-child:nth-child(odd) { grid-column: span 2; }
+  .panels { grid-template-columns: 1fr; }
+  table.txs .hide-sm { display: none; }
+  .search { margin-left: 0; }
+}
+
+@media (max-width: 820px) {
+  header.top .wrap { gap: 8px; }
+  nav.main { overflow-x: auto; scrollbar-width: none; }
+  nav.main a { padding: 8px 7px; white-space: nowrap; }
+}
+#connectBtn .short { display: none; }
+@media (max-width: 640px) {
+  #connectBtn { padding: 8px 10px; flex-shrink: 0; }
+  #connectBtn .long { display: none; }
+  #connectBtn .short { display: inline; }
+}
+@media (max-width: 440px) {
+  .brand b { display: none; }
+}
+@media (max-width: 820px) {
+  .hero { grid-template-columns: 1fr; padding-top: 30px; }
+  .detail { grid-template-columns: 1fr; }
+  header.top .hide-sm { display: none; }
+  .count { margin-left: 0; width: 100%; }
+  /* the market's Refresh stays top right, next to the title */
+  .bar .bar-title { order: 0; }
+  .bar .refresh { order: 1; margin-left: auto; }
+  .bar select { order: 2; }
+  .bar .count { order: 3; }
+}
+</style>
+</head>
+<body>
+<div class="testbar" id="testbar" hidden><b>TEST SERVER</b> · balances are free test $CASH from the faucet and Solana devnet, nothing here is real money</div>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Prompt City, home"><img class="pix" src="/logo.png" alt=""><b class="px"><span class="script">Prompt</span>City</b></a>
+    <nav class="main" aria-label="Main"><a href="/" data-nav="market">Market</a><a href="/collections" data-nav="collections">Collections</a><a href="/explorer" data-nav="explorer">Explorer</a><a href="/tokens" data-nav="tokens">Tokens</a></nav>
+    <span class="spacer"></span>
+    <a class="btn red" id="connectBtn" href="/connect"><span class="long">Connect to your AI</span><span class="short">Connect</span></a>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<footer><div class="wrap">Prompt City · the first city inside your AI. Everything here is view-only: minting, buying and selling happen in your AI chat. · <a href="/explorer">Explorer</a> · <a href="/launch">Launch a collection</a> · <a href="/lost-deposit">Lost deposit?</a> · <a href="https://github.com/davidsyahshi/mcp-market" target="_blank" rel="noopener">Open source, forked from MCP Market (MIT)</a></div></footer>
+
+<script src="/launch.js"></script>
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+// amounts come from the API as plain numbers of $CASH (1 $CASH = $1): 20, 9.99, 0.5 -> 0.50
+const fmt = (n) => Number(n).toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(Number(n)) ? 0 : 2, maximumFractionDigits: 6 });
+const api = (p) => fetch('/api' + p).then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
+const pad = (id) => String(id).padStart(4, '0');
+const claudeLink = (q) => 'https://claude.ai/new?q=' + encodeURIComponent(q);
+// opens Claude's "Add custom connector" dialog with our name and URL filled in
+const addToClaude = (url) => 'https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Prompt%20City&connectorUrl=' + encodeURIComponent(url);
+const setAddLinks = (url) => document.querySelectorAll('[data-add-claude]').forEach((a) => { a.href = addToClaude(url); });
+const gptLink = (q) => 'https://chatgpt.com/?q=' + encodeURIComponent(q);
+// accounts are shown by city address; an X handle only when its owner chose to show it
+const label = (addr, name) => (name ? '@' + name : addr);
+const who = (addr, name) => (!addr ? '—' : addr === 'treasury' ? '<a class="addr tre" href="/a/treasury">treasury</a>'
+  : addr === 'escrow' ? '<a class="addr tre" href="/a/escrow">escrow</a>'
+  : `<a class="addr" href="/a/${esc(addr)}">${esc(label(addr, name))}</a>`);
+const shortSig = (sig) => `${sig.slice(0, 6)}…${sig.slice(-4)}`;
+const ago = (iso) => {
+  const sec = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (sec < 60) return 'just now';
+  if (sec < 3600) return `${Math.floor(sec / 60)} min ago`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)} h ago`;
+  return new Date(iso).toLocaleDateString();
+};
+let stats = null;
+const PAGE = 60;
+// the market: only NFTs for sale, cheapest first on every visit; only the rarity filter is remembered
+const state = { status: 'listed', sort: 'price_asc', rarity: '' };
+try { const saved = JSON.parse(localStorage.getItem('mcp-filter') || '{}'); if (typeof saved?.rarity === 'string') state.rarity = saved.rarity; } catch {}
+const RARITIES = ['Street', 'Hustler', 'Boss', 'Kingpin', 'Legend'];
+if (!RARITIES.includes(state.rarity)) state.rarity = '';
+const MARKET_SORTS = [['price_asc', 'Price: low to high'], ['price_desc', 'Price: high to low'], ['recent', 'Recently listed'], ['id', 'Number']];
+const rarClass = (r) => String(r || '').toLowerCase().replace(/[^a-z]+/g, '-');
+// rarity is the wanted level: Street ★ … Legend ★★★★★ (other collections' rarities show no stars)
+const STARS = { Street: 1, Hustler: 2, Boss: 3, Kingpin: 4, Legend: 5 };
+const stars = (r) => (STARS[r] ? `<span class="stars" aria-label="${STARS[r]} of 5 stars">${'★'.repeat(STARS[r])}${'☆'.repeat(5 - STARS[r])}</span>` : '');
+// 28x28 pixel art comes at its native size and is scaled up sharp; other pictures come full size.
+// n.big is the picture to download: 1008 px for the market's own pixel NFTs, the NFT's page shows that one
+const pic = (n, big = false) => n.pixel
+  ? `<img class="pix" src="${big && n.big ? n.big : n.image}" alt="${esc(n.name)}" loading="lazy" width="256" height="256">`
+  : `<img class="smooth" src="${big ? n.image : n.thumb}" alt="${esc(n.name)}" loading="lazy" width="256" height="256">`;
+const minted = (n) => n.minted_at;
+// what to type in the chat for this NFT ("Citizen #42" is enough in Prompt City; other collections add the NFT's number)
+const nftRef = (n) => (n.collection && n.collection !== 'citizens' ? `${n.name} (NFT #${n.id})` : n.name);
+
+function card(n) {
+  const price = n.price != null ? `<div class="price">${fmt(n.price)} <small style="color:var(--dim)">$CASH</small></div>`
+    : `<div class="price na">${n.burned_at ? 'burned' : minted(n) ? 'not for sale' : 'mintable'}</div>`;
+  return `<a class="card" href="/nft/${n.id}">
+    ${pic(n)}
+    <div class="meta">
+      <div class="name">${esc(n.name)}</div>
+      <div class="row2"><span class="rar ${rarClass(n.rarity)}">${esc(n.rarity || '')}</span>${stars(n.rarity)}</div>
+      <div class="row2"><span>${n.owner_addr ? esc(label(n.owner_addr, n.owner_name)) : '—'}</span></div>
+      ${price}
+    </div></a>`;
+}
+
+// ---------- the mint page (home) ----------
+// Progress and the newest mints come from /api/mint/live, one URL for everyone (cached ~2 s by the CDN), polled
+// every 5 s while the page is open and visible. Older mints load as you scroll.
+const MINT_POLL_MS = 5000;
+const mintView = { timer: null, seen: new Set(), cursor: null, minted: null, loading: false, done: false, observer: null };
+function stopMintPage() {
+  clearTimeout(mintView.timer);
+  mintView.timer = null;
+  mintView.observer?.disconnect();
+  mintView.observer = null;
+}
+const pctText = (minted, supply) => {
+  const p = supply ? (minted / supply) * 100 : 0;
+  return p >= 100 ? '100%' : p > 0 && p < 1 ? `${p.toFixed(1)}%` : `${Math.floor(p)}%`;
+};
+function mintCard(n, isNew = false) {
+  return `<a class="card${isNew ? ' new' : ''}" href="/nft/${n.id}" data-id="${n.id}">${pic(n)}
+    <div class="meta"><div class="name">${esc(n.name)}</div><div class="row2"><span class="rar ${rarClass(n.rarity)}">${esc(n.rarity || '')}</span>${stars(n.rarity)}</div></div></a>`;
+}
+function paintMintStats(s) {
+  const blocks = $('#mBlocks');
+  if (!blocks) return;
+  const filled = s.supply ? (s.minted / s.supply) * 10 : 0;
+  blocks.querySelectorAll('i').forEach((b, i) => b.style.setProperty('--f', `${Math.max(0, Math.min(1, filled - i)) * 100}%`));
+  $('#mPct').textContent = pctText(s.minted, s.supply);
+  $('#mMinted').textContent = s.minted.toLocaleString('en-US');
+  $('#mSupply').textContent = '/' + s.supply.toLocaleString('en-US');
+  $('#mLeft').textContent = s.left.toLocaleString('en-US');
+  const soldOut = s.left === 0;
+  $('#mState').innerHTML = soldOut ? '<b>Sold out</b>' : '<span class="live"></span> Mint is live';
+  $('#mCta').innerHTML = soldOut
+    ? `<a class="btn red" href="/market">Trade on the market</a><a class="btn ghost" href="/c/${esc(s.collection)}">The collection</a>`
+    : `<a class="btn red" href="${claudeLink('/mint-city')}" target="_blank" rel="noopener">Pull the heist in Claude</a>
+       <a class="btn ghost" href="${gptLink('/mint-city')}" target="_blank" rel="noopener">Mint in ChatGPT</a>
+       <a class="btn ghost" href="/connect">How to connect</a>`;
+}
+async function loadOlderMints() {
+  if (mintView.loading || mintView.done || !mintView.cursor) return;
+  mintView.loading = true;
+  try {
+    const rows = await api(`/mint/feed?limit=48&cursor=${encodeURIComponent(mintView.cursor)}`);
+    const fresh = rows.filter((n) => !mintView.seen.has(n.id));
+    fresh.forEach((n) => mintView.seen.add(n.id));
+    $('#feed')?.insertAdjacentHTML('beforeend', fresh.map((n) => mintCard(n)).join(''));
+    if (rows.length) mintView.cursor = rows.at(-1).cursor;
+    if (rows.length < 48) mintView.done = true;
+  } catch {}
+  mintView.loading = false;
+}
+function fillFeed(recent) {
+  mintView.seen = new Set(recent.map((n) => n.id));
+  mintView.cursor = recent.at(-1)?.cursor || null;
+  mintView.done = recent.length < 60;
+  $('#feed').innerHTML = recent.map((n) => mintCard(n)).join('') || '<div class="empty">Nothing minted yet. Be the first: ask your AI to mint a Citizen.</div>';
+}
+async function pollMint(first = false) {
+  if (!$('#feed') || (mintView.polling && !first)) return;
+  mintView.polling = true;
+  try {
+    const s = await api('/mint/live');
+    if (!$('#feed')) return; // the page changed meanwhile
+    paintMintStats(s);
+    const fresh = s.recent.filter((n) => !mintView.seen.has(n.id));
+    const gap = mintView.minted != null && (s.minted < mintView.minted || (fresh.length === s.recent.length && s.minted - mintView.minted > fresh.length));
+    if (first || gap) {
+      fillFeed(s.recent);
+    } else if (fresh.length) {
+      $('#feed .empty')?.remove();
+      fresh.forEach((n) => mintView.seen.add(n.id));
+      $('#feed').insertAdjacentHTML('afterbegin', fresh.map((n) => mintCard(n, true)).join(''));
+    }
+    mintView.minted = s.minted;
+  } catch {}
+  mintView.polling = false;
+  clearTimeout(mintView.timer);
+  mintView.timer = setTimeout(() => (document.visibilityState === 'visible' ? pollMint() : null), MINT_POLL_MS);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && $('#feed') && !mintView.loading) pollMint(); });
+
+async function renderMint() {
+  const app = $('#app');
+  const price = stats?.mint_price ?? 5;
+  app.innerHTML = `<section class="sunset"><div class="sun" aria-hidden="true"></div>
+    <svg class="palm l" viewBox="0 0 200 400" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M104 400 C 100 300, 96 200, 112 96" stroke-width="13"/><path d="M112 96 C 80 70, 40 72, 6 104" stroke-width="9"/><path d="M112 96 C 76 50, 40 40, 12 46" stroke-width="9"/><path d="M112 96 C 110 50, 96 20, 70 4" stroke-width="9"/><path d="M112 96 C 140 52, 170 40, 196 50" stroke-width="9"/><path d="M112 96 C 150 76, 180 86, 198 116" stroke-width="9"/><path d="M112 96 C 130 120, 140 150, 136 184" stroke-width="8"/></svg>
+    ${'<svg class="palm l" viewBox="0 0 200 400" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M104 400 C 100 300, 96 200, 112 96" stroke-width="13"/><path d="M112 96 C 80 70, 40 72, 6 104" stroke-width="9"/><path d="M112 96 C 76 50, 40 40, 12 46" stroke-width="9"/><path d="M112 96 C 110 50, 96 20, 70 4" stroke-width="9"/><path d="M112 96 C 140 52, 170 40, 196 50" stroke-width="9"/><path d="M112 96 C 150 76, 180 86, 198 116" stroke-width="9"/><path d="M112 96 C 130 120, 140 150, 136 184" stroke-width="8"/></svg>'.replace('palm l', 'palm r')}
+    <div class="wrap"><div class="mint-top">
+      <div>
+        <span class="tag">Gen 0 · ${(stats?.supply ?? 5555).toLocaleString('en-US')} Citizens · no wallet popup</span>
+        <h1 class="px">The first city<br><span>inside your AI.</span></h1>
+        <span class="welcome script">welcome to Prompt City</span>
+        <p><b>5,555 pixel citizens</b> that live inside your AI. Mint one by just asking Claude, ChatGPT or Grok: <b>${fmt(price)} $CASH</b> each, up to ${stats?.mint_limit ?? 5} per account. 1 $CASH = $1, top up with USDC or USDT on Solana.</p>
+        <div class="cta" id="mCta"></div>
+        <div class="hint">or type <code>/mint-city</code> in a chat with Prompt City on · <a href="/c/citizens">see the collection</a></div>
+      </div>
+      <div class="mintbox" aria-live="polite">
+        <div class="wanted"><span>Wanted level</span><span class="stars" aria-hidden="true">★★★☆☆</span></div>
+        <div class="k" id="mState"><span class="live"></span> Mint is live</div>
+        <div class="count"><b id="mMinted">—</b><small id="mSupply"></small></div>
+        <div class="blocks" id="mBlocks" role="img" aria-label="Mint progress">${'<i></i>'.repeat(10)}<span class="pct" id="mPct">0%</span></div>
+        <div class="row2"><span>Left: <b id="mLeft">—</b></span><span>Price: <b>${fmt(price)} $CASH</b></span></div>
+      </div>
+    </div></div></section>
+    <div class="wrap">
+    <div class="feed-head"><h2 class="px"><span class="live"></span>Just minted</h2><span class="note">updates live</span></div>
+    <div class="feed" id="feed"><div class="empty">Loading…</div></div>
+    <div class="feed-end" id="feedEnd"></div>
+  </div>`;
+  Object.assign(mintView, { seen: new Set(), cursor: null, minted: null, loading: false, done: false, polling: false });
+  mintView.observer = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) loadOlderMints(); }, { rootMargin: '600px' });
+  mintView.observer.observe($('#feedEnd'));
+  await pollMint(true);
+}
+
+async function renderMarket() {
+  const app = $('#app');
+  app.innerHTML = `<section class="sunset short"><div class="sun" aria-hidden="true"></div>
+    <svg class="palm l" viewBox="0 0 200 400" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M104 400 C 100 300, 96 200, 112 96" stroke-width="13"/><path d="M112 96 C 80 70, 40 72, 6 104" stroke-width="9"/><path d="M112 96 C 76 50, 40 40, 12 46" stroke-width="9"/><path d="M112 96 C 110 50, 96 20, 70 4" stroke-width="9"/><path d="M112 96 C 140 52, 170 40, 196 50" stroke-width="9"/><path d="M112 96 C 150 76, 180 86, 198 116" stroke-width="9"/><path d="M112 96 C 130 120, 140 150, 136 184" stroke-width="8"/></svg>
+    ${'<svg class="palm l" viewBox="0 0 200 400" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M104 400 C 100 300, 96 200, 112 96" stroke-width="13"/><path d="M112 96 C 80 70, 40 72, 6 104" stroke-width="9"/><path d="M112 96 C 76 50, 40 40, 12 46" stroke-width="9"/><path d="M112 96 C 110 50, 96 20, 70 4" stroke-width="9"/><path d="M112 96 C 140 52, 170 40, 196 50" stroke-width="9"/><path d="M112 96 C 150 76, 180 86, 198 116" stroke-width="9"/><path d="M112 96 C 130 120, 140 150, 136 184" stroke-width="8"/></svg>'.replace('palm l', 'palm r')}
+    <div class="wrap">
+    <section class="hero">
+      <div>
+        <h1 class="px">The first city<br><span>inside your AI.</span></h1>
+        <span class="welcome script">the market</span>
+        <p>Browse here. Mint, buy and sell only by talking to Claude, ChatGPT or Grok. Your balance and NFTs live in your city account. 1 $CASH = $1: top it up with USDC or USDT on Solana.</p>
+        <div class="cta">
+          <a class="btn red" data-add-claude href="${addToClaude(stats?.mcp_url || location.origin + '/mcp')}" target="_blank" rel="noopener">Add to Claude</a>
+          <a class="btn ghost" href="${claudeLink('/market-city')}" target="_blank" rel="noopener">Buy in Claude</a>
+          <a class="btn ghost" href="/c/citizens">The collection</a>
+          <a class="btn ghost" href="/connect">ChatGPT, Grok &amp; more</a>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+    </section></div></section>
+    <div class="ticker" id="ticker" hidden></div>
+    <div class="wrap">
+      <div class="bar">
+        <h2 class="px bar-title">For sale</h2>
+        <select id="rarity" aria-label="Rarity"><option value="">All rarities</option>${RARITIES.map((r) => `<option>${r}</option>`).join('')}</select>
+        <select id="sort" aria-label="Sort">${MARKET_SORTS.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select>
+        <span class="count" id="count"></span>
+        <button class="btn ghost refresh" id="refresh" type="button" title="Refresh the market" aria-label="Refresh the market"><span class="spin" aria-hidden="true">↻</span> Refresh</button>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="more"><button class="btn ghost" id="gridMore" hidden>Load more</button></div>
+    </div>`;
+  ['rarity', 'sort'].forEach((k) => $('#' + k).onchange = (e) => { state[k] = e.target.value; loadGrid(); });
+  $('#gridMore').onclick = () => loadGrid(true);
+  // new listings and sales without reloading the page
+  $('#refresh').onclick = async () => {
+    const b = $('#refresh');
+    if (b.classList.contains('busy')) return;
+    b.classList.add('busy');
+    try { await Promise.all([loadGrid(), loadStats(), loadTicker()]); b.title = `Updated ${new Date().toLocaleTimeString()}`; } catch {}
+    b.classList.remove('busy');
+  };
+  loadStats(); loadTicker();
+  await loadGrid();
+}
+
+async function loadStats() {
+  stats = await api('/stats');
+  exNet = stats.withdrawals?.network || (stats.deposits?.network === 'solana' ? 'mainnet' : 'devnet');
+  $('#testbar').hidden = !stats.test_mode;
+  setAddLinks(stats.mcp_url);
+  const el = $('#stats');
+  if (!el) return;
+  el.innerHTML = [
+    ['Floor', stats.floor != null ? `${fmt(stats.floor)} <small>$CASH</small>` : '—'],
+    ['Minted', `${stats.minted.toLocaleString('en-US')}<small>/${stats.supply.toLocaleString('en-US')}</small>`],
+    stats.burned > 0 && stats.trading_open !== false ? ['Burned', stats.burned.toLocaleString('en-US')] : ['Mint price', `${fmt(stats.mint_price)} <small>$CASH</small>`],
+    ['Listed', stats.listed], ['Holders', stats.holders], ['Volume', `${fmt(stats.volume)} <small>$CASH</small>`],
+  ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+}
+
+async function loadTicker() {
+  const sales = await api('/sales');
+  if (!sales.length || !$('#ticker')) return;
+  const items = sales.map((s) => `<span><b>${esc(s.nft_name)}</b> sold for <i>${fmt(s.price)} $CASH</i> · ${esc(label(s.buyer_addr, s.buyer_name))}</span>`).join('');
+  const t = $('#ticker');
+  t.innerHTML = `<div class="row">${items}${items}</div>`;
+  t.hidden = false;
+}
+
+let gridOffset = 0;
+let gridRun = 0;
+async function loadGrid(more = false) {
+  const run = ++gridRun; // a newer load (filter, Refresh) wins over answers still on their way
+  try { localStorage.setItem('mcp-filter', JSON.stringify({ rarity: state.rarity })); } catch {}
+  state.status = 'listed';
+  ['rarity', 'sort'].forEach((k) => $('#' + k).value = state[k]);
+  if (!more) gridOffset = 0;
+  const q = new URLSearchParams({ ...Object.fromEntries(Object.entries(state).filter(([, v]) => v)), limit: PAGE, offset: gridOffset, count: 1 });
+  const r = await fetch('/api/nfts?' + q);
+  const rows = r.ok ? await r.json() : [];
+  if (!$('#grid') || run !== gridRun) return; // the page or the filters changed meanwhile
+  const total = Number(r.headers.get('X-Total-Count') || rows.length);
+  gridOffset += rows.length;
+  $('#count').textContent = `${total.toLocaleString('en-US')} item${total === 1 ? '' : 's'}`;
+  const html = rows.map(card).join('');
+  if (more) $('#grid').insertAdjacentHTML('beforeend', html);
+  else $('#grid').innerHTML = html || `<div class="empty">${state.rarity ? 'Nothing for sale matches this filter right now.'
+    : stats?.trading_open === false ? 'Mint phase: Citizens can be listed once all 5,555 are minted. Mint yours in your AI now.'
+      : 'Nothing for sale right now. List yours in your AI: /sellnft-city 42 10'}</div>`;
+  $('#gridMore').hidden = gridOffset >= total;
+}
+
+// /u/<handle>: only accounts that show their handle can be found by it; they live at their city address
+async function renderProfile(handle) {
+  try {
+    const u = await api('/users/' + encodeURIComponent(handle));
+    go('/a/' + u.public_id, { replace: true });
+  } catch {
+    $('#app').innerHTML = `<div class="wrap"><div class="empty">No public city account @${esc(handle)}. Accounts are shown by their city address unless the owner shows their X handle.</div></div>`;
+  }
+}
+
+// ---------- collections ----------
+async function renderCollections() {
+  const app = $('#app');
+  app.innerHTML = `<div class="wrap"><div class="ex-head"><div><h1 class="px">Collections</h1>
+    <p>Every collection on Prompt City. Mint and trade them by talking to Claude or ChatGPT.</p></div>
+    <a class="btn red" href="/launch" style="margin-left:auto">Launch your collection</a></div>
+    <div class="cols" id="cols"><div class="note">Loading…</div></div></div>`;
+  const list = await api('/collections');
+  $('#cols').innerHTML = list.map((c) => `<a class="col" href="/c/${esc(c.slug)}">
+    <img class="pix" src="${esc(c.cover)}" alt="${esc(c.name)}" loading="lazy">
+    <div class="body"><h2 class="px">${esc(c.name)}</h2><p>${esc(c.description || '')}</p>
+      <div class="progress" title="${c.minted} of ${c.supply} minted"><i style="width:${Math.min(100, (c.minted / c.supply) * 100).toFixed(2)}%"></i></div>
+      <div class="kv"><span>Minted</span><span>${c.minted.toLocaleString('en-US')} / ${c.supply.toLocaleString('en-US')}</span>
+        <span>Mint price</span><span>${fmt(c.mint_price)} $CASH</span>
+        <span>Floor</span><span>${c.trading_open === false ? 'after sell-out' : c.floor != null ? fmt(c.floor) + ' $CASH' : '—'}</span>
+        <span>By</span><span>${c.creator_addr ? esc(label(c.creator_addr, c.creator_name)) : 'Prompt City'}</span></div></div></a>`).join('')
+    || '<div class="empty">No collections yet.</div>';
+}
+
+const cState = { slug: null, status: 'all', sort: 'id', traits: new Set(), offset: 0, total: 0 };
+async function renderCollection(slug, query) {
+  const app = $('#app');
+  app.innerHTML = '<div class="wrap"><div class="note" style="padding:30px 0">Loading…</div></div>';
+  let c;
+  try { c = await api('/collections/' + encodeURIComponent(slug)); } catch { app.innerHTML = '<div class="wrap"><div class="empty">No such collection.</div></div>'; return; }
+  // still minting: open on everything by number; sold out: what is for sale, cheapest first
+  const minting = c.minted < c.supply;
+  if (cState.slug !== c.slug) Object.assign(cState, { slug: c.slug, status: minting ? 'all' : 'listed', sort: minting ? 'id' : 'price_asc', traits: new Set() });
+  const cTabs = [['listed', 'For sale'], ['all', 'All'], ...(minting ? [['unminted', 'Mintable']] : [])];
+  if (!cTabs.some(([k]) => k === cState.status)) cState.status = 'listed';
+  // /c/citizens?t=Chassis:Bunny opens the collection filtered by that trait
+  const t = new URLSearchParams(query || '').getAll('t');
+  if (t.length) cState.traits = new Set(t);
+  const mintQ = c.slug === 'citizens' ? 'Mint me a Citizen' : `Mint me an NFT from the ${c.name} collection (${c.slug})`;
+  const banner = {
+    draft: 'Being prepared: only you can see this.',
+    review: 'In review: only its creator and the Prompt City team can see it until it is approved.',
+    rejected: `Rejected${c.review_note ? ': ' + c.review_note : ''}. Only its creator can see it.`,
+    paused: 'Minting is paused for now. Trading goes on.',
+    frozen: `Frozen by the Prompt City team${c.review_note ? ': ' + c.review_note : ''}. Minting and trading are stopped; minters whose money was still held got their mint price back.`,
+  }[c.status];
+  const canMint = c.status === 'live';
+  const locked = c.trading_open === false && c.status !== 'frozen'
+    ? `Trading opens after the sell-out: ${c.minted.toLocaleString('en-US')} of ${c.supply.toLocaleString('en-US')} minted. Until then NFTs can only be minted, not listed or bought.` : '';
+  app.innerHTML = `<div class="wrap">
+    <div class="crumbs"><a href="/collections">Collections</a> / ${esc(c.name)}</div>
+    ${banner ? `<div class="panel" style="margin-top:14px;border-color:${c.status === 'frozen' || c.status === 'rejected' ? 'var(--red-d)' : 'var(--line)'}">${esc(banner)}</div>` : ''}
+    ${locked ? `<div class="panel" style="margin-top:14px;border-color:#6b5f00"><span class="pill wait">Mint phase</span> ${esc(locked)}</div>` : ''}
+    <section class="c-head"><img class="${c.cover_pixel === false ? 'smooth' : 'pix'}" src="${esc(c.cover)}" alt="">
+      <div><h1 class="px">${esc(c.name)}</h1><p>${esc(c.description || '')}</p>
+        ${c.creator_addr ? `<p style="margin-top:6px">by ${who(c.creator_addr, c.creator_name)} · launched on Prompt City · mint money held 7 days before it is paid out</p>` : ''}
+        <div class="cta">${canMint ? `<a class="btn red" href="${claudeLink(mintQ)}" target="_blank" rel="noopener">Mint in Claude</a>
+          <a class="btn ghost" href="${gptLink(mintQ)}" target="_blank" rel="noopener">Mint in ChatGPT</a>` : ''}
+          <span class="note" style="align-self:center">${fmt(c.mint_price)} $CASH · a random one · up to ${c.mint_limit} per account</span></div></div></section>
+    <div class="c-tiles" id="cTiles">${cTiles(c)}</div>
+    <div class="bar">
+      <div class="tabs" role="tablist">${cTabs.map(([k, v]) => `<button class="tab" role="tab" data-cstatus="${k}">${v}</button>`).join('')}</div>
+      <select id="cSort" aria-label="Sort"><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="recent">Recently listed</option><option value="id">Number</option></select>
+      <span class="count" id="cCount"></span>
+      <button class="btn ghost refresh" id="cRefresh" type="button" title="Refresh the collection" aria-label="Refresh the collection"><span class="spin" aria-hidden="true">↻</span> Refresh</button>
+    </div>
+    <div class="c-body">
+      <aside class="filters" aria-label="Traits"><div class="fh"><b class="px">Traits</b><button class="btn ghost" id="cClear" style="padding:3px 8px;font-size:11px">Clear</button></div>
+        ${c.traits.map((tr) => `<details${[...cState.traits].some((x) => x.startsWith(tr.type + ':')) ? ' open' : ''}><summary><span>${esc(tr.type)}</span><small>${tr.values.length}</small></summary>
+          ${tr.values.map((v) => `<label><input type="checkbox" data-trait="${esc(tr.type + ':' + v.value)}"${cState.traits.has(tr.type + ':' + v.value) ? ' checked' : ''}>
+            <span title="${esc(v.value)}">${esc(v.value)}</span><small>${v.count} · ${v.percent}%</small></label>`).join('')}</details>`).join('')}
+      </aside>
+      <div><div class="chips" id="cChips"></div><div class="grid" id="cGrid" style="padding-top:10px;padding-bottom:10px"></div>
+        <div class="more"><button class="btn ghost" id="cMore" hidden>Load more</button></div></div>
+    </div></div>`;
+  app.querySelectorAll('[data-cstatus]').forEach((b) => b.onclick = () => { cState.status = b.dataset.cstatus; loadCollectionGrid(); });
+  $('#cSort').onchange = (e) => { cState.sort = e.target.value; loadCollectionGrid(); };
+  app.querySelectorAll('[data-trait]').forEach((cb) => cb.onchange = () => {
+    if (cb.checked) cState.traits.add(cb.dataset.trait); else cState.traits.delete(cb.dataset.trait);
+    loadCollectionGrid();
+  });
+  $('#cClear').onclick = () => { cState.traits.clear(); app.querySelectorAll('[data-trait]').forEach((cb) => { cb.checked = false; }); loadCollectionGrid(); };
+  $('#cMore').onclick = () => loadCollectionGrid(true);
+  // new listings, sales, floor and holders without reloading the page; filters and traits stay as they are
+  $('#cRefresh').onclick = async () => {
+    const b = $('#cRefresh');
+    if (b.classList.contains('busy')) return;
+    b.classList.add('busy');
+    const slug = cState.slug;
+    try {
+      const [fresh] = await Promise.all([api('/collections/' + encodeURIComponent(slug)), loadCollectionGrid()]);
+      if (slug === cState.slug && $('#cTiles')) $('#cTiles').innerHTML = cTiles(fresh);
+      b.title = `Updated ${new Date().toLocaleTimeString()}`;
+    } catch {}
+    b.classList.remove('busy');
+  };
+  $('#cChips').onclick = (e) => {
+    const b = e.target.closest('[data-untrait]');
+    if (!b) return;
+    cState.traits.delete(b.dataset.untrait);
+    const cb = [...app.querySelectorAll('[data-trait]')].find((x) => x.dataset.trait === b.dataset.untrait);
+    if (cb) cb.checked = false;
+    loadCollectionGrid();
+  };
+  await loadCollectionGrid();
+}
+
+// the numbers above a collection's NFTs
+function cTiles(c) {
+  return [
+    ['Supply', c.supply.toLocaleString('en-US')], ['Minted', c.minted.toLocaleString('en-US')], ['Holders', c.holders],
+    ...(c.burned > 0 ? [['Burned', c.burned.toLocaleString('en-US')]] : []),
+    ['Floor', c.trading_open === false ? 'after sell-out' : c.floor != null ? `${fmt(c.floor)} <small>$CASH</small>` : '—'], ['Mint price', `${fmt(c.mint_price)} <small>$CASH</small>`],
+    ['Per account', c.mint_limit], ['Volume', `${fmt(c.volume)} <small>$CASH</small>`],
+  ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+}
+
+let cRun = 0;
+async function loadCollectionGrid(more = false) {
+  const run = ++cRun; // a newer load (filter, Refresh) wins over answers still on their way
+  document.querySelectorAll('[data-cstatus]').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.cstatus === cState.status)));
+  $('#cSort').value = cState.sort;
+  if (!more) cState.offset = 0;
+  const q = new URLSearchParams({ status: cState.status, sort: cState.sort, limit: PAGE, offset: cState.offset });
+  for (const t of cState.traits) q.append('trait', t);
+  const slug = cState.slug;
+  const r = await api(`/collections/${encodeURIComponent(slug)}/nfts?${q}`);
+  if (slug !== cState.slug || !$('#cGrid') || run !== cRun) return; // the page or the filters changed meanwhile
+  cState.offset += r.items.length;
+  cState.total = r.total;
+  $('#cCount').textContent = `${r.total.toLocaleString('en-US')} item${r.total === 1 ? '' : 's'}`;
+  $('#cChips').innerHTML = [...cState.traits].map((t) => `<button class="chip" data-untrait="${esc(t)}">${esc(t.replace(':', ': '))} ×</button>`).join('');
+  const html = r.items.map(card).join('');
+  if (more) $('#cGrid').insertAdjacentHTML('beforeend', html);
+  else $('#cGrid').innerHTML = html || '<div class="empty">Nothing matches these filters.</div>';
+  $('#cMore').hidden = cState.offset >= r.total;
+}
+
+// ---------- tokens: the $HEIST token and its airdrop, live ----------
+// Left: the coin, $HEIST, the CA to copy and the pump.fun button (both appear once the owner sets the CA in /admin).
+// Right: the airdrop as it goes out, batch by batch, with a Solscan link for every wallet, the batch being sent, the
+// queue, and a search for one wallet. Everything comes from /api/credit/airdrop (one URL, cached ~3 s by the CDN),
+// polled every 5 s while the page is open and visible; a searched wallet is polled with it.
+const TK_POLL_MS = 5000;
+const tk = { timer: null, clock: null, data: null, first: true, tab: 'live', wallet: '', walletData: null, polling: false, shown: [], pending: [], reveal: null };
+const cr = (v) => Number(v || 0).toLocaleString('en-US');
+// 1,234,567 → 1.23M (tiles); small numbers stay whole
+const crShort = (v) => {
+  const x = Number(v || 0);
+  if (x >= 1e9) return `${(x / 1e9).toFixed(x >= 1e10 ? 1 : 2)}B`;
+  if (x >= 1e6) return `${(x / 1e6).toFixed(x >= 1e7 ? 1 : 2)}M`;
+  if (x >= 1e5) return `${Math.round(x / 1e3)}K`;
+  return cr(x);
+};
+const shortW = (w) => `${w.slice(0, 4)}…${w.slice(-4)}`;
+const isWallet = (s) => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s);
+const hhmm = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+// "in 12 min" / "any minute" / "in 1 h 20 min"
+const until = (iso) => {
+  const min = Math.round((new Date(iso).getTime() - Date.now()) / 60e3);
+  if (min <= 1) return 'any minute';
+  if (min < 60) return `in ${min} min`;
+  return `in ${Math.floor(min / 60)} h${min % 60 ? ` ${min % 60} min` : ''}`;
+};
+// a wallet's Solscan link: its own transaction, else its account (the transfer shows there)
+const walletLink = (r) => (r.tx ? solscan('tx', r.tx) : `${solscan('account', r.wallet)}#transfers`);
+function stopTokens() {
+  clearTimeout(tk.timer);
+  clearInterval(tk.clock);
+  clearTimeout(tk.reveal);
+  tk.timer = null;
+  tk.clock = null;
+  tk.reveal = null;
+}
+const coinImg = (cls = '') => `<img class="pix ${cls}" src="/credit.svg" alt="$HEIST" width="30" height="30">`;
+
+function renderTokens(query = '') {
+  stopTokens();
+  tk.data = null;
+  tk.first = true;
+  tk.shown = [];
+  tk.pending = [];
+  const fromUrl = new URLSearchParams(query).get('w') || '';
+  let saved = '';
+  try { saved = localStorage.getItem('mcp-credit-wallet') || ''; } catch {}
+  tk.wallet = isWallet(fromUrl) ? fromUrl : isWallet(saved) ? saved : '';
+  tk.walletData = null;
+  $('#app').innerHTML = `<div class="wrap"><div class="tk-grid">
+    <aside class="tk-side" aria-labelledby="tkTitle">
+      <div class="tk-coin">${coinImg()}</div>
+      <div class="tk-state" id="tkState"><span class="pill wait">Loading…</span></div>
+      <h1 class="px" id="tkTitle">$HEIST</h1>
+      <p class="tk-sub">The first token inside your AI. Burn Citizens for it, claim it to your Solana wallet, get it in the airdrop.</p>
+      <div class="tk-ca">
+        <div class="k">Contract address (CA)</div>
+        <div class="tk-ca-row"><code id="tkCa" class="tk-ca-val">—</code><button class="btn ghost" id="tkCopy" disabled>Copy</button></div>
+        <div class="note" id="tkCaNote" aria-live="polite"></div>
+      </div>
+      <a class="btn red big" id="tkBuy" aria-disabled="true">Buy on pump.fun <span class="arr">↗</span></a>
+      <div class="tk-steps">
+        <div><b>1</b><span>Burn Citizens in your AI: <button class="tk-cmd" data-copy="/burncitizen">/burncitizen</button></span></div>
+        <div><b>2</b><span>Bind your wallet: <button class="tk-cmd" data-copy="/claimheist">/claimheist</button></span></div>
+        <div><b>3</b><span>Watch your airdrop go out here →</span></div>
+      </div>
+      <p class="note tk-warn">The only $HEIST is the CA above. Anything else with the name is not ours.</p>
+    </aside>
+    <section class="tk-main" aria-labelledby="adTitle">
+      <div class="tk-head"><h2 class="px" id="adTitle"><span class="live"></span> Airdrop · live</h2>
+        <span class="note" id="tkUpdated"></span></div>
+      <div class="tiles tk-tiles" id="tkTiles">${['Wallets sent', '$HEIST sent', 'Batches', 'In queue'].map((k) => `<div class="stat"><div class="k">${k}</div><div class="v">—</div></div>`).join('')}</div>
+      <div class="tk-prog"><div class="blocks" id="tkBlocks">${'<i></i>'.repeat(10)}<span class="pct" id="tkPct">0%</span></div>
+        <div class="note" id="tkProgNote"></div></div>
+      <form class="search tk-search" id="tkFind" role="search">
+        <input id="tkWallet" placeholder="Your Solana wallet: find your airdrop" autocomplete="off" spellcheck="false" aria-label="Your Solana wallet" value="${esc(tk.wallet)}">
+        <button class="btn red">Find</button>
+      </form>
+      <div id="tkMine" aria-live="polite"></div>
+      <div id="tkNow"></div>
+      <div class="bar tk-bar"><div class="tabs" role="tablist" id="tkTabs">${[['live', 'Live feed'], ['batches', 'Batches'], ['queue', 'Queue']]
+        .map(([k, v]) => `<button class="tab" role="tab" data-tk="${k}" aria-selected="${k === tk.tab}">${v}</button>`).join('')}</div>
+        <span class="count" id="tkCount"></span></div>
+      <div id="tkList" class="tk-list"><div class="empty">Loading the airdrop…</div></div>
+    </section>
+  </div></div>`;
+  $('#tkTabs').onclick = (e) => {
+    const b = e.target.closest('[data-tk]');
+    if (!b) return;
+    tk.tab = b.dataset.tk;
+    $('#tkTabs').querySelectorAll('[data-tk]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+    paintTkList();
+  };
+  $('#tkFind').onsubmit = (e) => {
+    e.preventDefault();
+    const w = $('#tkWallet').value.trim().replace(/^https?:\/\/solscan\.io\/account\//, '').replace(/[?#].*$/, '');
+    if (!w) { tk.wallet = ''; tk.walletData = null; $('#tkMine').innerHTML = ''; saveWallet(''); return; }
+    if (!isWallet(w)) { $('#tkMine').innerHTML = '<div class="tk-card bad">That is not a Solana wallet address. Paste the address you gave in /claimheist.</div>'; return; }
+    tk.wallet = w;
+    saveWallet(w);
+    $('#tkMine').innerHTML = '<div class="tk-card note">Looking…</div>';
+    loadWallet(true);
+  };
+  $('#tkCopy').onclick = async () => {
+    const ca = tk.data?.token?.ca;
+    if (!ca) return;
+    try { await navigator.clipboard.writeText(ca); $('#tkCaNote').textContent = 'Copied.'; } catch { $('#tkCaNote').textContent = 'Select it above and copy.'; selectText($('#tkCa')); }
+    setTimeout(() => { if ($('#tkCaNote')) $('#tkCaNote').textContent = ''; }, 2500);
+  };
+  $('#tkCa').onclick = () => selectText($('#tkCa'));
+  pollTokens();
+  if (tk.wallet) loadWallet(true);
+  tk.clock = setInterval(paintTkState, 1000);
+}
+const selectText = (el) => { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+function saveWallet(w) {
+  try { if (w) localStorage.setItem('mcp-credit-wallet', w); else localStorage.removeItem('mcp-credit-wallet'); } catch {}
+  history.replaceState(null, '', w ? `/tokens?w=${encodeURIComponent(w)}` : '/tokens');
+}
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('.tk-cmd[data-copy]');
+  if (!b) return;
+  try { await navigator.clipboard.writeText(b.dataset.copy); const t = b.textContent; b.textContent = 'copied'; setTimeout(() => { b.textContent = t; }, 1200); } catch {}
+});
+
+async function pollTokens() {
+  if (!$('#tkList') || tk.polling) return;
+  tk.polling = true;
+  try {
+    const d = await api('/credit/airdrop');
+    if (!$('#tkList')) return; // the page changed meanwhile
+    tk.data = d;
+    paintTokens();
+  } catch {
+    if ($('#tkUpdated')) $('#tkUpdated').textContent = 'Reconnecting…';
+  } finally {
+    tk.polling = false;
+  }
+  // a searched wallet moves with the feed: refresh it when something was sent or a batch started
+  if (tk.wallet && tk.walletData && tk.data) loadWallet();
+  clearTimeout(tk.timer);
+  if ($('#tkList')) tk.timer = setTimeout(() => (document.visibilityState === 'visible' ? pollTokens() : null), TK_POLL_MS);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && $('#tkList')) pollTokens(); });
+
+function paintTkState() {
+  const el = $('#tkState');
+  const d = tk.data;
+  if (!el || !d) return;
+  const t = d.token;
+  const ms = t.launch_at ? new Date(t.launch_at).getTime() - Date.now() : null;
+  if (t.ca) el.innerHTML = '<span class="pill ok"><span class="live ok"></span> Live on Solana</span>';
+  else if (ms != null && ms > 0) {
+    const s = Math.floor(ms / 1000);
+    const two = (x) => String(x).padStart(2, '0');
+    el.innerHTML = `<span class="pill wait">Launch in <b class="tk-clock">${s >= 86400 ? `${Math.floor(s / 86400)}d ` : ''}${two(Math.floor(s / 3600) % 24)}:${two(Math.floor(s / 60) % 60)}:${two(s % 60)}</b></span>`;
+  } else el.innerHTML = `<span class="pill wait">${t.live ? 'Launching now: the CA is coming' : 'Launching soon'}</span>`;
+}
+
+function paintTokens() {
+  const d = tk.data;
+  const t = d.token;
+  paintTkState();
+  // the CA and the Buy button
+  const ca = $('#tkCa');
+  if (t.ca) {
+    if (ca.textContent !== t.ca) ca.textContent = t.ca;
+    ca.classList.remove('dim');
+    $('#tkCopy').disabled = false;
+    const buy = $('#tkBuy');
+    buy.href = t.url;
+    buy.target = '_blank';
+    buy.rel = 'noopener';
+    buy.removeAttribute('aria-disabled');
+  } else {
+    ca.textContent = t.launch_at && new Date(t.launch_at) > new Date() ? `Posted here at launch, ${hhmm(t.launch_at)}` : 'Posted here the moment it is live';
+    ca.classList.add('dim');
+  }
+  // the rows that came in since the last poll start showing one by one; the numbers count up with them
+  const s = d.totals;
+  takeRecent(d);
+  paintTkNumbers();
+  $('#tkUpdated').textContent = `Updated ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+  // the batch going out now, and the next one
+  const p = d.pace;
+  const now = d.open
+    ? `<div class="tk-now"><div class="tk-now-top"><span class="pill wait">Next batch</span><b class="px">Batch #${d.open.no}</b>
+        <span>${cr(d.open.wallets)} wallet${d.open.wallets === 1 ? '' : 's'} · ${cr(d.open.credit)} $HEIST · goes out ${d.open.eta ? until(d.open.eta) : 'any minute'}</span></div><div class="tk-stripes" aria-hidden="true"></div></div>`
+    : '';
+  const next = s.queued_wallets && p.next_at
+    ? `<div class="tk-next">${d.open ? 'After it' : 'Up next'}: <b>Batch #${p.next_no}</b> · ${until(p.next_at)} <span class="note">(a batch about every ${p.minutes} min, ${cr(p.size)} wallets each)</span></div>`
+    : !s.wallets ? '' : !s.queued_wallets && !d.open ? '<div class="tk-next">Everyone who claimed so far got the airdrop. New claims join the queue: <b>/claimheist</b></div>' : '';
+  $('#tkNow').innerHTML = now + next;
+  // the live list is not redrawn while rows are still coming in one by one (it would cut their entrance)
+  if (tk.tab !== 'live' || (!tk.reveal && !tk.pending.length)) paintTkList();
+  tk.first = false;
+}
+
+// the live feed: tk.shown is what the list shows (newest first); rows new since the last poll wait in tk.pending and
+// come in one by one, about a second apart (faster when many wait), so a batch of 100 runs down the list
+const LIVE_MAX = 100;
+const rowKey = (r) => `${r.batch}:${r.wallet}`;
+function takeRecent(d) {
+  if (tk.first) { tk.shown = d.recent.slice(0, LIVE_MAX); return; }
+  const known = new Set([...tk.shown, ...tk.pending].map(rowKey));
+  const fresh = d.recent.filter((r) => !known.has(rowKey(r))).reverse(); // oldest first, so the newest ends on top
+  if (!fresh.length) return;
+  tk.pending.push(...fresh);
+  if (tk.pending.length > 400) { // the page slept through a lot: catch up without the show
+    tk.shown = d.recent.slice(0, LIVE_MAX);
+    tk.pending = [];
+    return;
+  }
+  revealNext();
+}
+function revealNext() {
+  if (tk.reveal || !tk.pending.length) return;
+  const wait = Math.max(150, Math.min(1000, 90000 / tk.pending.length));
+  tk.reveal = setTimeout(() => {
+    tk.reveal = null;
+    const r = tk.pending.shift();
+    const list = $('#tkList');
+    if (!r || !list) return;
+    tk.shown.unshift(r);
+    if (tk.shown.length > LIVE_MAX) tk.shown.length = LIVE_MAX;
+    if (tk.tab === 'live') {
+      list.querySelector('.empty')?.remove();
+      list.insertAdjacentHTML('afterbegin', liveRow(r, true));
+      const rows = list.querySelectorAll('.tk-row');
+      if (rows.length > LIVE_MAX) rows[rows.length - 1].remove();
+      $('#tkCount').textContent = `latest ${tk.shown.length}`;
+    }
+    paintTkNumbers();
+    revealNext();
+  }, wait);
+}
+// the totals, less what is still waiting to be shown
+function paintTkNumbers() {
+  const s = tk.data?.totals;
+  if (!s || !$('#tkTiles')) return;
+  const shownBatches = new Set(tk.shown.map((r) => r.batch));
+  const waitBatches = new Set(tk.pending.filter((r) => !shownBatches.has(r.batch)).map((r) => r.batch));
+  const sentW = Math.max(0, s.sent_wallets - tk.pending.length);
+  const sentC = Math.max(0, s.sent_credit - tk.pending.reduce((a, r) => a + r.amount, 0));
+  const tiles = [
+    ['Wallets sent', `${cr(sentW)}<small> / ${cr(s.wallets)}</small>`],
+    ['$HEIST sent', `${crShort(sentC)}<small> / ${crShort(s.credit)}</small>`],
+    ['Batches', cr(Math.max(0, s.batches_sent - waitBatches.size))],
+    ['In queue', `${cr(s.queued_wallets)}<small> wallets</small>`],
+  ];
+  $('#tkTiles').innerHTML = tiles.map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+  const frac = s.credit ? sentC / s.credit : 0;
+  $('#tkBlocks').querySelectorAll('i').forEach((b, i) => b.style.setProperty('--f', `${Math.max(0, Math.min(1, frac * 10 - i)) * 100}%`));
+  $('#tkPct').textContent = pctText(sentC, s.credit || 1);
+  $('#tkProgNote').textContent = s.credit ? `${cr(sentC)} of ${cr(s.credit)} $HEIST claimed so far is airdropped` : 'Nothing claimed yet';
+}
+function liveRow(r, fresh = false) {
+  const mine = tk.wallet && r.wallet === tk.wallet;
+  return `<a class="tk-row${fresh ? ' new' : ''}${mine ? ' mine' : ''}" href="${walletLink(r)}" target="_blank" rel="noopener" title="${esc(r.wallet)}">
+    <span class="tk-b">#${r.batch}</span><span class="tk-w">${esc(shortW(r.wallet))}${mine ? ' <small>you</small>' : ''}</span>
+    <span class="tk-a">+${cr(r.amount)}</span><span class="tk-t">${r.at ? ago(r.at) : ''}</span><span class="tk-go" aria-hidden="true">↗</span></a>`;
+}
+
+function paintTkList() {
+  const d = tk.data;
+  const list = $('#tkList');
+  if (!d || !list) return;
+  if (tk.tab === 'live') {
+    // redrawn from tk.shown: new rows are added one by one by revealNext, not here
+    const rows = tk.shown;
+    $('#tkCount').textContent = rows.length ? `latest ${rows.length}` : '';
+    list.innerHTML = rows.map((r) => liveRow(r)).join('') || `<div class="empty">${d.open ? `Batch #${d.open.no} goes out next. Wallets show up here one by one as it lands.`
+      : d.totals.wallets ? `The first batch goes out ${d.token.ca ? 'any minute' : 'right after the launch'}. ${cr(d.totals.queued_wallets)} wallets are in the queue.`
+        : 'No claims yet. Burn Citizens in your AI (/burncitizen), then claim to your wallet (/claimheist).'}</div>`;
+    return;
+  }
+  if (tk.tab === 'batches') {
+    const bs = d.batches;
+    $('#tkCount').textContent = d.totals.batches_sent ? `${cr(d.totals.batches_sent)} sent` : '';
+    list.innerHTML = bs.map((b) => {
+      const links = b.txs.map((s, i) => `<a href="${solscan('tx', s)}" target="_blank" rel="noopener" class="tk-tx">${b.txs.length === 1 ? 'View transaction' : `Tx ${i + 1}`} ↗</a>`);
+      const extra = b.tx_count > b.txs.length ? `<span class="note">+${cr(b.tx_count - b.txs.length)} more</span>` : '';
+      return `<div class="tk-batch${b.status === 'sending' ? ' open' : ''}">
+        <div class="tk-batch-top"><b class="px">Batch #${b.no}</b>${b.status === 'sending' ? '<span class="pill wait">Next</span>' : '<span class="pill ok">Sent</span>'}
+          <span class="tk-batch-n">${cr(b.wallets)} wallet${b.wallets === 1 ? '' : 's'} · ${cr(b.credit)} $HEIST</span>
+          <span class="note tk-batch-t">${b.sent_at ? `${hhmm(b.sent_at)} · ${ago(b.sent_at)}` : `started ${ago(b.created_at)}`}</span></div>
+        ${links.length ? `<div class="tk-txs">${links.slice(0, 8).join('')}${links.length > 8 ? `<details><summary class="note">${links.length - 8} more transactions</summary><div class="tk-txs">${links.slice(8).join('')}</div></details>` : ''}${extra}</div>` : ''}
+      </div>`;
+    }).join('') || '<div class="empty">No batch sent yet.</div>';
+    return;
+  }
+  // the queue: the batch being sent, then everyone waiting, in order
+  const open = d.open ? d.open.lines.map((l) => ({ ...l, sending: true })) : [];
+  const q = d.queue;
+  $('#tkCount').textContent = d.totals.queued_wallets ? `${cr(d.totals.queued_wallets)} waiting` : '';
+  const row = (r) => {
+    const mine = tk.wallet && r.wallet === tk.wallet;
+    return `<a class="tk-row q${mine ? ' mine' : ''}" href="${solscan('account', r.wallet)}" target="_blank" rel="noopener" title="${esc(r.wallet)}">
+      <span class="tk-b">${r.sending ? `#${d.open.no}` : `${r.pos}.`}</span><span class="tk-w">${esc(shortW(r.wallet))}${mine ? ' <small>you</small>' : ''}</span>
+      <span class="tk-a">${cr(r.amount)}</span><span class="tk-t">${r.sending ? `next · ${d.open.eta ? until(d.open.eta) : 'any minute'}` : `batch #${r.batch} · ${until(r.eta)}`}</span><span class="tk-go" aria-hidden="true">↗</span></a>`;
+  };
+  list.innerHTML = (open.length ? `<div class="tk-sub-h">Batch #${d.open.no} · goes out next</div>${open.map(row).join('')}${d.open.wallets > open.length ? `<div class="note tk-more">+${cr(d.open.wallets - open.length)} more in this batch</div>` : ''}` : '')
+    + (q.length ? `<div class="tk-sub-h">Waiting</div>${q.map(row).join('')}${d.totals.queued_wallets > q.length ? `<div class="note tk-more">+${cr(d.totals.queued_wallets - q.length)} more waiting. Find your wallet above to see your place.</div>` : ''}` : '')
+    || '<div class="empty">Nobody is waiting.</div>';
+}
+
+// repaint: also redraw the list, so the wallet's rows are marked (not on every poll: it would cut the new rows' flash)
+async function loadWallet(repaint = false) {
+  const w = tk.wallet;
+  if (!w) return;
+  let r;
+  try {
+    r = await api(`/credit/airdrop/wallet/${encodeURIComponent(w)}`);
+  } catch {
+    if (w === tk.wallet && !tk.walletData) $('#tkMine').innerHTML = '<div class="tk-card bad">Could not look it up. Try again in a moment.</div>';
+    return;
+  }
+  if (w !== tk.wallet || !$('#tkMine')) return;
+  tk.walletData = r;
+  const parts = [];
+  for (const b of r.sent_batches) {
+    const link = b.tx ? solscan('tx', b.tx) : b.txs.length === 1 ? solscan('tx', b.txs[0]) : `${solscan('account', r.wallet)}#transfers`;
+    parts.push(`<div class="tk-st ok"><span class="pill ok">Airdropped</span><div><b>${cr(b.amount)} $HEIST</b>${b.batch ? ` in batch #${b.batch}` : ''}${b.at ? ` · ${hhmm(b.at)}, ${ago(b.at)}` : ''}
+      <div><a href="${link}" target="_blank" rel="noopener">${b.tx || b.txs.length === 1 ? 'View the transaction' : 'See it on Solscan'} ↗</a></div></div></div>`);
+  }
+  if (r.sending) parts.push(`<div class="tk-st"><span class="pill wait">Next batch</span><div><b>${cr(r.sending.amount)} $HEIST</b> in batch #${r.sending.batch}, the next to go out (${r.sending.eta ? until(r.sending.eta) : 'any minute'}).</div></div>`);
+  if (r.queued) parts.push(`<div class="tk-st"><span class="pill">In queue</span><div><b>${cr(r.queued.amount)} $HEIST</b> · <b>#${cr(r.queued.pos)}</b> in line · batch #${r.queued.batch} · ${until(r.queued.eta)} <span class="note">(around ${hhmm(r.queued.eta)}, an estimate)</span></div></div>`);
+  $('#tkMine').innerHTML = `<div class="tk-card"><div class="tk-card-h"><span>Wallet</span> <a class="mono-link" href="${solscan('account', r.wallet)}" target="_blank" rel="noopener">${esc(shortW(r.wallet))} ↗</a>
+      <button class="tk-x" id="tkClear" aria-label="Clear">×</button></div>
+    ${r.found ? parts.join('') : `<div class="tk-st"><div>No claim to this wallet yet. Burn Citizens in your AI (<b>/burncitizen</b>), then claim your $HEIST to this wallet (<b>/claimheist</b>).</div></div>`}</div>`;
+  $('#tkClear').onclick = () => { tk.wallet = ''; tk.walletData = null; $('#tkWallet').value = ''; $('#tkMine').innerHTML = ''; saveWallet(''); paintTkList(); };
+  if (repaint) paintTkList();
+}
+
+// ---------- an NFT's page ----------
+// "Citizen #42" → Citizen-42.png
+const fileName = (n) => `${String(n.name || `NFT ${n.id}`).replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'nft'}.png`;
+// a pixel picture that has no big copy on the CDN (launchpad collections): scale it up sharp in the browser, then save
+document.addEventListener('click', async (e) => {
+  const a = e.target.closest('a[data-upscale]');
+  if (!a) return;
+  e.preventDefault();
+  try {
+    const img = new Image();
+    img.src = a.href;
+    await img.decode();
+    const f = Math.max(1, Math.floor(1024 / Math.max(img.naturalWidth, img.naturalHeight)));
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth * f;
+    c.height = img.naturalHeight * f;
+    const x = c.getContext('2d');
+    x.imageSmoothingEnabled = false;
+    x.drawImage(img, 0, 0, c.width, c.height);
+    const blob = await new Promise((ok) => c.toBlob(ok, 'image/png'));
+    const url = URL.createObjectURL(blob);
+    const save = Object.assign(document.createElement('a'), { href: url, download: a.getAttribute('download') || 'nft.png' });
+    document.body.append(save);
+    save.click();
+    save.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch {
+    window.open(a.href, '_blank', 'noopener');
+  }
+});
+async function renderNft(id) {
+  const app = $('#app');
+  app.innerHTML = '<div class="wrap"><div class="note" style="padding:30px 0">Loading…</div></div>';
+  let n;
+  try { n = await api('/nfts/' + id); } catch { app.innerHTML = `<div class="wrap"><div class="empty">There is no NFT #${esc(id)}.</div></div>`; return; }
+  const ref = nftRef(n);
+  const frozen = n.collection_status === 'frozen';
+  const burnt = n.burned_at ? (n.activity || []).find((a) => a.type === 'burn') : null;
+  const q = n.burned_at ? `Show me ${ref}` : n.price != null ? `Buy ${ref} for ${n.price} $CASH` : !minted(n) ? (n.collection === 'citizens' ? 'Mint me a Citizen' : `Mint me an NFT from the ${n.collection_name} collection (${n.collection})`) : `Show me ${ref}`;
+  const action = n.burned_at ? `<div class="big" style="font-size:18px">Burned</div><div style="color:var(--dim);font-size:12px">Burned for $HEIST${burnt ? ` by ${who(burnt.from_addr, burnt.from_name)}` : ''}. It is gone for good.</div>`
+    : frozen ? `<div class="big" style="font-size:18px">Collection frozen</div><div style="color:var(--dim);font-size:12px">The Prompt City team stopped minting and trading in ${esc(n.collection_name)}.</div>`
+    : n.price != null
+    ? `<div class="big">${fmt(n.price)} <small style="color:var(--dim)">$CASH</small></div>
+       <div class="acts"><a class="btn red" href="${claudeLink(q)}" target="_blank" rel="noopener">Buy in Claude</a>
+       <a class="btn ghost" href="${gptLink(q)}" target="_blank" rel="noopener">Buy in ChatGPT</a></div>`
+    : !minted(n)
+      ? `<div class="big" style="font-size:18px">Not minted yet</div><div style="color:var(--dim);font-size:12px">A mint gives a random NFT from ${esc(n.collection_name)}, maybe this one.</div>
+       <div class="acts"><a class="btn red" href="${claudeLink(q)}" target="_blank" rel="noopener">Mint in Claude</a>
+       <a class="btn ghost" href="${gptLink(q)}" target="_blank" rel="noopener">Mint in ChatGPT</a></div>`
+      : `<div class="big" style="font-size:18px">Not for sale</div><div style="color:var(--dim);font-size:12px">Owned by ${who(n.owner_addr, n.owner_name)}.</div>`;
+  const act = (a) => a.type === 'mint'
+    ? `<tr><td><span class="type mint">${a.team ? 'team mint' : a.free ? 'free mint' : 'mint'}</span></td><td>${who(a.to_addr, a.to_name)}</td><td class="num">${a.team || a.free ? 'free' : `${fmt(a.price)} <small style="color:var(--dim)">$CASH</small>`}</td><td class="hide-sm note">${ago(a.at)}</td><td><a class="tx" href="/tx/${a.tx}">#${a.tx}</a></td></tr>`
+    : a.type === 'burn'
+    ? `<tr><td><span class="type burn">burn</span></td><td>${who(a.from_addr, a.from_name)}</td><td class="num note">for $HEIST</td><td class="hide-sm note">${ago(a.at)}</td><td><a class="tx" href="/tx/${a.tx}">#${a.tx}</a></td></tr>`
+    : a.type === 'transfer'
+    ? `<tr><td><span class="type transfer">transfer</span></td><td>${who(a.from_addr, a.from_name)} → ${who(a.to_addr, a.to_name)}</td><td class="num note">sent</td><td class="hide-sm note">${ago(a.at)}</td><td><a class="tx" href="/tx/${a.tx}">#${a.tx}</a></td></tr>`
+    : `<tr><td><span class="type buy">sale</span></td><td>${who(a.from_addr, a.from_name)} → ${who(a.to_addr, a.to_name)}</td><td class="num">${fmt(a.price)} <small style="color:var(--dim)">$CASH</small></td><td class="hide-sm note">${ago(a.at)}</td><td><a class="tx" href="/tx/${a.tx}">#${a.tx}</a></td></tr>`;
+  app.innerHTML = `<div class="wrap">
+    <div class="crumbs"><a href="/collections">Collections</a> / <a href="/c/${esc(n.collection)}">${esc(n.collection_name)}</a> / ${esc(n.name)}</div>
+    <div class="nftpage">
+      <div class="art">${pic(n, true).replace(' loading="lazy" width="256" height="256"', '')}
+        <div class="dl"><a class="btn ghost" href="${esc(n.big || n.image)}" download="${esc(fileName(n))}"${n.pixel && (n.big || n.image) === n.image ? ' data-upscale' : ''}>Download PNG</a>
+          <span class="note">${n.big && n.big !== n.image ? '1008 × 1008 px' : 'full size'}</span></div></div>
+      <div class="info">
+        <div>${n.rarity ? `<span class="rar ${rarClass(n.rarity)}">${esc(n.rarity)}</span>` : ''}<h1 class="px">${esc(n.name)}</h1>
+          <div style="color:var(--dim)"><a href="/c/${esc(n.collection)}">${esc(n.collection_name)}</a> · ${n.owner_addr ? `owned by ${who(n.owner_addr, n.owner_name)}` : n.burned_at ? 'burned' : 'not minted yet'}</div></div>
+        <div class="pricebox">${action}
+          <div class="cmd">or type <code>${esc(q)}</code><button class="btn ghost" data-copy="${esc(q)}" style="padding:4px 8px">Copy</button></div></div>
+        <div class="ttable">${n.attributes.map((a) => `<a href="/c/${esc(n.collection)}?t=${encodeURIComponent(a.trait_type + ':' + a.value)}" title="All with ${esc(a.trait_type)}: ${esc(a.value)}">
+          <span class="k">${esc(a.trait_type)}</span><span>${esc(a.value)}</span>${a.percent != null ? `<span class="p">${a.count} have it · ${a.percent}%</span>` : ''}</a>`).join('')}</div>
+      </div>
+    </div>
+    <h2 class="px" style="margin:6px 0 10px;font-size:18px">Activity</h2>
+    <table class="txs"><thead><tr><th>Event</th><th>Who</th><th style="text-align:right">Price</th><th class="hide-sm">When</th><th>Tx</th></tr></thead>
+      <tbody>${n.activity.map(act).join('') || '<tr><td colspan="5" class="note">Not minted yet.</td></tr>'}</tbody></table>
+    <p class="note" style="padding:12px 0 40px">Every mint, sale and transfer is a transaction in the <a href="/explorer">explorer</a>, part of the hash chain anchored on Solana.</p></div>`;
+}
+
+// ---------- the explorer ----------
+let exNet = 'mainnet';
+const solscan = (kind, id) => `https://solscan.io/${kind}/${id}${exNet === 'mainnet' ? '' : '?cluster=' + exNet}`;
+const nftLink = (n) => (n ? `<a class="nftl" href="/nft/${n.id}">${n.thumb ? `<img class="${n.pixel ? 'pix' : 'smooth'}" src="${n.pixel ? n.image : n.thumb}" alt="" loading="lazy">` : ''}${esc(n.name)}</a>` : 'an NFT');
+const usd = (n) => fmt(Math.round(Number(n) * 100) / 100);
+const micro = (s) => Number(s) / 1e6;
+
+function txSummary(t) {
+  const find = (k, notTreasury = true) => t.entries.find((e) => e.kind === k && (!notTreasury || e.account !== 'treasury'));
+  const user = t.entries.find((e) => e.account !== 'treasury') || t.entries[0];
+  if (t.type === 'deposit' && t.manual) return { what: `credited by support → ${who(user.account, user.name)}`, amount: `+${usd(user.amount)}`, unit: '$CASH', cls: 'plus' };
+  if (t.type === 'deposit') return { what: `Solana → ${who(user.account, user.name)}`, amount: `+${usd(user.amount)}`, unit: t.solana?.token || '$CASH', cls: 'plus' };
+  if (t.type === 'withdrawal') { const e = find('withdraw'); return { what: `${who(e.account, e.name)} → Solana`, amount: usd(-e.amount), unit: 'USDC', cls: 'minus' }; }
+  if (t.type === 'buy') {
+    const b = find('buy');
+    const se = find('sale');
+    return { what: `${who(b.account, b.name)} bought ${nftLink(t.nft)} from ${se ? who(se.account, se.name) : '—'}`, amount: usd(-b.amount), unit: '$CASH' };
+  }
+  if (t.type === 'team mint' && t.team) return { what: `team mint → ${who(t.team.account, t.team.name)}: ${t.team.count > 1 ? `${t.team.count} NFTs, first ` : ''}${nftLink(t.nft)}`, amount: 'free', unit: '' };
+  if (t.type === 'transfer' && t.transfer) {
+    const tr = t.transfer;
+    const to = tr.recipients === 1 && tr.to[0] ? who(tr.to[0].account, tr.to[0].name) : `${tr.recipients} accounts`;
+    return { what: `${who(tr.from, tr.from_name)} sent ${tr.count > 1 ? `${tr.count} NFTs, first ${nftLink(t.nft)},` : nftLink(t.nft)} to ${to}`, amount: 'no sale', unit: '' };
+  }
+  if (t.type === 'burn' && t.burn) {
+    const b = t.burn;
+    return { what: `${who(b.account, b.name)} burned ${b.count > 1 ? `${b.count} NFTs, first ${nftLink(t.nft)},` : nftLink(t.nft)} for ${Number(b.credit).toLocaleString('en-US')} $HEIST${b.id ? ` · <a href="/burn/${b.id}">card</a>` : ''}`, amount: 'burned', unit: '' };
+  }
+  if (t.type === 'claim') { const e = find('claim_fee'); if (e) return { what: `${who(e.account, e.name)} claimed $HEIST to a Solana wallet (fee)`, amount: usd(e.amount), unit: '$CASH', cls: 'minus' }; }
+  if (t.type === 'free mint') { const e = find('free_mint'); return { what: `${who(e.account, e.name)} got ${nftLink(t.nft)} free with a code`, amount: 'free', unit: '' }; }
+  if (t.type === 'mint') { const mn = find('mint'); return { what: `${who(mn.account, mn.name)} minted ${nftLink(t.nft)}${find('hold', false) ? ' · held for the creator' : ''}`, amount: usd(-mn.amount), unit: '$CASH' }; }
+  if (t.type === 'payout') { const e = find('payout'); return { what: `escrow → ${who(e.account, e.name)}, creator of ${t.collection ? `<a href="/c/${esc(t.collection.slug)}">${esc(t.collection.name)}</a>` : 'a collection'}`, amount: `+${usd(e.amount)}`, unit: '$CASH', cls: 'plus' }; }
+  if (t.type === 'refund' && t.refunds) return { what: `${t.refunds} mints refunded to their holders (collection frozen)`, amount: `+${usd(t.refunded)}`, unit: '$CASH', cls: 'plus' };
+  if (t.type === 'refund' && find('mint_refund')) { const e = find('mint_refund'); return { what: `mint of ${nftLink(t.nft)} refunded → ${who(e.account, e.name)} (collection frozen)`, amount: `+${usd(e.amount)}`, unit: '$CASH', cls: 'plus' }; }
+  if (t.type === 'refund') return { what: `withdrawal #${t.withdrawal?.id ?? '?'} rejected → ${who(user.account, user.name)}`, amount: `+${usd(user.amount)}`, unit: '$CASH', cls: 'plus' };
+  return { what: who(user.account, user.name), amount: `${user.amount > 0 ? '+' : ''}${usd(user.amount)}`, unit: '$CASH' };
+}
+
+function txRow(t) {
+  const s = txSummary(t);
+  const chainCell = t.solana ? `<a href="${esc(t.solana.url)}" target="_blank" rel="noopener">${shortSig(t.solana.tx)} ↗</a>`
+    : t.withdrawal ? `<span class="pill wait">${esc(t.withdrawal.status || 'pending')}</span>` : t.manual ? '<span class="note">support</span>' : '<span class="note">inside Prompt City</span>';
+  return `<tr><td><a class="tx" href="/tx/${t.id}">#${t.id}</a></td><td class="hide-sm note">${ago(t.at)}</td>
+    <td><span class="type ${esc(t.type)}">${esc(t.type)}</span></td><td>${s.what}</td>
+    <td class="num ${s.cls || ''}">${s.amount} <small style="color:var(--dim)">${esc(s.unit)}</small></td><td class="hide-sm">${chainCell}</td></tr>`;
+}
+
+function txTable(id) {
+  return `<table class="txs"><thead><tr><th>Tx</th><th class="hide-sm">When</th><th>Type</th><th>What</th><th style="text-align:right">Amount</th><th class="hide-sm">Solana</th></tr></thead>
+    <tbody id="${id}"><tr><td colspan="6" class="note">Loading…</td></tr></tbody></table>`;
+}
+
+// fills a transaction table page by page ("Load more" goes back in time); type: only mints, sales, … (TX_TYPES)
+let txsRun = 0;
+async function loadTxs(tbodyId, moreId, addr, type = '') {
+  const body = $('#' + tbodyId);
+  const more = $('#' + moreId);
+  const run = ++txsRun; // a newer filter wins over answers still on their way
+  let before = null;
+  const page = async () => {
+    const q = new URLSearchParams({ limit: 30, ...(addr ? { addr } : {}), ...(type ? { type } : {}), ...(before ? { before } : {}) });
+    const list = await api('/explorer/txs?' + q);
+    if (run !== txsRun || !document.body.contains(body)) return;
+    if (before == null) body.innerHTML = '';
+    body.insertAdjacentHTML('beforeend', list.map(txRow).join('') || (before == null ? `<tr><td colspan="6" class="note">${type ? 'None of these yet.' : 'No transactions yet.'}</td></tr>` : ''));
+    before = list.length ? list[list.length - 1].id : before;
+    more.hidden = list.length < 30;
+  };
+  more.onclick = () => page();
+  if (body.querySelector('tr')) body.innerHTML = '<tr><td colspan="6" class="note">Loading…</td></tr>';
+  await page();
+}
+
+// the type filter above a transaction table; the choice stays in the address (?type=mint) so it can be shared
+const TX_FILTERS = [['', 'All'], ['mint', 'Mints'], ['buy', 'Sales'], ['transfer', 'Transfers'], ['burn', 'Burns'], ['deposit', 'Deposits'], ['withdrawal', 'Withdrawals']];
+const TX_FILTERS_ACCOUNT = [['', 'All'], ['mint', 'Mints'], ['buy', 'Bought'], ['sell', 'Sold'], ['transfer', 'Transfers'], ['burn', 'Burns'], ['deposit', 'Deposits'], ['withdrawal', 'Withdrawals']];
+const txTypeNow = (list) => { const t = new URLSearchParams(location.search).get('type') || ''; return list.some(([k]) => k === t) ? t : ''; };
+function txFilter(id, list, current) {
+  return `<div class="tabs tx-filter" role="tablist" id="${id}" aria-label="Show only">${list.map(([k, v]) =>
+    `<button class="tab" role="tab" data-txtype="${k}" aria-selected="${k === current}">${v}</button>`).join('')}</div>`;
+}
+function wireTxFilter(id, tbodyId, moreId, addr) {
+  $('#' + id).onclick = (e) => {
+    const b = e.target.closest('[data-txtype]');
+    if (!b) return;
+    const type = b.dataset.txtype;
+    $('#' + id).querySelectorAll('[data-txtype]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+    history.replaceState(null, '', location.pathname + (type ? `?type=${type}` : ''));
+    loadTxs(tbodyId, moreId, addr, type);
+  };
+}
+
+function searchBox() {
+  return `<form class="search" id="exSearch" role="search"><input id="exQ" placeholder="city address, tx #, Citizen #123 or @handle" aria-label="Search the explorer" autocomplete="off" spellcheck="false"><button class="btn">Go</button></form>`;
+}
+function wireSearch() {
+  $('#exSearch').onsubmit = (e) => {
+    e.preventDefault();
+    const q = $('#exQ').value.trim();
+    let mm;
+    if (/^city_[1-9A-HJ-NP-Za-km-z]{12}$/.test(q) || q === 'treasury' || q === 'escrow') go('/a/' + q);
+    else if ((mm = /^(?:mcp|nft)\s*#?\s*(\d{1,9})$/i.exec(q))) go('/nft/' + mm[1]);
+    else if (/^#?\d+$/.test(q)) go('/tx/' + q.replace('#', ''));
+    else if (/^@?\w{1,15}$/.test(q)) go('/u/' + q.replace('@', ''));
+    else $('#exQ').value = '';
+  };
+}
+
+async function renderExplorer() {
+  const app = $('#app');
+  app.innerHTML = `<div class="wrap">
+    <div class="ex-head"><div><h1 class="px">Prompt City Explorer</h1>
+      <p>Every balance change in the market, as it happens. Accounts are city addresses. Deposits and withdrawals link to Solana, the rest happens inside Prompt City.</p></div>
+      ${searchBox()}</div>
+    <div class="tiles" id="exTiles"></div>
+    <div class="panels">
+      <section class="panel" id="exReserves" aria-label="Proof of reserves"><h2 class="px">Reserves</h2><div class="note">Loading…</div></section>
+      <section class="panel" id="exChain" aria-label="The chain"><h2 class="px">The chain</h2><div class="note">Loading…</div></section>
+    </div>
+    <div class="bar"><h2 class="px bar-title">Transactions</h2>${txFilter('exType', TX_FILTERS, txTypeNow(TX_FILTERS))}</div>
+    ${txTable('exTxs')}
+    <div class="more"><button class="btn ghost" id="exMore" hidden>Load more</button></div></div>`;
+  wireSearch();
+  wireTxFilter('exType', 'exTxs', 'exMore', null);
+  const s = await api('/explorer/summary');
+  exNet = s.network;
+  $('#exTiles').innerHTML = [
+    ['Accounts', s.accounts], ['Transactions', s.transactions],
+    ['Deposited', `${usd(s.deposited)} <small>$</small>`], ['Withdrawn', `${usd(s.withdrawn)} <small>$</small>`],
+    ['NFTs minted', s.minted != null ? s.minted.toLocaleString('en-US') : '—'], ['NFT volume', `${usd(s.volume)} <small>$CASH</small>`],
+  ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+  renderReserves(s.reserves);
+  renderChain(s);
+  await loadTxs('exTxs', 'exMore', null, txTypeNow(TX_FILTERS));
+}
+
+function renderReserves(r) {
+  const el = $('#exReserves');
+  if (!r) {
+    el.innerHTML = '<h2 class="px">Reserves</h2><p class="note">The first snapshot is being made. Check back in a few minutes.</p>';
+    return;
+  }
+  const owedTotal = micro(r.owed_total);
+  const cov = r.coverage;
+  // the same, counting only addresses the market itself uses (not the owner's declared reserve wallets)
+  const ownHeld = r.accounts.filter((a) => a.kind !== 'reserve').reduce((x, a) => x + micro(a.amount), 0);
+  const covOwn = owedTotal > 0 ? ownHeld / owedTotal : null;
+  const hasReserve = r.accounts.some((a) => a.kind === 'reserve');
+  const covText = cov == null ? 'Nothing owed yet' : `${cov.toFixed(2)}× <small>backed</small>`;
+  const covPill = r.ledger_matches === false ? '<span class="pill bad">balances ≠ ledger</span>'
+    : cov == null ? '' : cov >= 1 ? '<span class="pill ok">fully backed</span>' : '<span class="pill bad">short</span>';
+  const held = Object.entries(r.held).map(([t, v]) => `<span>Held on Solana · ${esc(t)}</span><span>${usd(micro(v))}</span>`).join('');
+  const kindName = { payout: 'Payout wallet', reserve: 'Reserve wallet', deposit: 'Deposit address' };
+  const line = (a) => `<div><a href="${solscan('account', a.token_account)}" target="_blank" rel="noopener">${kindName[a.kind]} ${shortSig(a.wallet)} · ${esc(a.token)} ↗</a><span>${usd(micro(a.amount))}</span></div>`;
+  const order = { payout: 0, reserve: 1, deposit: 2 };
+  el.innerHTML = `<h2 class="px">Reserves ${covPill}</h2>
+    <div class="lead">${covText}</div>
+    ${hasReserve && covOwn != null ? `<div class="note">${covOwn.toFixed(2)}× without the reserve wallets the owner declared</div>` : ''}
+    <div class="kv">
+      <span>Owed to users (balances)</span><span>${usd(micro(r.owed_balances))}</span>
+      <span>Withdrawals not paid yet</span><span>${usd(micro(r.owed_withdrawals))}</span>
+      ${r.owed_escrow != null ? `<span>Held for creators (escrow)</span><span>${usd(micro(r.owed_escrow))}</span>` : ''}
+      <span style="color:var(--cream)">Total owed</span><span style="color:var(--cream)">${usd(owedTotal)}</span>
+      ${held}
+      <span style="color:var(--cream)">Total held</span><span style="color:var(--cream)">${usd(micro(r.held_total))}</span>
+      <span>Market's own funds (fees, mints)</span><span>${usd(micro(r.treasury))}</span>
+    </div>
+    <div class="wallets">${[...r.accounts].sort((x, y) => order[x.kind] - order[y.kind]).map(line).join('')}</div>
+    <p class="note">Read from Solana ${ago(r.at)}: USDC and USDT on ${r.deposit_wallets} deposit address${r.deposit_wallets === 1 ? '' : 'es'} and the payout wallet, which only this market uses${hasReserve ? ', plus reserve wallets the owner declared as theirs (Solscan proves the balance, not who controls the wallet)' : ''}. Owed is the sum of the ledger, the same entries as the chain. Every line opens on Solscan.</p>`;
+}
+
+const DEFAULT_RPC = { mainnet: 'https://solana-rpc.publicnode.com', devnet: 'https://api.devnet.solana.com' };
+
+function renderChain(s) {
+  const a = s.last_anchor;
+  const landed = a && ['confirmed', 'finalized'].includes(a.status);
+  $('#exChain').innerHTML = `<h2 class="px">The chain</h2>
+    <div class="kv"><span>Entries</span><span>${s.chain.head_seq.toLocaleString('en-US')}${s.chain.unsealed ? ` <small style="color:var(--dim)">+${s.chain.unsealed} being sealed</small>` : ''}</span>
+      <span>Latest hash</span><span class="hash" title="${esc(s.chain.head_hash)}">${esc(s.chain.head_hash.slice(0, 16))}…</span>
+      <span>Last anchor on Solana</span><span>${a ? `#${a.seq} · <a href="${esc(a.url)}" target="_blank" rel="noopener">${landed ? esc(a.status) : 'not landed yet'} ↗</a>` : 'not yet'}</span>
+      ${s.payout_wallet ? `<span>Anchors come from</span><span><a href="${solscan('account', s.payout_wallet)}" target="_blank" rel="noopener">${shortSig(s.payout_wallet)} ↗</a></span>` : ''}</div>
+    <p class="note">Each entry's hash covers the entry and the hash before it, so changing any past entry breaks every hash after it. About once an hour the latest hash is written to Solana from the payout wallet as a memo (<code>mcp:anchor:${esc(s.network)}:&lt;entry&gt;:&lt;hash&gt;</code>), where nobody can change it. Entries after the last anchor are covered once the next one lands.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="exVerify">Verify the whole chain</button>
+      <input id="exRpc" value="${esc(DEFAULT_RPC[s.network] || DEFAULT_RPC.mainnet)}" aria-label="Solana RPC used to read the anchors" title="Solana RPC used to read the anchors" style="flex:1;min-width:0;background:var(--bg);color:var(--dim);border:2px solid var(--edge);padding:6px 8px;font:12px 'JetBrains Mono',monospace"></div>
+    <div id="exVerifyOut" class="note" aria-live="polite"></div>`;
+  $('#exVerify').onclick = () => verifyChain(s);
+}
+
+async function sha256hex(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+// reads an anchor's memo and signer from Solana itself (not from our server)
+async function anchorOnSolana(rpcUrl, signature) {
+  const r = await fetch(rpcUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(10_000),
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getTransaction', params: [signature, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }] }) });
+  const j = await r.json();
+  const tx = j.result;
+  if (!tx) return null;
+  const ix = (tx.transaction?.message?.instructions || []).find((i) => i.program === 'spl-memo' || i.programId === 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+  const key0 = tx.transaction?.message?.accountKeys?.[0];
+  return { memo: typeof ix?.parsed === 'string' ? ix.parsed : null, signer: typeof key0 === 'string' ? key0 : key0?.pubkey, failed: !!tx.meta?.err };
+}
+
+// downloads every entry and recomputes every hash here, in the browser, then reads the anchors from Solana
+async function verifyChain(s) {
+  const btn = $('#exVerify');
+  const out = $('#exVerifyOut');
+  btn.disabled = true;
+  try {
+    const anchors = (await api('/explorer/anchors')).filter((a) => ['confirmed', 'finalized'].includes(a.status));
+    const bySeq = new Map(anchors.map((a) => [a.seq, a]));
+    const mine = new Map(); // seq -> hash recomputed here, for the anchored entries
+    let prev = s.chain.genesis;
+    let after = 0;
+    for (;;) {
+      const page = await api(`/explorer/chain?after=${after}&limit=1000`);
+      if (!page.length) break;
+      for (const e of page) {
+        if (e.seq !== after + 1) throw new Error(`entry #${after + 1} is missing`);
+        const h = await sha256hex([prev, e.seq, e.id, e.account, e.delta, e.kind, e.ref, e.at].join('\n'));
+        if (h !== e.hash) throw new Error(`entry #${e.seq} does not match its hash`);
+        if (bySeq.has(e.seq)) mine.set(e.seq, h);
+        prev = h;
+        after = e.seq;
+      }
+      out.textContent = `Checked ${after.toLocaleString('en-US')} entries…`;
+    }
+    let msg = `<span class="pill ok">ok</span> All ${after.toLocaleString('en-US')} entries match their hashes.`;
+    // the newest anchors, read from Solana: memo must equal what was recomputed here, signed by the payout wallet
+    const rpcUrl = $('#exRpc').value.trim();
+    const check = anchors.slice(0, 3);
+    let read = 0;
+    for (const a of check) {
+      out.innerHTML = `${msg} Reading anchor #${a.seq} from Solana…`;
+      let onChain = null;
+      try { onChain = await anchorOnSolana(rpcUrl, a.signature); } catch { onChain = null; }
+      if (!onChain) continue;
+      const expect = `mcp:anchor:${s.network}:${a.seq}:${mine.get(a.seq)}`;
+      if (onChain.failed || onChain.memo !== expect) throw new Error(`the anchor on Solana for entry #${a.seq} says "${onChain.memo}", the chain gives "${expect}"`);
+      if (s.payout_wallet && onChain.signer !== s.payout_wallet) throw new Error(`the anchor for entry #${a.seq} is not signed by the payout wallet`);
+      read++;
+    }
+    if (read) msg += ` ${read} anchor${read === 1 ? '' : 's'} read from Solana match too (up to entry #${Math.max(...check.map((a) => a.seq))}).`;
+    else if (check.length) msg += ` This RPC couldn't return the anchors (public ones keep little history): open <a href="${esc(check[0].url)}" target="_blank" rel="noopener">the latest anchor</a> and compare its memo with <span class="hash">mcp:anchor:${esc(s.network)}:${check[0].seq}:${esc(mine.get(check[0].seq) || '')}</span>, or use another RPC.`;
+    else msg += ' No anchor has landed on Solana yet.';
+    out.innerHTML = msg;
+  } catch (e) {
+    out.innerHTML = `<span class="pill bad">failed</span> ${esc(e.message || e)}`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function renderTx(id) {
+  const app = $('#app');
+  app.innerHTML = `<div class="wrap"><div class="ex-head"><div><h1 class="px">Transaction #${esc(id)}</h1></div>${searchBox()}</div><div id="txBody" class="note">Loading…</div></div>`;
+  wireSearch();
+  let t;
+  try { t = await api('/explorer/tx/' + id); } catch { $('#txBody').textContent = 'No such transaction.'; return; }
+  const s = txSummary(t);
+  $('#txBody').outerHTML = `<div class="panel" style="margin:12px 0 18px">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="type ${esc(t.type)}" style="font-size:14px">${esc(t.type)}</span>
+        <span class="note">${new Date(t.at).toLocaleString()}</span>${t.sealed ? '<span class="pill ok">sealed</span>' : '<span class="pill wait">being sealed</span>'}</div>
+      <div style="font-size:18px">${s.what}</div>
+      <div class="kv"><span>Amount</span><span class="${s.cls || ''}">${s.amount} ${esc(s.unit)}</span>
+        ${t.solana ? `<span>On Solana</span><span><a href="${esc(t.solana.url)}" target="_blank" rel="noopener">${shortSig(t.solana.tx)} ↗</a></span>` : ''}
+        ${t.withdrawal ? `<span>Withdrawal #${t.withdrawal.id}</span><span>${esc(t.withdrawal.status || '')}</span>` : ''}</div>
+    </div>
+    <table class="txs"><thead><tr><th>Entry</th><th>Account</th><th style="text-align:right">Change</th><th>Kind</th><th class="hide-sm">Hash</th></tr></thead><tbody>
+      ${t.entries.map((e) => `<tr><td>${e.seq != null ? '#' + e.seq : '—'}</td><td>${who(e.account, e.name)}</td>
+        <td class="num ${e.amount > 0 ? 'plus' : ''}">${e.amount > 0 ? '+' : ''}${fmt(e.amount)}</td><td class="note">${esc(e.kind)}</td>
+        <td class="hide-sm hash" title="${esc(e.hash || '')}">${e.hash ? esc(e.hash.slice(0, 16)) + '…' : 'being sealed'}</td></tr>`).join('')}
+    </tbody></table>
+    <p class="note" style="padding:12px 0 40px">Amounts in $CASH (1 $CASH = $1). Each entry is one line of the chain; its hash covers the entry and the one before it.</p>`;
+}
+
+async function renderAddress(addr) {
+  const app = $('#app');
+  app.innerHTML = `<div class="wrap"><div class="ex-head"><div><h1 class="px">${addr === 'treasury' ? 'Market treasury' : addr === 'escrow' ? 'Escrow' : 'Account'}</h1></div>${searchBox()}</div><div id="addrBody" class="note">Loading…</div></div>`;
+  wireSearch();
+  let a;
+  try { a = await api('/explorer/address/' + encodeURIComponent(addr)); } catch { $('#addrBody').textContent = 'No such city address.'; return; }
+  $('#addrBody').outerHTML = `<div class="profile" style="padding-top:8px">${a.avatar ? `<img src="${esc(a.avatar)}" alt="">` : ''}
+      <div style="display:grid;gap:8px"><div class="idbox"><code>${esc(a.address)}</code>${!['treasury', 'escrow'].includes(a.address) ? `<button class="btn ghost" data-copy="${esc(a.address)}" style="padding:6px 10px">Copy</button>` : ''}</div>
+      <div class="note">${a.name ? `@${esc(a.name)} · ` : a.address !== 'treasury' ? 'X handle hidden by its owner · ' : ''}${a.joined ? `joined ${new Date(a.joined).toLocaleDateString()} · ` : ''}balance <b style="color:var(--cream)">${usd(a.balance)} $CASH</b>${a.transactions != null ? ` · ${a.transactions} transaction${a.transactions === 1 ? '' : 's'}` : ''}</div>
+      ${a.address === 'treasury' ? '<div class="note">Market fees and mint payments of the Citizens collection.</div>'
+        : a.address === 'escrow' ? '<div class="note">Mint money of launchpad collections, held at least 7 days per mint. It goes to the creator when the Prompt City team releases it, or back to the minters if a collection is frozen.</div>'
+        : '<div class="note">A city address is an account number inside Prompt City, not a Solana wallet: never send tokens to it.</div>'}</div></div>
+    ${a.nfts.length ? `<h2 class="px" style="margin:18px 0 10px;font-size:18px">NFTs</h2><div class="grid" style="padding-bottom:20px">${a.nfts.map(card).join('')}</div>` : ''}
+    <div class="bar" style="padding-top:18px"><h2 class="px bar-title">Transactions</h2>${['treasury', 'escrow'].includes(addr) ? '' : txFilter('addrType', TX_FILTERS_ACCOUNT, txTypeNow(TX_FILTERS_ACCOUNT))}</div>
+    ${txTable('addrTxs')}<div class="more"><button class="btn ghost" id="addrMore" hidden>Load more</button></div>`;
+  if (!['treasury', 'escrow'].includes(addr)) wireTxFilter('addrType', 'addrTxs', 'addrMore', addr);
+  await loadTxs('addrTxs', 'addrMore', addr, ['treasury', 'escrow'].includes(addr) ? '' : txTypeNow(TX_FILTERS_ACCOUNT));
+}
+
+document.addEventListener('click', async (e) => {
+  const t = e.target.closest('[data-copy]');
+  if (!t) return;
+  await navigator.clipboard?.writeText(t.dataset.copy).catch(() => {});
+  t.textContent = 'Copied';
+});
+
+// chat commands, same list as server/src/commands.js (a test checks they match)
+const CHAT_COMMANDS = [
+  ['/promptcity', '[code]', 'Start here: your balance, the mint and all commands; with a code, your free mint'],
+  ['/heist', '[code]', 'With a code: your free mint ("/heist with code EARLY"). Without one: mint for 5 $CASH'],
+  ['/crewchat', '', 'The holders-only group chat on X: your invite link, if you hold a Citizen'],
+  ['/help-city', '', 'All commands'],
+  ['/balance-city', '', 'Balance, city address, your NFTs and recent activity'],
+  ['/deposit-city', '', 'Your Solana address for USDC/USDT top-ups; run it again after sending to check'],
+  ['/withdraw-city', '[amount]', 'The withdrawal form'],
+  ['/withdrawals-city', '', 'Your withdrawals and their status'],
+  ['/collections-city', '', 'Collections, mint price, how many are minted'],
+  ['/mint-city', '[count] [collection]', 'Mint random NFTs (1 from Citizens if you name nothing)'],
+  ['/market-city', '[filter]', 'NFTs for sale, cheapest first; filter by collection, rarity or trait'],
+  ['/nft-city', '<number>', 'One NFT: traits, owner, price, history'],
+  ['/showmynfts', '', 'Your NFTs as pictures, right in the chat'],
+  ['/mynft-city', '', 'The NFTs you own, as a list'],
+  ['/buynft-city', '<number>', 'Buy a listed NFT, after you confirm name and price'],
+  ['/sellnft-city', '<number> <price>', 'List your NFT for sale or change its price'],
+  ['/cancelnft-city', '<number>', 'Take your NFT off sale'],
+  ['/sendnft', '<numbers> to <address>', 'Send your NFTs to another city address: one, several ("/sendnft 42 43 to city_…") or each to its own; you confirm first'],
+  ['/transfernft', '', 'The transfer form: tick the NFTs you want to send, type the city address, confirm'],
+  ['/burncitizen', '', 'Burn Citizens for $HEIST: 10,000 each, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x; in a form'],
+  ['/claimheist', '', 'Claim your $HEIST to your Solana wallet for the airdrop (fee 0.5 $CASH), in a form'],
+  ['/profile-city', '<on|off>', 'Show or hide your X handle on public pages'],
+];
+document.addEventListener('click', async (e) => {
+  const t = e.target.closest('[data-cmd]');
+  if (!t) return;
+  const label = t.dataset.label || (t.dataset.label = t.textContent);
+  t.textContent = 'Copied';
+  setTimeout(() => { t.textContent = label; }, 900);
+  await navigator.clipboard?.writeText(t.dataset.cmd).catch(() => {});
+});
+
+// /connect: how to plug Prompt City into Claude, ChatGPT and Grok. The logos are the apps' own icons, loaded from their sites.
+function renderConnect() {
+  const url = stats?.mcp_url || location.origin + '/mcp';
+  const k = (t) => `<b>${t}</b>`; // something to press or type
+  const card = ({ name, logo, plan, steps, hint, href, button, after }) => `<section class="ai" aria-label="${name}">
+      <div class="ai-head"><img class="ai-logo" src="${logo}" alt="" width="44" height="44" referrerpolicy="no-referrer" loading="lazy"
+        onerror="this.replaceWith(Object.assign(document.createElement('span'), { className: 'ai-logo', textContent: '${name[0]}' }))">
+        <div><h2 class="px">${name}</h2><div class="note">${plan}</div></div></div>
+      <div class="lbl">Manual setup</div>
+      <ol class="ai-steps">${steps.map((x) => `<li><div>${x}</div></li>`).join('')}</ol>
+      ${hint ? `<div class="hint">${hint}</div>` : ''}
+      <div class="quick"><div class="lbl">Your link</div>
+        <div class="url"><code>${esc(url)}</code><button class="btn" data-copy="${esc(url)}">Copy</button></div>
+        <div class="lbl">Quick add</div>
+        <a class="btn red big" href="${esc(href)}" target="_blank" rel="noopener"><span>${button}</span><span class="arr">→</span></a>
+        <div class="note">${after}</div></div>
+    </section>`;
+  $('#app').innerHTML = `<div class="wrap connect">
+    <h1 class="px">Connect to your AI</h1>
+    <p class="lead">Prompt City lives inside your AI chat. Add it once, sign in with X, then just talk to it. Pick your AI, follow the steps or use Quick add.</p>
+    <div class="ai-grid">
+      ${card({
+        name: 'Claude', logo: 'https://claude.ai/apple-touch-icon.png', plan: 'Any plan, free too · web, desktop, phone',
+        steps: [
+          `In Claude open ${k('Customize')} → ${k('Connectors')}.`,
+          `Press ${k('+ Add')} → ${k('Add custom connector')}.`,
+          `Name: ${k('Prompt City')}. Paste your link. Press ${k('Continue')} → ${k('Add')}.`,
+          `Press ${k('Connect')}, sign in with X, press ${k('Authorize app')}.`,
+          `In a chat: ${k('+')} → ${k('Connectors')} → turn ${k('Prompt City')} on.`,
+        ],
+        hint: 'Free plan: one custom connector.',
+        href: addToClaude(url), button: 'Add to Claude', after: 'Fills in the name and link: you do steps 3–5.',
+      })}
+      ${card({
+        name: 'ChatGPT', logo: 'https://chatgpt.com/favicon.ico', plan: 'Set it up on a computer at chatgpt.com',
+        steps: [
+          `Open ${k('Plugins')} in the left menu.`,
+          `Press ${k('Add')} (top right) → ${k('Add custom MCP server')}.`,
+          `Name: ${k('Prompt City')}. Paste your link. Authentication: ${k('OAuth')}.`,
+          `Tick ${k('I understand and want to continue')} → ${k('Create as a plugin')}, sign in with X.`,
+          `In a chat: ${k('+')} → pick ${k('Prompt City')}. Press ${k('Confirm')} when ChatGPT asks.`,
+        ],
+        hint: `No ${k('Add custom MCP server')}? ${k('Settings')} → ${k('Security and login')} → ${k('Developer mode')} on.`,
+        href: 'https://chatgpt.com/plugins', button: 'Add to ChatGPT', after: 'Opens the Plugins page: you do steps 2–5.',
+      })}
+      ${card({
+        name: 'Grok', logo: 'https://grok.com/images/apple-touch-icon.png', plan: 'Set it up on the web at grok.com',
+        steps: [
+          `Open ${k('Connectors')} at grok.com and sign in.`,
+          `Press ${k('New connector')} → ${k('Custom')}.`,
+          'Paste your link and save.',
+          'Sign in with X when Grok asks.',
+          `In a chat: turn the ${k('Prompt City')} connector on.`,
+        ],
+        href: 'https://grok.com/connectors', button: 'Add to Grok', after: 'Opens Grok Connectors: you do steps 2–5.',
+      })}
+    </div>
+    <div class="say">Then just say: <b>“mint me a Citizen”</b>, <b>“top up my balance”</b>, <b>“what's on the market under 10?”</b>, <b>“buy Citizen #42”</b>, <b>“withdraw 20”</b></div>
+    <h2 class="px cmds-title">Commands</h2>
+    <p class="lead">Or type a command: your AI does exactly that, no guessing. Start with <b>/promptcity</b>. Tap one to copy it.</p>
+    <div class="cmds">${CHAT_COMMANDS.map(([cmd, args, does]) => `<div><button type="button" data-cmd="${esc(cmd)} ">${esc(cmd + (args ? ' ' + args : ''))}</button><span>${esc(does)}</span></div>`).join('')}</div>
+    <p class="note">${k('&lt;…&gt;')} you fill in, ${k('[…]')} you can skip. Buying always asks you to confirm the name and price first.</p>
+    <p class="note">One X account = one city account; X accounts younger than 30 days can't sign in. Prompt City never sees your X password. Any other app that supports remote MCP with sign-in works with the same link.</p>
+    <p class="note">Sent a deposit that didn't arrive? <a href="/lost-deposit">Report a lost deposit</a>.</p>
+  </div>`;
+}
+
+// ---------- a lost deposit: the report goes to the owner's /admin, checked by hand ----------
+function renderLostDeposit() {
+  const field = (id, label, hint, ph) => `<label class="lf"><span class="lbl">${label}</span>
+    <input id="${id}" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${ph}" maxlength="200">
+    <span class="note">${hint}</span></label>`;
+  $('#app').innerHTML = `<div class="wrap lost">
+    <h1 class="px">Lost a deposit?</h1>
+    <p class="lead">Sent USDC or USDT to your Prompt City deposit address and it isn't on your balance? First type <b>/deposit-city</b> in your AI chat: it checks Solana again and credits anything new. Still missing after 10 minutes? Tell us here and we check it by hand, usually within 24 hours.</p>
+    <form class="panel lost-form" id="lostForm" novalidate>
+      ${field('ldTo', 'Prompt City deposit address', 'The Solana address your AI gave you for deposits (from /deposit-city).', 'e.g. 4erdBhPx…3kGdqa')}
+      ${field('ldFrom', 'Your wallet', 'The Solana wallet you sent from (Phantom, Solflare, an exchange…).', 'e.g. 7xKXtg2C…osgAsU')}
+      ${field('ldTx', 'Transaction link', 'The Solscan link of the transfer, or its signature.', 'https://solscan.io/tx/…')}
+      <p class="note err-text" id="ldErr" role="alert" hidden></p>
+      <button class="btn red" id="ldGo" type="submit">Send report</button>
+    </form>
+    <div class="panel lost-done" id="ldDone" hidden></div>
+    <div class="lost-tips"><h2 class="px">Common reasons</h2><ul>
+      <li>Sent on another network (Ethereum, Tron, BNB…) or a token other than USDC/USDT on Solana: these can't be credited automatically.</li>
+      <li>Sent SOL instead of USDC/USDT.</li>
+      <li>Sent to a city address (<code>city_…</code>): that is an account number inside Prompt City, not a Solana wallet.</li>
+      <li>Less than 0.01: too small to credit.</li>
+    </ul><p class="note">We never ask for your seed phrase or private key. Nobody from Prompt City will DM you first.</p></div>
+  </div>`;
+  const sol = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+  const sigOk = (v) => /^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(v) || /\/tx\/[1-9A-HJ-NP-Za-km-z]{64,90}(?:[/?#]|$)/.test(v);
+  const err = (t) => { $('#ldErr').textContent = t || ''; $('#ldErr').hidden = !t; };
+  $('#lostForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const body = { deposit_address: $('#ldTo').value.trim(), from_wallet: $('#ldFrom').value.trim(), tx: $('#ldTx').value.trim() };
+    if (!sol.test(body.deposit_address)) return err('Prompt City deposit address: a Solana address, 32 to 44 letters and digits.');
+    if (!sol.test(body.from_wallet)) return err('Your wallet: a Solana address, 32 to 44 letters and digits.');
+    if (body.deposit_address === body.from_wallet) return err('The deposit address and your wallet are the same. Check both.');
+    if (!sigOk(body.tx)) return err('Transaction: paste its Solscan link (solscan.io/tx/…) or the signature.');
+    err('');
+    $('#ldGo').disabled = true;
+    try {
+      const r = await fetch('/api/deposit-claims', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-MCP-Site': '1' }, body: JSON.stringify(body), credentials: 'same-origin' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || `Error ${r.status}`);
+      $('#lostForm').hidden = true;
+      $('#ldDone').innerHTML = j.duplicate
+        ? `<b>We already have this transaction</b> (report #${Number(j.id)}). We'll look at it; no need to send it again.`
+        : `<b>Report #${Number(j.id)} received.</b> We check it by hand, usually within 24 hours. If the deposit is ours, it is credited to the account of that deposit address.`;
+      $('#ldDone').hidden = false;
+    } catch (ex) {
+      err(ex.message || 'Could not send. Try again.');
+    }
+    $('#ldGo').disabled = false;
+  };
+}
+
+async function route() {
+  const pathPart = location.pathname.replace(/\/+$/, '') || '/';
+  const query = location.search.slice(1);
+  let mm;
+  const section = pathPart === '/connect' ? '' : pathPart === '/tokens' ? 'tokens' : /^\/(explorer|tx\/|a\/|u\/)/.test(pathPart) ? 'explorer'
+    : /^\/(collections|c\/|nft\/|launch|admin)/.test(pathPart) ? 'collections' : /^\/lost-deposit/.test(pathPart) ? '' : 'market';
+  stopMintPage();
+  stopTokens();
+  document.querySelectorAll('[data-nav]').forEach((a) => {
+    if (a.dataset.nav === section) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  });
+  window.scrollTo(0, 0);
+  if ((mm = pathPart.match(/^\/u\/(\w+)/))) return renderProfile(mm[1]);
+  if (pathPart === '/explorer') return renderExplorer();
+  if ((mm = pathPart.match(/^\/tx\/(\d+)/))) return renderTx(mm[1]);
+  if ((mm = pathPart.match(/^\/a\/(city_[1-9A-HJ-NP-Za-km-z]{12}|treasury|escrow)\b/))) return renderAddress(mm[1]);
+  if (pathPart === '/connect') return renderConnect();
+  if (pathPart === '/tokens') return renderTokens(query);
+  if (pathPart === '/launch') return window.MCP_LAUNCH.renderLaunch();
+  if (pathPart === '/admin') return window.MCP_LAUNCH.renderAdmin();
+  if (pathPart === '/collections') return renderCollections();
+  if ((mm = pathPart.match(/^\/c\/([a-z0-9-]{1,40})/))) return renderCollection(mm[1], query);
+  if ((mm = pathPart.match(/^\/nft\/(\d{1,9})/))) return renderNft(Number(mm[1]));
+  if (pathPart === '/lost-deposit') return renderLostDeposit();
+  if (pathPart === '/market') return renderMarket();
+  if (pathPart === '/mint') return renderMint();
+  // the home page: the market once Citizens trade (after the sell-out), the mint page before
+  if (!stats) await loadStats().catch(() => {});
+  return stats?.trading_open === false ? renderMint() : renderMarket();
+}
+// Pages have plain addresses (/c/citizens, /nft/42, /explorer): Netlify serves index.html for them (netlify.toml) and the
+// page draws itself. Links inside the site change the address without reloading.
+const SITE_PATH = /^\/($|market$|mint$|lost-deposit$|collections$|connect$|explorer$|tokens$|launch$|admin$|(c|nft|tx|a|u)\/[^/?#]+)/;
+function go(path, { replace = false } = {}) {
+  if (replace) history.replaceState(null, '', path); else history.pushState(null, '', path);
+  route();
+}
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[href]');
+  if (!a || a.target || a.hasAttribute('download') || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const href = a.getAttribute('href');
+  if (!href.startsWith('/') || href.startsWith('//') || !SITE_PATH.test(href)) return;
+  e.preventDefault();
+  if (href !== location.pathname + location.search) go(href);
+});
+window.addEventListener('popstate', route);
+// old links (prompt.city/#/nft/42) keep working: the address becomes /nft/42
+const fromHash = () => { if (location.hash.startsWith('#/')) history.replaceState(null, '', location.hash.slice(1)); };
+window.addEventListener('hashchange', () => { fromHash(); route(); });
+fromHash();
+loadStats().catch(() => {}).finally(route); // a page even if the stats are down
+</script>
+</body>
+</html>
