@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Prompt City $HEIST</title>
+<title>Prompt City $PROMPT</title>
 <!--
-  The $HEIST form shown inside the chat (an MCP App), two views: Burn (tick Citizens, Burn, Confirm: each gives
-  $HEIST) and Claim (paste a Solana wallet, Claim, Confirm: all the $HEIST goes to it in the airdrop). The assistant
+  The $PROMPT form shown inside the chat (an MCP App), two views: Burn (tick Citizens, Burn, Confirm: each gives
+  $PROMPT) and Claim (paste a Solana wallet, Claim, Confirm: all the $PROMPT goes to it in the airdrop). The assistant
   only opens it (burn_form, claim_credit_form); the person presses the buttons here. The server inlines the MCP Apps
   SDK in place of the marker in the script below (server/src/ui.js). Pictures come from the site (the resource's CSP).
 -->
@@ -157,7 +157,7 @@
 <main id="app" aria-live="polite">
   <header>
     <span class="logo"><svg viewBox="0 0 19 16" shape-rendering="crispEdges" aria-hidden="true"><rect width="19" height="16" fill="#FF2A1F"/><path fill="#F5F1E8" d="M8 1h8v1h-8zM6 2h11v1h-11zM5 3h13v1h-13zM5 4h13v1h-13zM5 5h3v1h-3zM10 5h4v1h-4zM16 5h2v1h-2zM5 6h13v1h-13zM5 7h13v1h-13zM8 10h8v1h-8zM8 11h8v1h-8zM9 12h6v1h-6zM9 13h1v1h-1zM13 13h1v1h-1zM9 14h1v1h-1zM13 14h1v1h-1z"/><path fill="#B5B2AB" d="M17 2h1v1h-1zM18 3h1v1h-1zM18 4h1v1h-1zM18 5h1v1h-1zM18 6h1v1h-1zM18 7h1v1h-1zM6 8h12v1h-12zM10 13h1v1h-1zM14 13h1v1h-1zM10 14h1v1h-1zM14 14h1v1h-1z"/><path fill="#0B0B0B" d="M3 9h14v1h-14zM2 10h2v1h-2zM1 11h1v1h-1z"/><path fill="#363636" d="M17 9h1v1h-1zM2 11h1v1h-1z"/></svg></span>
-    <div class="ttl"><b id="title">$HEIST</b><small id="from">your city address</small></div>
+    <div class="ttl"><b id="title">$PROMPT</b><small id="from">your city address</small></div>
     <div class="views" role="group" aria-label="View"><button type="button" id="vBurn" aria-pressed="false">Burn</button><button type="button" id="vClaim" aria-pressed="false">Claim</button></div>
   </header>
 
@@ -167,7 +167,7 @@
 
   <!-- burn: tick NFTs, Burn, Confirm -->
   <section id="burn" hidden>
-    <div class="hero"><span class="num" id="bEach">10,000</span><span class="unit">$HEIST</span><span class="fine">for each Citizen you burn</span></div>
+    <div class="hero"><span class="num" id="bEach">10,000</span><span class="unit">$PROMPT</span><span class="fine">for each Citizen you burn</span></div>
     <p class="fine" id="bRarity" style="margin-top:4px"></p>
     <div class="bar" style="margin-top:12px">
       <span class="count" id="count">0 selected</span>
@@ -193,16 +193,16 @@
     <img class="card" id="rCard" alt="Your burn card">
     <div class="launch" id="rLaunch"></div>
     <div class="actions"><button class="primary" id="share">Post on X</button><button class="ghost" id="openCard">Open card</button></div>
-    <div class="actions"><button class="ghost" id="toClaim">Claim $HEIST</button><button class="ghost" id="again">Burn more</button></div>
+    <div class="actions"><button class="ghost" id="toClaim">Claim $PROMPT</button><button class="ghost" id="again">Burn more</button></div>
   </section>
 
   <!-- claim: paste the wallet, Claim, Confirm -->
   <section id="claim" hidden>
-    <span class="label">$HEIST to claim</span>
-    <div class="hero"><span class="num" id="cBal">0</span><span class="unit">$HEIST</span></div>
+    <span class="label">$PROMPT to claim</span>
+    <div class="hero"><span class="num" id="cBal">0</span><span class="unit">$PROMPT</span></div>
     <p class="fine" id="cFrom"></p>
     <div id="cNone" hidden style="margin-top:10px">
-      <p class="note warn">No $HEIST to claim yet. Burn Citizens for it first.</p>
+      <p class="note warn">No $PROMPT to claim yet. Burn Citizens for it first.</p>
       <div class="actions" style="margin-top:10px"><button class="primary" id="toBurn">Burn NFTs</button></div>
     </div>
     <div id="cForm" style="margin-top:12px">
@@ -239,7 +239,7 @@ const $ = (id) => document.getElementById(id);
 const TOKEN = 'mcp-market/credit-token';
 const WALLET = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const textOf = (r) => (r?.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('\n');
-const EXPIRED = 'This form has expired. Ask the assistant to open it again: /burncitizen or /claimheist.';
+const EXPIRED = 'This form has expired. Ask the assistant to open it again: /burncitizen or /claimprompt.';
 const CHECK = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 7.5l3 3 6-6.5" fill="none" stroke="#0B0B0B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const n0 = (v) => Number(v || 0).toLocaleString('en-US');
 const mcp = (v) => `${Number(v || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })} $CASH`;
@@ -259,7 +259,7 @@ let pendingBurn = null;   // the NFT numbers fixed when Burn was pressed: Confir
 let pendingClaim = null;  // { wallet, key } fixed when Claim was pressed
 const TTL_MS = 2 * 3600e3, MIN_AGE_MS = 5000;
 
-const app = new McpApps.App({ name: 'Prompt City $HEIST', version: '1.0.0' }, {}, { autoResize: true });
+const app = new McpApps.App({ name: 'Prompt City $PROMPT', version: '1.0.0' }, {}, { autoResize: true });
 
 function applyContext(ctx) {
   if (!ctx) return;
@@ -293,7 +293,7 @@ const siteOrigin = () => { try { return new URL(st?.site || '').origin; } catch 
 const ours = (u) => { try { const x = new URL(u); return siteOrigin() && x.origin === siteOrigin() && (x.protocol === 'https:' || x.hostname === 'localhost') ? x.href : ''; } catch { return ''; } };
 const shareOk = (u) => { try { const x = new URL(u); return x.protocol === 'https:' && x.hostname === 'x.com' && x.pathname === '/intent/post' ? x.href : ''; } catch { return ''; } };
 const limit = () => (st ? Number(st.max) || 0 : 0);
-const launchLine = () => st?.credit?.launch_line || 'The $HEIST token launches soon.';
+const launchLine = () => st?.credit?.launch_line || 'The $PROMPT token launches soon.';
 
 // ---------- calls to our server, made only by this form ----------
 
@@ -363,7 +363,7 @@ function render() {
   $('vBurn').disabled = $('vClaim').disabled = !!(busy || pendingBurn || pendingClaim);
   $('vBurn').setAttribute('aria-pressed', String(view === 'burn'));
   $('vClaim').setAttribute('aria-pressed', String(view === 'claim'));
-  $('title').textContent = view === 'claim' ? 'Claim $HEIST' : 'Burn for $HEIST';
+  $('title').textContent = view === 'claim' ? 'Claim $PROMPT' : 'Burn for $PROMPT';
   message(tokenOk() || !asked ? '' : EXPIRED, 'warn');
   show('burn', view === 'burn' && !burned);
   show('burned', view === 'burn' && !!burned);
@@ -395,7 +395,7 @@ function tile(n) {
   ck.innerHTML = CHECK;
   b.append(img, ck, Object.assign(document.createElement('span'), { className: 'nm', textContent: n.name }),
     Object.assign(document.createElement('span'), { className: 'rr', textContent: n.rarity || '' }),
-    Object.assign(document.createElement('span'), { className: 'cr', textContent: `${n0(creditOf(n))}`, title: `${n0(creditOf(n))} $HEIST when burned` }));
+    Object.assign(document.createElement('span'), { className: 'cr', textContent: `${n0(creditOf(n))}`, title: `${n0(creditOf(n))} $PROMPT when burned` }));
   if (n.listed != null) b.append(Object.assign(document.createElement('span'), { className: 'tag', textContent: 'LISTED', title: 'For sale now: burning takes it off the market' }));
   b.addEventListener('click', () => toggle(n.id));
   return b;
@@ -420,7 +420,7 @@ function toggle(id) {
   if (b) { b.classList.toggle('on', picked.has(id)); b.setAttribute('aria-checked', picked.has(id) ? 'true' : 'false'); }
   updateBurn();
 }
-// $HEIST for the ticked NFTs: each by its rarity (the server says how much)
+// $PROMPT for the ticked NFTs: each by its rarity (the server says how much)
 const creditOf = (n) => Number(n?.credit) || Number(st?.credit?.per_nft) || 0;
 const pickedCredit = (ids) => ids.reduce((sum, id) => sum + creditOf(nfts.find((x) => x.id === id)), 0);
 function updateBurn() {
@@ -428,10 +428,10 @@ function updateBurn() {
   const sum = pickedCredit([...picked]);
   const listed = nfts.filter((x) => picked.has(x.id) && x.listed != null).length;
   $('count').replaceChildren(`${n} selected`, Object.assign(document.createElement('small'), {
-    textContent: ` of ${n0(st.total)}${n ? ` · ${n0(sum)} $HEIST` : ''}${listed ? ` · ${listed} listed, will come off the market` : ''}` }));
+    textContent: ` of ${n0(st.total)}${n ? ` · ${n0(sum)} $PROMPT` : ''}${listed ? ` · ${listed} listed, will come off the market` : ''}` }));
   const closed = st.burn_open === false;
   $('go').disabled = !n || busy || !tokenOk() || closed;
-  $('go').textContent = closed ? 'Burning is closed' : n ? `Burn ${n} NFT${n === 1 ? '' : 's'} for ${n0(sum)} $HEIST` : 'Burn';
+  $('go').textContent = closed ? 'Burning is closed' : n ? `Burn ${n} NFT${n === 1 ? '' : 's'} for ${n0(sum)} $PROMPT` : 'Burn';
   $('all').disabled = busy || !nfts.length || closed;
   if (closed) say('burnErr', st.burn_closed || 'Burning is closed right now.');
 }
@@ -441,7 +441,7 @@ function renderBurn() {
   $('bRarity').textContent = Object.entries(x).filter(([, v]) => v > 1).map(([r, v]) => `${r} ${v}x (${n0(v * st.credit.per_nft)})`).join(' · ');
   renderGrid();
   show('moreWrap', nfts.length < Number(st.total));
-  $('bLimits').textContent = `Burned NFTs are gone for good: no undo. Up to ${n0(st.max)} at a time. You have ${n0(st.credit?.balance)} $HEIST. ${launchLine()}`;
+  $('bLimits').textContent = `Burned NFTs are gone for good: no undo. Up to ${n0(st.max)} at a time. You have ${n0(st.credit?.balance)} $PROMPT. ${launchLine()}`;
   updateBurn();
 }
 function closeBurnConfirm() {
@@ -454,12 +454,12 @@ function closeBurnConfirm() {
 function renderBurned() {
   const b = burned;
   $('rHead').textContent = `Burnt ${n0(b.count)} NFT${b.count === 1 ? '' : 's'}`;
-  $('rBody').replaceChildren(`${n0(b.count)} NFT${b.count === 1 ? '' : 's'} = `, Object.assign(document.createElement('b'), { className: 'mono', textContent: `${n0(b.credit)} $HEIST` }),
-    ` credited. Your $HEIST: ${n0(b.balance ?? st.credit?.balance)}.`);
+  $('rBody').replaceChildren(`${n0(b.count)} NFT${b.count === 1 ? '' : 's'} = `, Object.assign(document.createElement('b'), { className: 'mono', textContent: `${n0(b.credit)} $PROMPT` }),
+    ` credited. Your $PROMPT: ${n0(b.balance ?? st.credit?.balance)}.`);
   const img = ours(b.image_url);
   show('rCard', !!img);
   if (img && $('rCard').getAttribute('src') !== img) $('rCard').src = img;
-  $('rLaunch').textContent = `${b.launch_line || launchLine()} Bind your wallet for it: Claim $HEIST (or /claimheist).`;
+  $('rLaunch').textContent = `${b.launch_line || launchLine()} Bind your wallet for it: Claim $PROMPT (or /claimprompt).`;
   show('share', !!shareOk(b.share_url));
   show('openCard', !!ours(b.card_url));
 }
@@ -483,7 +483,7 @@ function renderClaim() {
   show('cListWrap', claims.length > 0);
   $('cList').replaceChildren(...claims.map((k) => {
     const row = document.createElement('div');
-    row.append(Object.assign(document.createElement('span'), { textContent: `#${k.id} · ${n0(k.amount)} $HEIST → ` }),
+    row.append(Object.assign(document.createElement('span'), { textContent: `#${k.id} · ${n0(k.amount)} $PROMPT → ` }),
       Object.assign(document.createElement('span'), { className: 'mono', textContent: short(k.wallet), title: k.wallet }),
       Object.assign(document.createElement('span'), { className: 'st', textContent: k.status === 'sent' ? 'sent' : 'in the airdrop' }));
     return row;
@@ -498,7 +498,7 @@ function updateClaim() {
   const short0 = Number(c.mcp_balance) < Number(c.fee);
   $('fee').textContent = `Fee: ${mcp(c.fee)} from your balance (${mcp(c.mcp_balance)}).${short0 ? ' Top up first: /deposit-city' : ''}`;
   $('cGo').disabled = !w.ok || busy || !tokenOk() || !(Number(c.balance) > 0) || short0;
-  $('cGo').textContent = Number(c.balance) > 0 ? `Claim ${n0(c.balance)} $HEIST` : 'Claim';
+  $('cGo').textContent = Number(c.balance) > 0 ? `Claim ${n0(c.balance)} $PROMPT` : 'Claim';
 }
 function closeClaimConfirm() {
   pendingClaim = null;
@@ -508,9 +508,9 @@ function closeClaimConfirm() {
 }
 function renderClaimed() {
   const k = claimed;
-  $('kHead').textContent = `Claimed ${n0(k.amount)} $HEIST`;
+  $('kHead').textContent = `Claimed ${n0(k.amount)} $PROMPT`;
   $('kBody').replaceChildren('To ', Object.assign(document.createElement('b'), { className: 'mono', textContent: k.wallet }),
-    `. It arrives with the $HEIST airdrop. Fee paid: ${mcp(k.fee)}. Claim #${k.id}.`);
+    `. It arrives with the $PROMPT airdrop. Fee paid: ${mcp(k.fee)}. Claim #${k.id}.`);
   $('kLaunch').textContent = k.launch_line || launchLine();
 }
 
@@ -541,7 +541,7 @@ $('go').addEventListener('click', () => {
   const n = pendingBurn.length;
   const total = pickedCredit(pendingBurn);
   $('yes').textContent = `Confirm: burn ${n} NFT${n === 1 ? '' : 's'}`;
-  $('confirmBurn').textContent = `Burn ${n} NFT${n === 1 ? '' : 's'} for ${n0(total)} $HEIST? They are gone for good: they can't be sold, sent or brought back.`;
+  $('confirmBurn').textContent = `Burn ${n} NFT${n === 1 ? '' : 's'} for ${n0(total)} $PROMPT? They are gone for good: they can't be sold, sent or brought back.`;
   $('find').disabled = true;
   $('burn').classList.add('locked');
   show('goActs', false); show('confirmBurn', true); show('confirmActs', true);
@@ -565,8 +565,8 @@ $('yes').addEventListener('click', async () => {
     closeBurnConfirm();
     render();
     tellAssistant(`The user burned ${b.count} Citizen${b.count === 1 ? '' : 's'} in the burn form` +
-      `${b.nfts?.length ? ` (${b.nfts.map((x) => `#${Number(x.id)}`).join(', ')})` : ''} for ${n0(b.credit)} $HEIST, credited; their $HEIST is now ${n0(b.balance)}.` +
-      `${b.card_url ? ` Their burn card: ${b.card_url}` : ''} ${b.launch_line || ''} They bind a wallet for it with /claimheist.`);
+      `${b.nfts?.length ? ` (${b.nfts.map((x) => `#${Number(x.id)}`).join(', ')})` : ''} for ${n0(b.credit)} $PROMPT, credited; their $PROMPT is now ${n0(b.balance)}.` +
+      `${b.card_url ? ` Their burn card: ${b.card_url}` : ''} ${b.launch_line || ''} They bind a wallet for it with /claimprompt.`);
   };
   try {
     await waitPass();
@@ -625,8 +625,8 @@ $('cGo').addEventListener('click', () => {
   if (!w.ok || busy || pendingClaim || !(Number(st?.credit?.balance) > 0)) return;
   const key = [...crypto.getRandomValues(new Uint8Array(18))].map((b) => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'[b & 63]).join('');
   pendingClaim = { wallet: w.v, key, expected: Number(st.credit.balance) };
-  $('cYes').textContent = `Confirm: claim ${n0(st.credit.balance)} $HEIST`;
-  $('confirmClaim').replaceChildren(`All your ${n0(st.credit.balance)} $HEIST go to `, Object.assign(document.createElement('b'), { className: 'mono', textContent: w.v }),
+  $('cYes').textContent = `Confirm: claim ${n0(st.credit.balance)} $PROMPT`;
+  $('confirmClaim').replaceChildren(`All your ${n0(st.credit.balance)} $PROMPT go to `, Object.assign(document.createElement('b'), { className: 'mono', textContent: w.v }),
     ` in the airdrop, for a fee of ${mcp(st.credit.fee)}. Check every character: the airdrop goes exactly there.`);
   $('wallet').disabled = true;
   show('cGoActs', false); show('confirmClaim', true); show('cConfirmActs', true);
@@ -659,8 +659,8 @@ $('cYes').addEventListener('click', async () => {
       closeClaimConfirm();
       $('wallet').value = '';
       render();
-      tellAssistant(`The user claimed ${n0(claimed.amount)} $HEIST in the claim form to the Solana wallet ${claimed.wallet} (claim #${claimed.id}, fee ${mcp(claimed.fee)}). ` +
-        'It goes out with the $HEIST airdrop.');
+      tellAssistant(`The user claimed ${n0(claimed.amount)} $PROMPT in the claim form to the Solana wallet ${claimed.wallet} (claim #${claimed.id}, fee ${mcp(claimed.fee)}). ` +
+        'It goes out with the $PROMPT airdrop.');
     } else {
       closeClaimConfirm();
       say('claimErr', textOf(r) || 'Nothing was claimed.');

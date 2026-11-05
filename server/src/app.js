@@ -24,6 +24,8 @@ import { bigImage } from './assets.js';
 import * as credit from './credit.js';
 import * as airdrop from './airdrop.js';
 import { burnCard, airdropCard } from './card.js';
+import * as game from './game.js';
+import { createBridge, metadata } from './bridge.js';
 
 const sameSecret = (given, key) => {
   if (!key || typeof given !== 'string') return false;
@@ -46,6 +48,7 @@ export async function createApp(opts) {
   const deposits = opts.deposits || createDeposits(db, { publicUrl, rpc: opts.rpc, helius: opts.helius, config: opts.depositConfig });
   const withdrawals = opts.withdrawals || createWithdrawals(db, { rpc: opts.rpc, config: opts.withdrawConfig });
   const explorer = opts.explorer || createExplorer(db, { deposits, withdrawals, rpc: opts.rpc, config: opts.explorerConfig });
+  const bridge = opts.bridge || createBridge(db, { rpc: opts.rpc, config: opts.bridgeConfig, publicUrl });
   const storage = opts.storage || await defaultStorage();
   // database backups (backup.js): made every 2 hours by netlify/functions/backup.mjs, downloaded from /admin
   const backups = opts.backupStore || await defaultBackupStore();
@@ -82,7 +85,7 @@ export async function createApp(opts) {
   const auth = requireBearerAuth({ verifier: provider, resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(mcpUrl) });
   const thumbsDir = path.join(collectionDir, 'thumbs');
   app.post('/mcp', auth, express.json({ limit: '1mb' }), async (req, res) => {
-    const server = buildMcpServer(db, req.auth.extra.userId, { publicUrl, thumbsDir, deposits, withdrawals });
+    const server = buildMcpServer(db, req.auth.extra.userId, { publicUrl, thumbsDir, deposits, withdrawals, bridge });
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
     let closed = false;
     const cleanup = () => {
@@ -178,7 +181,7 @@ export async function createApp(opts) {
       recent: recent.map(feedItem),
     });
   });
-  // The Tokens page: the $HEIST token (CA, link) and its airdrop: batches sent with their Solana transactions, the batch
+  // The Tokens page: the $PROMPT token (CA, link) and its airdrop: batches sent with their Solana transactions, the batch
   // being sent, the queue. Polled every few seconds by every open page, so one URL for everyone, cached by the CDN.
   api.get('/credit/airdrop', async (req, res) => cdn(res, 3).json(await airdrop.feed(db)));
   // one wallet: its batch, its transaction, or its place in the queue and roughly when
@@ -196,6 +199,16 @@ export async function createApp(opts) {
     cdn(res, 5).json(items.map(feedItem));
   });
   api.get('/collections', async (req, res) => res.json((await m.collections(db)).map(colView)));
+  // the game (game.js): districts and when they open, the leaderboards of players and crews, today's job
+  api.get('/districts', async (req, res) => cdn(res, 10).json(await game.districts(db)));
+  api.get('/leaderboard', async (req, res) => cdn(res, 10).json(await game.boards(db, { limit: intOr(req.query.limit, 20) })));
+  api.get('/job', async (req, res) => {
+    const day = game.dayOf();
+    const j = game.jobOfDay(day);
+    cdn(res, 60).json({ day, title: j.title, story: j.story, approaches: Object.entries(game.APPROACHES).map(([k, a]) => ({ key: k, label: a.label, does: a.does })),
+      levels: game.LEVELS, discount: game.DISCOUNT, pick_prices: Object.fromEntries(Object.entries(game.CONFIG.pickPrices).map(([k, v]) => [k, num(v)])),
+      pick_level: game.PICK_LEVEL, craft_fee: num(game.CONFIG.craftFee), export: { enabled: bridge.enabled, fee: num(bridge.fee), network: bridge.cluster } });
+  });
   api.get('/collections/:slug', async (req, res) => {
     const c = await visible(req, String(req.params.slug).toLowerCase());
     if (!c) return res.status(404).json({ error: 'not found' });
@@ -332,7 +345,7 @@ export async function createApp(opts) {
       res.status(500).json({ error: String(e.message || e) });
     }
   });
-  // $HEIST: burns and claims for the airdrop; the page copies the pending claims as "wallet,amount" lines
+  // $PROMPT: burns and claims for the airdrop; the page copies the pending claims as "wallet,amount" lines
   admin.get('/credit', wrap(async () => credit.adminCredit(db)));
   admin.post('/credit/mark', wrap(async (req) => credit.markClaims(db, req.body?.ids, String(req.body?.status || ''))));
   admin.post('/credit/void/:id', wrap(async (req) => credit.voidClaim(db, idOf(req))));
@@ -350,7 +363,7 @@ export async function createApp(opts) {
   admin.post('/airdrop/batch/:id/cancel', wrap(async (req) => airdrop.cancelBatch(db, idOf(req))));
   // the token's CA and Buy link on the Tokens page: set once
   admin.post('/airdrop/token', wrap(async (req) => airdrop.setToken(db, { ca: req.body?.ca, url: req.body?.url })));
-  // free $HEIST drops: a code people type in the chat (/promptcity FREE1000) for a fixed amount of $HEIST each
+  // free $PROMPT drops: a code people type in the chat (/promptcity FREE1000) for a fixed amount of $PROMPT each
   admin.get('/drops', wrap(async () => credit.drops(db)));
   admin.post('/drops', wrap(async (req) => credit.createDrop(db, { code: req.body?.code, amount: req.body?.amount, uses: req.body?.uses, ...links(req.body) })));
   admin.post('/drops/:code', wrap(async (req) => credit.updateDrop(db, req.params.code, { status: req.body?.status, uses: req.body?.uses, ...links(req.body) })));
@@ -480,6 +493,12 @@ export async function createApp(opts) {
     res.redirect(301, path);
     return true;
   };
+  // the Metaplex metadata of a Citizen on Solana (bridge.js): the "uri" of its asset. Only Citizens, public data.
+  app.get(/^\/meta\/(\d{1,9})\.json$/, async (req, res) => {
+    const n = await m.getNft(db, Number(req.params[0]));
+    if (!n || n.collection !== m.OWN_COLLECTION) return res.status(404).json({ error: 'not found' });
+    res.set({ 'Cache-Control': 'public, max-age=3600', 'Access-Control-Allow-Origin': '*' }).json(metadata(n, publicUrl));
+  });
   app.get(/^\/burn\/(\d{1,9})\.png$/, async (req, res) => {
     const id = Number(req.params[0]);
     if (!id || canonical(req, res, `/burn/${id}.png`)) return id ? undefined : res.status(404).json({ error: 'not found' });
@@ -522,12 +541,12 @@ a{color:#F5F1E8;text-decoration:none;border:2px solid #2A2A30;padding:10px 16px}
     const who = b.name ? `@${b.name}` : b.address;
     sharePage(res, {
       page: `${publicUrl}/burn/${b.id}`,
-      title: `BURNT ${b.count.toLocaleString('en-US')} NFT${b.count === 1 ? '' : 's'} · ${credit.credits(b.credit)} $HEIST`,
-      desc: `${who} burned ${b.count === 1 ? 'a Citizen' : `${b.count.toLocaleString('en-US')} Citizens`} for ${credit.credits(b.credit)} $HEIST, right inside their AI.`,
+      title: `BURNT ${b.count.toLocaleString('en-US')} NFT${b.count === 1 ? '' : 's'} · ${credit.credits(b.credit)} $PROMPT`,
+      desc: `${who} burned ${b.count === 1 ? 'a Citizen' : `${b.count.toLocaleString('en-US')} Citizens`} for ${credit.credits(b.credit)} $PROMPT, right inside their AI.`,
       back: `/a/${b.address}`, cta: 'Burn yours: /burncitizen in your AI',
     });
   });
-  // a free $HEIST airdrop's card: /airdrop/<n>.png and its page
+  // a free $PROMPT airdrop's card: /airdrop/<n>.png and its page
   app.get(/^\/airdrop\/(\d{1,9})\.png$/, async (req, res) => {
     const id = Number(req.params[0]);
     if (!id || canonical(req, res, `/airdrop/${id}.png`)) return id ? undefined : res.status(404).json({ error: 'not found' });
@@ -546,8 +565,8 @@ a{color:#F5F1E8;text-decoration:none;border:2px solid #2A2A30;padding:10px 16px}
     if (!d) return res.status(404).json({ error: 'not found' });
     sharePage(res, {
       page: `${publicUrl}/airdrop/${d.id}`,
-      title: `FREE ${credit.credits(d.amount)} $HEIST · AIRDROP INSIDE AI`,
-      desc: `${d.name ? `@${d.name}` : d.address} got a free ${credit.credits(d.amount)} $HEIST airdrop, right inside their AI. Get yours: /promptcity ${d.code}`,
+      title: `FREE ${credit.credits(d.amount)} $PROMPT · AIRDROP INSIDE AI`,
+      desc: `${d.name ? `@${d.name}` : d.address} got a free ${credit.credits(d.amount)} $PROMPT airdrop, right inside their AI. Get yours: /promptcity ${d.code}`,
       back: null, cta: `Get yours: /promptcity ${d.code}`,
     });
   });
@@ -579,5 +598,5 @@ a{color:#F5F1E8;text-decoration:none;border:2px solid #2A2A30;padding:10px 16px}
     if (res.headersSent) return next(err);
     res.status(err.status || 500).json({ error: err.expose ? err.message : 'internal error' });
   });
-  return { app, db, deposits, withdrawals, explorer };
+  return { app, db, deposits, withdrawals, explorer, bridge };
 }

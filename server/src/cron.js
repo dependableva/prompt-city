@@ -5,6 +5,7 @@ import { migrate } from './schema.js';
 import { createDeposits } from './deposits.js';
 import { createWithdrawals } from './withdrawals.js';
 import { createExplorer } from './explorer.js';
+import { createBridge } from './bridge.js';
 
 export function createCronHandler(opts = {}) {
   let ready = null;
@@ -14,12 +15,13 @@ export function createCronHandler(opts = {}) {
     const deposits = opts.deposits || createDeposits(db, { publicUrl: opts.publicUrl, rpc: opts.rpc, helius: opts.helius, config: opts.depositConfig });
     const withdrawals = opts.withdrawals || createWithdrawals(db, { rpc: opts.rpc, config: opts.withdrawConfig });
     const explorer = opts.explorer || createExplorer(db, { deposits, withdrawals, rpc: opts.rpc, config: opts.explorerConfig });
-    return { deposits, withdrawals, explorer };
+    const bridge = opts.bridge || createBridge(db, { rpc: opts.rpc, config: opts.bridgeConfig, publicUrl: opts.publicUrl });
+    return { deposits, withdrawals, explorer, bridge };
   };
   return async (event, context) => {
     if (context) context.callbackWaitsForEmptyEventLoop = false;
     ready ??= init().catch((e) => { ready = null; throw e; });
-    const { deposits, withdrawals, explorer } = await ready;
+    const { deposits, withdrawals, explorer, bridge } = await ready;
     // Netlify gives a scheduled run 30 seconds: deposits, then withdrawals, then the explorer's chain and reserves
     const out = deposits.enabled ? await deposits.tick({ budgetMs: opts.budgetMs ?? 11_000 }) : { skipped: deposits.problem };
     console.log('deposits tick', JSON.stringify(out));
@@ -27,6 +29,9 @@ export function createCronHandler(opts = {}) {
     console.log('withdrawals tick', JSON.stringify(out.withdrawals));
     out.explorer = await explorer.tick({ budgetMs: opts.explorerBudgetMs ?? 5_000 });
     console.log('explorer tick', JSON.stringify(out.explorer));
+    // Citizens taken to Solana: mint the queued ones (bridge.js)
+    out.exports = bridge.enabled ? await bridge.tick({ budgetMs: opts.exportBudgetMs ?? 3_000 }) : { skipped: bridge.problem };
+    console.log('exports tick', JSON.stringify(out.exports));
     return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(out) };
   };
 }

@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { mcp, toMicro, MoneyError } from './money.js';
 import { mintIntoEscrow } from './launchpad.js';
+import { openSql, turfOf, closedTurfs } from './districts.js';
 
 // MCP_TRADING: "after_sold_out" (the default) keeps Citizens off the market until all of them are minted;
 // "open" lets people trade them right away. Read on every start, like the mint price.
@@ -146,7 +147,7 @@ export async function getUser(db, id) {
   return (await db.query('select * from users where id = $1', [id]))[0];
 }
 
-async function move(t, userId, delta, kind, ref) {
+export async function move(t, userId, delta, kind, ref) {
   if (userId != null) {
     const rows = await t.query('update users set balance = balance + $1 where id = $2 and balance + $1 >= 0 returning balance', [delta, userId]);
     if (!rows.length) fail('Not enough $CASH on your balance.');
@@ -178,8 +179,11 @@ export async function getCollection(db, slug) {
   return (await db.query('select * from collections where slug = $1', [String(slug || OWN_COLLECTION).toLowerCase()]))[0] || null;
 }
 
-// one random NFT of the collection that nobody has minted yet
-export async function mint(db, userId, { collection = OWN_COLLECTION } = {}) {
+// One NFT of the collection that nobody has minted yet: a random one, or (the market's own collection only) the one
+// the user picked (nftId). Only from districts that are open (districts.js). priceOf(nft, collection) sets what a
+// pick costs (game.js: by rarity and the account's wanted level) and may refuse it; a random mint costs the
+// collection's mint price.
+export async function mint(db, userId, { collection = OWN_COLLECTION, nftId = null, priceOf = null } = {}) {
   return db.tx(async (t) => {
     // the collection first, shared: a freeze or a payout waits for mints in progress, and a mint after a freeze
     // sees it. Then the account (one mint at a time per account, so the limit holds with parallel requests).
@@ -190,10 +194,26 @@ export async function mint(db, userId, { collection = OWN_COLLECTION } = {}) {
     if (c.status !== 'live') fail(`${c.name} is not open for minting.`);
     const [{ n }] = await t.query('select count(*)::int as n from nfts where collection_id = $1 and minted_by = $2', [c.id, userId]);
     if (n >= c.mint_limit) fail(`Mint limit reached: ${c.mint_limit} per account in ${c.name}.`);
-    const free = await t.query('select * from nfts where collection_id = $1 and minted_at is null order by random() limit 1 for update skip locked', [c.id]);
-    if (!free.length) fail(`${c.name} is sold out: every NFT is minted. Check the market.`);
-    const nft = free[0];
-    const price = Number(c.mint_price);
+    let nft;
+    if (nftId != null) {
+      if (c.creator_id != null) fail(`In ${c.name} you can't pick an NFT: its mint is random.`);
+      const [x] = await t.query('select * from nfts where id = $1 and collection_id = $2 for update', [Number(nftId), c.id]);
+      if (!x) fail(`${nftName(nftId)} is not a ${c.name} NFT.`);
+      if (x.minted_at) fail(`${x.name} is already minted. Find another one that is still free: /find-city`);
+      if (closedTurfs().includes(turfOf(x.attributes))) fail(`${x.name} lives in ${turfOf(x.attributes)}, which isn't open yet: /districts-city`);
+      nft = x;
+    } else {
+      const p = [c.id];
+      const open = c.creator_id == null ? openSql(p) : 'true';
+      const free = await t.query(`select * from nfts n where n.collection_id = $1 and n.minted_at is null and ${open}
+        order by random() limit 1 for update skip locked`, p);
+      if (!free.length) {
+        const [{ left: any }] = await t.query('select exists (select 1 from nfts where collection_id = $1 and minted_at is null) as left', [c.id]);
+        fail(any ? `Every open district of ${c.name} is minted out; the next one opens soon: /districts-city` : `${c.name} is sold out: every NFT is minted. Check the market.`);
+      }
+      nft = free[0];
+    }
+    const price = nftId != null && priceOf ? Number(await priceOf(nft, c)) : Number(c.mint_price);
     if (c.creator_id != null) {
       // a launchpad collection: the market's fee, the rest held in the escrow (launchpad.js)
       await mintIntoEscrow(t, c, userId, nft);
@@ -204,7 +224,7 @@ export async function mint(db, userId, { collection = OWN_COLLECTION } = {}) {
     }
     const [row] = await t.query('update nfts set owner_id = $1, minted_by = $1, minted_at = now() where id = $2 returning *', [userId, nft.id]);
     const [{ left }] = await t.query('select exists (select 1 from nfts where collection_id = $1 and minted_at is null) as left', [c.id]);
-    return { ...row, price, collection: c.slug, collection_name: c.name, minted_by_you: n + 1, mint_limit: c.mint_limit,
+    return { ...row, price, picked: nftId != null, collection: c.slug, collection_name: c.name, minted_by_you: n + 1, mint_limit: c.mint_limit,
       trade_after_sold_out: c.trade_after_sold_out, sold_out: !left };
   });
 }
@@ -319,8 +339,14 @@ export async function redeemCode(db, userId, input, { proof } = {}) {
         return { tasks, code, left: p.max_uses - p.used, max_uses: p.max_uses, tweet_url: p.tweet_url || null, proof_missing: !!note };
       }
     }
-    const [pick] = await t.query('select id from nfts where collection_id = $1 and minted_at is null order by random() limit 1 for update skip locked', [c.id]);
-    if (!pick) fail(`${c.name} is sold out: every NFT is minted.`);
+    const pp = [c.id];
+    const open = openSql(pp);
+    const [pick] = await t.query(`select id from nfts n where n.collection_id = $1 and n.minted_at is null and ${open}
+      order by random() limit 1 for update skip locked`, pp);
+    if (!pick) {
+      const [{ left: any }] = await t.query('select exists (select 1 from nfts where collection_id = $1 and minted_at is null) as left', [c.id]);
+      fail(any ? `Every open district of ${c.name} is minted out; the next one opens soon: /districts-city` : `${c.name} is sold out: every NFT is minted.`);
+    }
     const [nft] = await t.query('update nfts set owner_id = $1, minted_at = now() where id = $2 and minted_at is null returning *', [userId, pick.id]);
     if (!nft) fail('Someone minted that one a moment ago; try again.');
     await t.query("insert into ledger (user_id, delta, kind, ref) values ($1, 0, 'free_mint', $2)", [userId, String(nft.id)]);
@@ -360,8 +386,8 @@ export async function createPromo(db, { code, uses, follow_url, tweet_url } = {}
   checkLinks(links);
   const col = await getCollection(db, OWN_COLLECTION);
   if (!col) fail(`There is no collection "${OWN_COLLECTION}".`);
-  // free $HEIST drops (credit.js) share the name space
-  if ((await db.query('select 1 from credit_drops where code = $1', [c0])).length) fail(`${c0} is already a $HEIST drop.`);
+  // free $PROMPT drops (credit.js) share the name space
+  if ((await db.query('select 1 from credit_drops where code = $1', [c0])).length) fail(`${c0} is already a $PROMPT drop.`);
   try {
     await db.query('insert into promo_codes (code, collection_id, max_uses, follow_url, tweet_url) values ($1, $2, $3, $4, $5)',
       [c0, col.id, uses, links.follow_url || null, links.tweet_url || null]);
@@ -593,7 +619,7 @@ export async function sendsLeft(db, fromId) {
 // ---------- read side, shared by the MCP tools and the public preview API ----------
 
 // owner_addr: the owner's city address; owner_name: their X handle, only when they chose to show it
-const NFT_COLS = `n.id, n.name, n.edition, n.rarity, n.attributes, n.pixel, n.price, n.listed_at, n.minted_at, n.burned_at,
+const NFT_COLS = `n.id, n.name, n.edition, n.rarity, n.attributes, n.pixel, n.price, n.listed_at, n.minted_at, n.burned_at, n.exported_at, n.export_asset,
   c.slug as collection, c.name as collection_name, c.status as collection_status,
   u.public_id as owner_addr, case when u.show_handle then u.handle end as owner_name`;
 const NFT_FROM = 'from nfts n join collections c on c.id = n.collection_id left join users u on u.id = n.owner_id';
@@ -639,7 +665,7 @@ export async function getNft(db, id, { anyStatus = false } = {}) {
 // the NFT's own transactions from the ledger (mint, sales and transfers), newest first; tx = the explorer's transaction number
 export async function activity(db, id) {
   const rows = await db.query(`select l.id, l.xact, l.kind, l.delta, l.created_at, ${PUBLIC_NAME('u', 'user')}
-    from ledger l join users u on u.id = l.user_id where l.ref = $1 and l.kind in ('mint', 'team_mint', 'free_mint', 'buy', 'sale', 'send', 'receive', 'burn') order by l.id`, [String(id)]);
+    from ledger l join users u on u.id = l.user_id where l.ref = $1 and l.kind in ('mint', 'team_mint', 'free_mint', 'buy', 'sale', 'send', 'receive', 'burn', 'craft', 'craft_burn', 'export') order by l.id`, [String(id)]);
   const byX = new Map();
   for (const r of rows) {
     const key = String(r.xact);
@@ -653,12 +679,17 @@ export async function activity(db, id) {
     if (r.kind === 'send') Object.assign(a, { type: 'transfer', from_addr: r.user_addr, from_name: r.user_name, price: 0 });
     if (r.kind === 'receive') Object.assign(a, { to_addr: r.user_addr, to_name: r.user_name });
     if (r.kind === 'burn') Object.assign(a, { type: 'burn', from_addr: r.user_addr, from_name: r.user_name, price: 0 });
+    // crafting (game.js): three Citizens burned into one of the next rarity
+    if (r.kind === 'craft') Object.assign(a, { type: 'mint', craft: true, to_addr: r.user_addr, to_name: r.user_name, price: 0 });
+    if (r.kind === 'craft_burn') Object.assign(a, { type: 'burn', craft: true, from_addr: r.user_addr, from_name: r.user_name, price: 0 });
+    // taken to Solana (bridge.js): it leaves the market for good
+    if (r.kind === 'export') Object.assign(a, { type: 'export', from_addr: r.user_addr, from_name: r.user_name, price: 0 });
   }
   return [...byX.values()].filter((a) => a.type).reverse();
 }
 
 // traits: [[type, value], ...]: values of one type are alternatives, different types must all match
-function traitFilter(traits, where, p) {
+export function traitFilter(traits, where, p) {
   const byType = new Map();
   for (const [type, value] of traits || []) {
     if (typeof type !== 'string' || typeof value !== 'string' || !type || !value) continue;

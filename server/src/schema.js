@@ -382,9 +382,9 @@ create unique index if not exists deposit_claims_tx_addr on deposit_claims(tx, d
 create index if not exists deposit_claims_tx on deposit_claims(tx);
 create index if not exists deposit_claims_ip on deposit_claims(ip_hash, created_at);
 
--- $HEIST (credit.js): Citizens burned for $HEIST, and claims of $HEIST to a Solana wallet for the airdrop.
--- $HEIST is not $CASH: it is a separate balance (users.credit_balance, whole units) that never enters the $CASH ledger.
--- An account's credit_balance is always the $HEIST of its burns and finished free drops minus what its claims took
+-- $PROMPT (credit.js): Citizens burned for $PROMPT, and claims of $PROMPT to a Solana wallet for the airdrop.
+-- $PROMPT is not $CASH: it is a separate balance (users.credit_balance, whole units) that never enters the $CASH ledger.
+-- An account's credit_balance is always the $PROMPT of its burns and finished free drops minus what its claims took
 -- (void claims gave theirs back).
 -- A burned NFT has no owner and can't be minted again (minted_at stays); each one is a zero-amount "burn" ledger row.
 alter table nfts add column if not exists burned_at timestamptz;
@@ -400,7 +400,7 @@ create table if not exists burns (
   user_id int not null references users(id),
   nft_ids int[] not null,
   count int not null check (count > 0),
-  credit bigint not null check (credit > 0), -- $HEIST it gave
+  credit bigint not null check (credit > 0), -- $PROMPT it gave
   xact bigint not null default txid_current(), -- the explorer transaction with its "burn" ledger rows
   created_at timestamptz not null default now()
 );
@@ -410,22 +410,22 @@ create table if not exists credit_claims (
   id serial primary key,
   user_id int not null references users(id),
   wallet text not null,                 -- the Solana wallet the user gave for the airdrop
-  amount bigint not null check (amount > 0), -- $HEIST claimed (all the account had)
+  amount bigint not null check (amount > 0), -- $PROMPT claimed (all the account had)
   fee bigint not null default 0,        -- $CASH paid for the claim, micro-units
   client_key text,                      -- made by the claim form: a retry never makes a second claim
-  status text not null default 'pending' check (status in ('pending', 'sent', 'void')), -- void: undone by the owner, $HEIST back
+  status text not null default 'pending' check (status in ('pending', 'sent', 'void')), -- void: undone by the owner, $PROMPT back
   created_at timestamptz not null default now(),
   sent_at timestamptz
 );
 create unique index if not exists credit_claims_key on credit_claims(user_id, client_key);
 create index if not exists credit_claims_status on credit_claims(status, id);
--- Free $HEIST drops (credit.js: redeemDrop): a code from /admin gives each account a fixed amount of $HEIST, through the
+-- Free $PROMPT drops (credit.js: redeemDrop): a code from /admin gives each account a fixed amount of $PROMPT, through the
 -- chat's promo-code tool (redeem_code), so no new tool is needed. Steps per account: 'tasks' (follow, like + RT shown),
 -- 'post' (the screenshot showed them: the airdrop card is made, a use is counted), 'done' (the screenshot of the user's
--- own post with the card: the $HEIST is added). Drop codes and promo codes share one name space.
+-- own post with the card: the $PROMPT is added). Drop codes and promo codes share one name space.
 create table if not exists credit_drops (
   code text primary key,
-  amount bigint not null check (amount > 0),  -- $HEIST per account
+  amount bigint not null check (amount > 0),  -- $PROMPT per account
   max_uses int not null check (max_uses > 0),
   used int not null default 0 check (used >= 0 and used <= max_uses),
   status text not null default 'active' check (status in ('active', 'paused')),
@@ -446,7 +446,7 @@ create table if not exists credit_drop_claims (
   done_at timestamptz,
   unique (code, user_id)
 );
--- The $HEIST airdrop, batch by batch (airdrop.js). The owner makes a batch of the oldest pending claims (one line per
+-- The $PROMPT airdrop, batch by batch (airdrop.js). The owner makes a batch of the oldest pending claims (one line per
 -- wallet), sends it from his own wallet with a multisender, pastes the transaction signatures and marks it sent. The
 -- Tokens page shows the batches, the queue and where a wallet is in it. One batch is open ('sending') at a time; an open
 -- batch that is cancelled is deleted (its claims go back to the queue and its number is used again).
@@ -477,7 +477,7 @@ begin
 end $g$;
 drop trigger if exists credit_claims_guard on credit_claims;
 create trigger credit_claims_guard before update or delete on credit_claims for each row execute function credit_claims_guard();
--- a finished free drop never changes or goes away (its $HEIST is on the account)
+-- a finished free drop never changes or goes away (its $PROMPT is on the account)
 create or replace function credit_drop_claims_guard() returns trigger language plpgsql set search_path = pg_catalog, public as $g$
 begin
   if tg_op = 'DELETE' then
@@ -493,6 +493,72 @@ begin
 end $g$;
 drop trigger if exists credit_drop_claims_guard on credit_drop_claims;
 create trigger credit_drop_claims_guard before update or delete on credit_drop_claims for each row execute function credit_drop_claims_guard();
+
+-- The game (game.js): XP and the wanted level, the daily job, crews, crafting. XP is not money and is not in the
+-- ledger; the $PROMPT a job gives goes to users.credit_balance like a burn's (jobs.prompt keeps what each gave).
+alter table users add column if not exists xp int not null default 0;
+alter table users add column if not exists job_streak int not null default 0;
+alter table users add column if not exists last_job_day date;
+create table if not exists jobs (
+  id serial primary key,
+  user_id int not null references users(id),
+  day date not null,                     -- the UTC day: one job per account per day
+  job text not null,                     -- game.js JOBS key
+  approach text not null check (approach in ('stealth', 'muscle', 'talk')),
+  xp int not null check (xp >= 0),
+  prompt bigint not null default 0 check (prompt >= 0), -- $PROMPT it gave
+  helper_nft int references nfts(id),    -- the Citizen whose looks helped
+  breakdown jsonb not null default '[]', -- [["the job", 20], ...]
+  created_at timestamptz not null default now(),
+  unique (user_id, day)
+);
+create index if not exists users_xp on users(xp desc) where xp > 0;
+create table if not exists crews (
+  id serial primary key,
+  name text not null,
+  key text not null unique,              -- the name lower case, for lookups
+  boss_id int references users(id),
+  created_at timestamptz not null default now()
+);
+create table if not exists crew_members (
+  user_id int primary key references users(id), -- one crew per account
+  crew_id int not null references crews(id) on delete cascade,
+  joined_at timestamptz not null default now()
+);
+create index if not exists crew_members_crew on crew_members(crew_id);
+-- three Citizens of one rarity burned into one of the next (their "craft_burn" rows and the new one's "craft" row)
+create table if not exists crafts (
+  id serial primary key,
+  user_id int not null references users(id),
+  burned int[] not null,
+  nft_id int not null unique references nfts(id),
+  fee bigint not null default 0 check (fee >= 0), -- $CASH, micro-units
+  created_at timestamptz not null default now()
+);
+create index if not exists crafts_user on crafts(user_id);
+
+-- Taking a Citizen to Solana (bridge.js): the owner asks, the NFT leaves the market for good (no owner here, an
+-- "export" ledger row), and the server mints it as a Metaplex Core asset to the wallet given.
+alter table nfts add column if not exists exported_at timestamptz;
+alter table nfts add column if not exists export_asset text;   -- the asset's address on Solana once minted
+create table if not exists nft_exports (
+  id serial primary key,
+  nft_id int not null unique references nfts(id),
+  user_id int not null references users(id),
+  wallet text not null,                  -- the Solana wallet it goes to
+  network text not null,                 -- mainnet | devnet
+  fee bigint not null default 0 check (fee >= 0), -- $CASH paid, micro-units
+  status text not null default 'pending' check (status in ('pending', 'sending', 'minted', 'failed')),
+  asset text,                            -- the asset address (a new keypair per export; its seed is never stored)
+  signature text,
+  attempts int not null default 0,
+  error text,
+  created_at timestamptz not null default now(),
+  sent_at timestamptz,                   -- the last time a transaction was sent for it
+  minted_at timestamptz
+);
+create index if not exists nft_exports_status on nft_exports(status, id);
+create index if not exists nft_exports_user on nft_exports(user_id, id desc);
 
 -- OAuth for the Prompt City connector. Codes and tokens are stored as sha256 hashes, never in plain text.
 create table if not exists oauth_clients (
@@ -555,6 +621,11 @@ alter table credit_claims enable row level security;
 alter table credit_drops enable row level security;
 alter table credit_drop_claims enable row level security;
 alter table credit_batches enable row level security;
+alter table jobs enable row level security;
+alter table crews enable row level security;
+alter table crew_members enable row level security;
+alter table crafts enable row level security;
+alter table nft_exports enable row level security;
 do $$ begin
   if exists (select 1 from pg_roles where rolname = 'anon') and exists (select 1 from pg_roles where rolname = 'authenticated') then
     revoke all on all tables in schema public from anon, authenticated;
@@ -605,7 +676,7 @@ const DATA_MIGRATIONS = [
     end $c$;
     delete from nfts where collection_id is null;`],
   // 2026-10-31: rarer NFTs burn for more (credit.js RARITY_X: Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x). Burns made
-  // before that got 10,000 each: they are topped up to the new rate, never lowered, and the $HEIST goes to the account.
+  // before that got 10,000 each: they are topped up to the new rate, never lowered, and the $PROMPT goes to the account.
   ['credit-rarity', `
     with fix as (
       select b.id, b.user_id, b.credit, sum(10000 * case n.rarity when 'Hustler' then 2 when 'Boss' then 4 when 'Kingpin' then 8

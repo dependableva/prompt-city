@@ -57,7 +57,7 @@ export function explorerConfig(env = process.env) {
 }
 
 const KINDS = { deposit: 'deposit', faucet: 'faucet', mint: 'mint', team_mint: 'team mint', free_mint: 'free mint', buy: 'buy', send: 'transfer', withdraw: 'withdrawal', withdraw_refund: 'refund', payout: 'payout', mint_refund: 'refund',
-  burn: 'burn', claim_fee: 'claim' };
+  burn: 'burn', claim_fee: 'claim', craft: 'craft', craft_burn: 'craft', craft_fee: 'craft', export: 'export', export_fee: 'export' };
 const ESCROW_SQL = `(${ESCROW_KINDS.map((k) => `'${k}'`).join(', ')})`;
 // the explorer's filter: which ledger rows mark a transaction of each type. A sale is one transaction with a "buy" row
 // (the buyer) and a "sale" row (the seller): on the whole market "buy" and "sell" are the same list; on an account's
@@ -68,6 +68,8 @@ export const TX_TYPES = {
   sell: ['sale'],
   transfer: ['send', 'receive'],
   burn: ['burn'],
+  craft: ['craft', 'craft_burn'],
+  export: ['export'],
   deposit: ['deposit'],
   withdrawal: ['withdraw'],
 };
@@ -269,7 +271,7 @@ export function createExplorer(db, opts = {}) {
   // ---------- read side (the public API) ----------
 
   const typeOf = (kinds) => {
-    for (const k of ['deposit', 'withdraw', 'withdraw_refund', 'mint_refund', 'payout', 'buy', 'mint', 'team_mint', 'free_mint', 'send', 'burn', 'claim_fee', 'faucet']) if (kinds.includes(k)) return KINDS[k];
+    for (const k of ['craft', 'export', 'deposit', 'withdraw', 'withdraw_refund', 'mint_refund', 'payout', 'buy', 'mint', 'team_mint', 'free_mint', 'send', 'burn', 'claim_fee', 'faucet']) if (kinds.includes(k)) return KINDS[k];
     return kinds[0] || 'other';
   };
 
@@ -283,8 +285,8 @@ export function createExplorer(db, opts = {}) {
     const ws = wIds.length ? await db.query('select id, status, tx from withdrawals where id = any($1)', [wIds]) : [];
     const wById = new Map(ws.map((w) => [Number(w.id), w]));
     // NFT rows (mints, buys, transfers) carry the NFT's number: its name, picture and collection for the page
-    const nIds = [...new Set(rows.filter((r) => ['mint', 'team_mint', 'free_mint', 'buy', 'mint_refund', 'send', 'burn'].includes(r.kind) && /^\d{1,9}$/.test(r.ref || '')).map((r) => Number(r.ref)))];
-    // burns: the $HEIST each gave and its card (burns.xact is the transaction of its "burn" rows)
+    const nIds = [...new Set(rows.filter((r) => ['mint', 'team_mint', 'free_mint', 'buy', 'mint_refund', 'send', 'burn', 'craft', 'export'].includes(r.kind) && /^\d{1,9}$/.test(r.ref || '')).map((r) => Number(r.ref)))];
+    // burns: the $PROMPT each gave and its card (burns.xact is the transaction of its "burn" rows)
     const bX = [...new Set(rows.filter((r) => r.kind === 'burn').map((r) => String(r.xact)))];
     const bs = bX.length ? await db.query('select id, xact::text as xact, credit from burns where xact = any($1::bigint[])', [bX]) : [];
     const burnByX = new Map(bs.map((b) => [b.xact, { id: Number(b.id), credit: Number(b.credit) }]));
@@ -340,7 +342,7 @@ export function createExplorer(db, opts = {}) {
         if (first != null) t.nft = n ? { id: first, name: n.name, rarity: n.rarity, collection: n.slug, collection_name: n.collection_name,
           image: `/img/${first}.png`, thumb: `/thumb/${first}.png`, pixel: n.pixel } : { id: first, name: nftName(first) };
       } else if (type === KINDS.burn) {
-        // NFTs burned for $HEIST: one or many from one account, in one transaction
+        // NFTs burned for $PROMPT: one or many from one account, in one transaction
         const burned = g.filter((r) => r.kind === 'burn');
         const info = burnByX.get(String(g[0].xact));
         t.burn = { count: burned.length, account: burned[0].public_id || null, name: burned[0].name || null, credit: info?.credit ?? null, id: info?.id ?? null };
@@ -348,6 +350,15 @@ export function createExplorer(db, opts = {}) {
         const n = nById.get(first);
         t.nft = n ? { id: first, name: n.name, rarity: n.rarity, collection: n.slug, collection_name: n.collection_name,
           image: `/img/${first}.png`, thumb: `/thumb/${first}.png`, pixel: n.pixel } : { id: first, name: nftName(first) };
+      } else if (type === KINDS.craft || type === KINDS.export) {
+        // crafting (three Citizens burned into one) or a Citizen taken to Solana: the NFT it is about
+        const main = g.find((r) => r.kind === (type === KINDS.craft ? 'craft' : 'export'));
+        const id = main && /^\d{1,9}$/.test(main.ref || '') ? Number(main.ref) : null;
+        const n = id != null ? nById.get(id) : null;
+        if (type === KINDS.craft) t.craft = { account: main?.public_id || null, name: main?.name || null, burned: g.filter((r) => r.kind === 'craft_burn').map((r) => Number(r.ref)) };
+        else t.export = { account: main?.public_id || null, name: main?.name || null };
+        if (id != null) t.nft = n ? { id, name: n.name, rarity: n.rarity, collection: n.slug, collection_name: n.collection_name,
+          image: `/img/${id}.png`, thumb: `/thumb/${id}.png`, pixel: n.pixel } : { id, name: nftName(id) };
       } else if (/^\d+$/.test(ref) && ['mint', 'free mint', 'buy', 'refund'].includes(type)) {
         const n = nById.get(Number(ref));
         t.nft = n ? { id: Number(ref), name: n.name, rarity: n.rarity, collection: n.slug, collection_name: n.collection_name,

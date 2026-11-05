@@ -128,7 +128,7 @@
   .tasks li { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: var(--rl); padding: 10px 12px; counter-increment: t; }
   .tasks li::before { content: counter(t); flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--cherry); color: var(--ink); font-weight: 700; font-size: 13px; display: grid; place-items: center; }
   .tasks li b { flex: 1; font-weight: 600; }
-  /* a free $HEIST airdrop: its card, the steps to confirm it */
+  /* a free $PROMPT airdrop: its card, the steps to confirm it */
   .drop { display: flex; flex-direction: column; gap: 12px; }
   .drop .card { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: var(--rl); background: #0D0D0F; box-shadow: 0 0 0 1px var(--line); image-rendering: pixelated; }
   .drop .amt { font-family: var(--mono, ui-monospace, Menlo, monospace); font-size: 26px; font-weight: 700; }
@@ -252,14 +252,14 @@ function renderTasks() {
     d.note ? el('p', { class: 'note warn', style: 'margin-top:12px', text: d.note }) : null);
 }
 
-// a free $HEIST airdrop: the card to post (step 'post') or the confirmed amount (step 'done')
+// a free $PROMPT airdrop: the card to post (step 'post') or the confirmed amount (step 'done')
 function renderDrop() {
   const d = data;
-  header(d.title || 'FREE $HEIST', d.subtitle || '', d.badge);
+  header(d.title || 'FREE $PROMPT', d.subtitle || '', d.badge);
   const src = (typeof pics.drop === 'string' && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(pics.drop) ? pics.drop : '') || ours(d.image_url) || '';
   $('view').replaceChildren(el('div', { class: 'drop' },
     src ? el('img', { class: 'card', src, alt: d.title || 'Airdrop card', width: 640, height: 360 }) : null,
-    d.amount ? el('div', { class: 'amt' }, `${fmt(d.amount)} `, el('i', { text: '$HEIST' })) : null,
+    d.amount ? el('div', { class: 'amt' }, `${fmt(d.amount)} `, el('i', { text: '$PROMPT' })) : null,
     d.steps?.length ? el('ol', { class: 'tasks' }, ...d.steps.map((t) => el('li', {}, el('b', { text: t })))) : null,
     el('div', { class: 'actions' },
       ...(d.share || []).map((x, i) => el('button', { class: i ? 'ghost' : 'primary', type: 'button', text: x.label, onclick: () => open(x.url) }))),

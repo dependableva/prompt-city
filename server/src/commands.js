@@ -26,6 +26,13 @@ export const COMMANDS = [
   { name: 'mint-city', args: [{ name: 'count', example: '2', optional: true }, { name: 'collection', example: 'citizens', optional: true }], tool: 'mint',
     does: 'Mint random NFTs (1 from Citizens if you name nothing)',
     how: 'call mint (with the collection if one is named) count times, 1 to 5, default 1, one after another; stop at the first error and say what was minted' },
+  { name: 'find-city', args: [{ name: 'looks', example: 'Boss with a gold chain', optional: true }], tool: 'find_citizens',
+    does: 'Find free Citizens by their looks to pick one: rarity, turf, outfit, bling…',
+    how: 'turn the words into a rarity and traits and call find_citizens; show the matches with their pick prices' },
+  { name: 'pick-city', args: [{ name: 'number', example: '42' }], tool: 'pick_citizen', does: 'Mint exactly that free Citizen, at the price of its rarity (less your wanted-level discount)',
+    how: 'call pick_citizen with that number' },
+  { name: 'districts-city', tool: 'districts', does: 'Districts: which are open for minting, which open next and when',
+    how: 'call districts' },
   { name: 'market-city', args: [{ name: 'filter', example: 'Kingpin', optional: true }], tool: 'market', does: 'NFTs for sale, cheapest first; filter by collection, rarity or trait',
     how: 'call market with the filters written in the command (a collection id, a rarity, or traits like "Lid: Beanie")' },
   { name: 'nft-city', args: [{ name: 'number', example: '42' }], tool: 'nft', does: 'One NFT: traits, owner, price, history',
@@ -47,10 +54,23 @@ export const COMMANDS = [
       'its confirm code only after the user answers yes. The command itself is not the yes' },
   { name: 'transfernft', tool: 'transfer_form', does: 'The transfer form: tick the NFTs you want to send, type the city address, confirm',
     how: 'call transfer_form and let the user pick in the form; nothing is sent until they confirm there' },
-  { name: 'burncitizen', tool: 'burn_form', does: 'Burn Citizens for $HEIST: 10,000 each, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x; in a form',
+  { name: 'burncitizen', tool: 'burn_form', does: 'Burn Citizens for $PROMPT: 10,000 each, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x; in a form',
     how: 'call burn_form and let the user pick in the form; nothing is burned until they confirm there' },
-  { name: 'claimheist', tool: 'claim_credit_form', does: 'Claim your $HEIST to your Solana wallet for the airdrop (fee 0.5 $CASH), in a form',
+  { name: 'claimprompt', tool: 'claim_credit_form', does: 'Claim your $PROMPT to your Solana wallet for the airdrop (fee 0.5 $CASH), in a form',
     how: 'call claim_credit_form; the user pastes the wallet and confirms in the form' },
+  { name: 'job', args: [{ name: 'way', example: 'stealth', optional: true }], tool: 'job', does: 'The daily job: stealth, muscle or talk, for XP (your wanted level) and $PROMPT',
+    how: 'call job to show today\'s job; if a way in is written (stealth, muscle or talk), call job with that approach' },
+  { name: 'wanted-city', tool: 'wanted', does: 'Your wanted level, XP, streak and what each level unlocks',
+    how: 'call wanted' },
+  { name: 'crew-city', args: [{ name: 'create|join|leave', key: 'action', example: 'join', optional: true }, { name: 'name', example: 'Vice Kings', optional: true }], tool: 'crew',
+    does: 'Your crew; start one, join one by name or leave. Crews of 3+ get more XP',
+    how: 'call crew with the action (create, join or leave) and the name written after it; with nothing written, call crew to show it' },
+  { name: 'craft-city', args: [{ name: 'numbers', example: '12 40 77' }, { name: 'number', key: 'into', lead: 'into', example: '501', optional: true }], tool: 'craft',
+    does: 'Burn 3 Citizens of one rarity into 1 of the next rarity; you confirm first',
+    how: 'call craft with the three numbers (and into, if written) without confirm, show what it returns and ask; call it again with confirm true only after the user answers yes. The command itself is not the yes' },
+  { name: 'export-city', args: [{ name: 'number', example: '42', optional: true }, { name: 'wallet', lead: 'to', example: '<Solana wallet>', optional: true }], tool: 'export_nft',
+    does: 'Take a Citizen to your Solana wallet as a real NFT (one way); with nothing, your exports',
+    how: 'with a number and a wallet, call export_nft without confirm, show what it returns and ask; call it again with confirm true only after the user answers yes. The command itself is not the yes. With nothing written, call export_nft with no arguments' },
   { name: 'profile-city', args: [{ name: 'on|off', key: 'show', example: 'off' }], tool: 'public_profile', does: 'Show or hide your X handle on public pages',
     how: 'call public_profile with show_x_handle true for on, false for off; if neither is written, ask' },
 ];
@@ -68,7 +88,7 @@ export const toolHint = (tool) => {
 };
 
 export const INSTRUCTIONS_COMMANDS = `Chat commands. The user may type a command: /promptcity, the start command (also written promptcity, /prompt.city or
-prompt.city on its own), /heist (also heist), /crewchat (also crewchat), /showmynfts (also showmynfts), /sendnft (also sendnft), /transfernft (also transfernft), /burncitizen (also burncitizen), /claimheist (also claimheist), or a message starting with "/" and ending in "-city" (any case, "_city" is the same).
+prompt.city on its own), /heist (also heist), /job (also job), /crewchat (also crewchat), /showmynfts (also showmynfts), /sendnft (also sendnft), /transfernft (also transfernft), /burncitizen (also burncitizen), /claimprompt (also claimprompt), or a message starting with "/" and ending in "-city" (any case, "_city" is the same).
 Do exactly what the command says, right away, without guessing and without extra questions beyond a missing argument
 or a confirmation the command asks for below.
 NFT numbers may be written 42, #42 or "Citizen #42". If a required argument is missing, ask only for it. For an unknown

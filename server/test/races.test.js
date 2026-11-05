@@ -171,7 +171,7 @@ test('mints and a freeze in parallel: every mint either refunded or refused, mon
   assert.ok(await ledgerOk());
 });
 
-// ---------- $HEIST (credit.js) ----------
+// ---------- $PROMPT (credit.js) ----------
 const creditOk = async () => (await db.query(`select count(*)::int as n from users u where u.credit_balance <>
   coalesce((select sum(credit) from burns where user_id = u.id), 0)
     + coalesce((select sum(amount) from credit_drop_claims where user_id = u.id and stage = 'done'), 0)
@@ -183,7 +183,7 @@ async function mcpReady() {
   await db.query("update collections set trade_after_sold_out = false where slug = 'citizens'"); // burn before the sell-out here
 }
 
-test('$HEIST: two burns of the same NFT, a burn racing a buy and a send, two claims at once: each happens once, everything adds up', opts, async () => {
+test('$PROMPT: two burns of the same NFT, a burn racing a buy and a send, two claims at once: each happens once, everything adds up', opts, async () => {
   const credit = await import('../src/credit.js');
   await mcpReady();
   const a = await user('burner', 5e6);
@@ -213,7 +213,7 @@ test('$HEIST: two burns of the same NFT, a burn racing a buy and a send, two cla
   const before = await bal(a.id);
   const cl = await Promise.all([settle(credit.claim(db, a.id, { wallet, requestKey: `ka-${run}-0001` })), settle(credit.claim(db, a.id, { wallet, requestKey: `kb-${run}-0002` }))]);
   assert.equal(cl.filter((o) => o.ok).length, 1);
-  assert.match(cl.find((o) => !o.ok).e.message, /No \$HEIST to claim yet/);
+  assert.match(cl.find((o) => !o.ok).e.message, /No \$PROMPT to claim yet/);
   assert.equal(await bal(a.id), before - 500_000);
   const deadlocks = [...two, ...bs, ...cl].filter((o) => !o.ok && /deadlock/.test(o.e.message));
   assert.equal(deadlocks.length, 0);
@@ -221,7 +221,7 @@ test('$HEIST: two burns of the same NFT, a burn racing a buy and a send, two cla
   assert.ok(await creditOk());
 });
 
-test('$HEIST: many burns, buys, sends and mints in parallel: no deadlock, every NFT has one fate', opts, async () => {
+test('$PROMPT: many burns, buys, sends and mints in parallel: no deadlock, every NFT has one fate', opts, async () => {
   const credit = await import('../src/credit.js');
   await mcpReady();
   const people = [];
