@@ -1,0 +1,48 @@
+# One-time build of the repository: bootstrap/run.sh turns the open MCP Market code (MIT) into Prompt City,
+# regenerates the Citizens collection, runs the tests and commits the result. It runs only when bootstrap/
+# or this file changes; run.sh deletes bootstrap/ at the end, so later runs skip every step.
+name: bootstrap
+on:
+  push:
+    paths: ['bootstrap/**', '.github/workflows/bootstrap.yml']
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: ${{ !contains(github.event.head_commit.message, '[skip bootstrap]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: todo
+        run: test -f bootstrap/run.sh && echo "run=1" >> "$GITHUB_OUTPUT" || echo "nothing to build"
+      - if: steps.todo.outputs.run == '1'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - if: steps.todo.outputs.run == '1'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - if: steps.todo.outputs.run == '1'
+        run: pip install pillow
+      - if: steps.todo.outputs.run == '1'
+        run: bash bootstrap/run.sh
+      - name: tests
+        if: steps.todo.outputs.run == '1'
+        run: |
+          npm ci
+          node -e "import('./server/src/assets.js').then((m) => console.log(m.unpackCollection(process.cwd())))"
+          npm test
+      - name: commit
+        if: steps.todo.outputs.run == '1'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Prompt City: fork of MCP Market with Gen 0 Citizens, \$CASH/\$HEIST and the neon-sunset site" \
+            -m "Built by bootstrap/run.sh from davidsyahshi/mcp-market@1bb66c9 (MIT)." \
+            -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+          Claude-Session: https://claude.ai/code/session_01E9VTZvXTdJTxZav5nWuL4N"
+          git push
