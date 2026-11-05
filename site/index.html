@@ -147,7 +147,8 @@ select { background: var(--panel); color: var(--cream); border: 2px solid var(--
 .city h3 { margin: 0; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
 .city .story { color: var(--cream); line-height: 1.5; }
 .city .ways { display: flex; flex-wrap: wrap; gap: 6px; }
-.city .ways code, .city .cmd code { color: var(--gold); font-weight: 700; }
+.city .ways code, .city .how code { color: var(--gold); font-weight: 700; }
+.city .how { line-height: 1.6; }
 .city ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
 .city li { color: var(--cream); } .city li small { color: var(--dim); }
 .city .d { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
@@ -650,7 +651,7 @@ async function loadCity() {
   if (job && el('cJob')) {
     el('cJob').innerHTML = `<h3>Today's job</h3><b class="px" style="font-size:18px">${esc(job.title)}</b><div class="story">${esc(job.story)}</div>
       <div class="ways">${job.approaches.map((a) => `<a class="btn ghost" href="${claudeLink('/job ' + a.key)}" target="_blank" rel="noopener" title="${esc(a.does)}">${esc(a.label)}</a>`).join('')}</div>
-      <div class="note cmd">type <code>/job</code> in your AI · XP raises your wanted level: ${job.levels.map((x, i) => `${'★'.repeat(i + 1)} ${x.toLocaleString('en-US')}`).join(' · ')} XP.
+      <div class="note how">type <code>/job</code> in your AI · XP raises your wanted level: ${job.levels.map((x, i) => `${'★'.repeat(i + 1)} ${x.toLocaleString('en-US')}`).join(' · ')} XP.
         Pick a Citizen by its looks (<code>/find-city</code>, Street ${fmt(job.pick_prices.Street)} … Legend ${fmt(job.pick_prices.Legend)} $CASH), craft 3 into 1 (<code>/craft-city</code>, ${fmt(job.craft_fee)} $CASH)${job.export.enabled ? `, take one to Solana (<code>/export-city</code>, ${fmt(job.export.fee)} $CASH)` : ''}.</div>`;
   }
   if (ds && el('districts')) {
