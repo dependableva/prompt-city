@@ -187,6 +187,12 @@ test('pick: find by looks, pay the price of the rarity less the level discount, 
   const t = await call('find_citizens', { rarity: 'Boss', traits: ['Bling: Gold Chain'] });
   assert.match(t.text, /free Citizens? match/);
   assert.match(t.text, /pick for 15 \$CASH/);
+  // the line shows the look asked for, and the district only once
+  for (const l of t.text.split('\n').filter((x) => /^#\d+ Boss/.test(x))) {
+    assert.match(l, /^#\d+ Boss · [^·]+ · Gold Chain[,· ]/, l);
+    const turf = l.split(' · ')[1];
+    assert.equal(l.split(turf).length - 1, 1, l);
+  }
   const pick = found.items[0];
   const before = Number(u.balance);
   const r = await call('pick_citizen', { nft_id: pick.id });

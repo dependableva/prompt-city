@@ -104,7 +104,7 @@ export function transferTokenOk(userId, token) {
 // opts.ui: the withdrawal form ({ uri, html }), or null for none; by default built by ui.js
 export function buildMcpServer(db, userId, opts) {
   const { publicUrl, thumbsDir, deposits, withdrawals } = opts;
-  const server = new McpServer({ name: 'mcp-market', version: '0.3.0' }, { instructions: INSTRUCTIONS });
+  const server = new McpServer({ name: 'prompt-city', version: '0.3.0' }, { instructions: INSTRUCTIONS });
   const link = (id) => `${publicUrl}/nft/${id}`;
   // the NFT picture as image content, so the chat shows it inline. Read from disk; if the file isn't
   // bundled with this instance, fetch it from the site's CDN.
@@ -173,6 +173,13 @@ export function buildMcpServer(db, userId, opts) {
   const describe = (n) => `${n.name}${n.collection && n.collection !== m.OWN_COLLECTION ? ` (NFT #${n.id}, ${n.collection_name})` : ''}` +
     `${n.rarity ? ` · ${n.rarity}` : ''}${keyTraits(n) ? ` · ${keyTraits(n)}` : ''}` +
     (n.owner_addr ? ` · owner ${m.label(n.owner_addr, n.owner_name)}` : n.burned_at ? ' · burned' : n.exported_at ? ' · on Solana' : ' · not minted yet') + (n.price != null ? ` · listed at ${m.fmt(n.price)}` : '');
+  // a found Citizen's looks in one line: the traits asked for first, then the rest (not its rarity or district)
+  const lookOf = (n, pairs = []) => {
+    const asked = new Set(pairs.map(([t]) => String(t).toLowerCase()));
+    const rest = (n.attributes || []).filter((a) => a.trait_type !== 'Rarity' && a.trait_type !== 'Turf');
+    const first = rest.filter((a) => asked.has(String(a.trait_type).toLowerCase()));
+    return [...first, ...rest.filter((a) => !first.includes(a))].slice(0, Math.max(5, first.length)).map((a) => a.value).join(', ');
+  };
   const traitLines = (n) => (n.attributes || []).map((a) => `${a.trait_type}: ${a.value}${a.percent != null ? ` (${a.percent}% have it)` : ''}`).join('\n');
 
   // turn rule violations into a normal answer the assistant can relay, instead of a protocol error
@@ -508,7 +515,7 @@ export function buildMcpServer(db, userId, opts) {
     const items = r.items.map((n) => ({ ...n, price: null }));
     return {
       ...ok(text(`${r.total.toLocaleString('en-US')} free Citizen${r.total === 1 ? '' : 's'} match. ${r.total > r.items.length ? `${r.items.length} of them:` : ''}\n` +
-        r.items.map((n) => `#${n.id} ${n.rarity} · ${turfOf(n.attributes)} · ${keyTraits(n)} · pick for ${priceOf(n)}`).join('\n') +
+        r.items.map((n) => `#${n.id} ${n.rarity} · ${turfOf(n.attributes)} · ${lookOf(n, pairs)} · pick for ${priceOf(n)}`).join('\n') +
         `\n\nYou are ${w.stars || '-'}${w.discount ? ` (${w.discount}% off picks)` : ''}. Pick one: /pick-city <number>`)),
       ...await card({ view: 'many', title: 'Free to pick', subtitle: `${r.total.toLocaleString('en-US')} match`, total: r.total }, items.map(cardItem)),
     };
