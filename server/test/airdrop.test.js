@@ -1,4 +1,4 @@
-// The $PROMT airdrop, batch by batch (airdrop.js): the owner makes a batch of the oldest pending claims in /admin,
+// The $PROMPT airdrop, batch by batch (airdrop.js): the owner makes a batch of the oldest pending claims in /admin,
 // sends it, pastes the signatures, marks it sent, sends failed wallets back to the queue; the Tokens page reads the
 // feed (batches, the batch being sent, the queue) and one wallet's status; the CA is set once.
 import { test, before, after } from 'node:test';
@@ -45,7 +45,7 @@ async function user() {
 const nftsOf = async (u, k) => (await db.query(`update nfts set owner_id = $1, minted_at = now() where id in (
     select n.id from nfts n join collections c on c.id = n.collection_id where c.slug = 'citizens' and n.minted_at is null and n.rarity = 'Street'
     order by random() limit $2) returning id`, [u.id, k])).map((x) => Number(x.id));
-// an account that burned k Street NFTs and claimed the $PROMT (10,000 each) to w
+// an account that burned k Street NFTs and claimed the $PROMPT (10,000 each) to w
 async function claimer(w = wallet(), k = 1) {
   const u = await user();
   await credit.burn(db, u.id, await nftsOf(u, k));
@@ -218,7 +218,7 @@ test('admin: batches and the CA (set once) are the owner\'s; the Tokens page sho
   assert.equal((await boss.call('POST', `/admin/airdrop/batch/${made.body.id}/cancel`)).status, 400);
   // the CA: a Solana address, once
   let f = (await get('/api/credit/airdrop')).body;
-  assert.deepEqual([f.token.ca, f.token.symbol, f.token.live], [null, '$PROMT', false]);
+  assert.deepEqual([f.token.ca, f.token.symbol, f.token.live], [null, '$PROMPT', false]);
   assert.equal((await boss.call('POST', '/admin/airdrop/token', { ca: 'not-an-address' })).status, 400);
   assert.equal((await boss.call('POST', '/admin/airdrop/token', { ca: wallet(), url: 'javascript:alert(1)' })).status, 400);
   const ca = `${wallet()}`;

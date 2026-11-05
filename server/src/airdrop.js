@@ -1,4 +1,4 @@
-// The $PROMT airdrop, batch by batch, and what the Tokens page shows about it.
+// The $PROMPT airdrop, batch by batch, and what the Tokens page shows about it.
 //
 // The owner sends the token himself, from his own wallet, with a multisender: no key for it is on this server. In /admin
 // he makes a batch of the oldest pending claims (credit.js: claim), one line per wallet ("wallet,amount"), sends those
@@ -270,7 +270,7 @@ export async function feed(db, { now = new Date(), rows = 100, batches = 20, que
   const tk = await token(db);
   const launch = launchAt();
   return {
-    token: { symbol: '$PROMT', ca: tk.ca, url: tk.url, launch_at: launch?.toISOString() || null, live: !!tk.ca || (!!launch && launch <= now) },
+    token: { symbol: '$PROMPT', ca: tk.ca, url: tk.url, launch_at: launch?.toISOString() || null, live: !!tk.ca || (!!launch && launch <= now) },
     totals,
     pace: { size: sch.size, minutes: sch.minutes, next_no: sch.next_no, next_at: totals.queued_wallets ? sch.at(1).eta : null },
     open: open ? { no: open.no, wallets: open.wallets, credit: open.credit, started_at: open.created_at, eta: sch.open_eta,

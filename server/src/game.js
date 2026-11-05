@@ -1,7 +1,7 @@
 // The game around the Citizens: the wanted level (stars a player earns, not buys), the daily job, crews, picking a
 // Citizen to mint by its looks, and crafting three Citizens into one of the next rarity.
 //
-// Wanted level: every account has XP (users.xp). The daily job (/job) gives XP and a little $PROMT; XP sets the level,
+// Wanted level: every account has XP (users.xp). The daily job (/job) gives XP and a little $PROMPT; XP sets the level,
 // ★ to ★★★★★. A level gives a discount on picked mints and opens the rarest picks (Kingpin from ★★★, Legend from ★★★★).
 // Nothing here is paid by chance: a job costs nothing, a pick shows the Citizen before it is minted, and a craft lets the
 // player choose the Citizen it gives (or take any free one of that rarity).
@@ -40,7 +40,7 @@ const intEnv = (v, d) => (/^\d{1,9}$/.test(String(v ?? '').trim()) ? Number(v) :
 export const CONFIG = {
   pickPrices: parsePickPrices(process.env.PICK_PRICES),
   craftFee: (() => { try { return toMicro(process.env.CRAFT_FEE || '1', { what: 'CRAFT_FEE' }); } catch { return alert('CRAFT_FEE', process.env.CRAFT_FEE, 1_000_000); } })(),
-  promptPerXp: intEnv(process.env.JOB_PROMPT_PER_XP, 10), // $PROMT a job gives per XP it gives
+  promptPerXp: intEnv(process.env.JOB_PROMPT_PER_XP, 10), // $PROMPT a job gives per XP it gives
   crewMax: Math.max(2, intEnv(process.env.CREW_MAX, 10)),
 };
 

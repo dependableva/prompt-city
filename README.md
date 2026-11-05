@@ -7,7 +7,7 @@
 
 - **Citizens** are 5,555 pixel characters of a neon-sunset city. **Rarity is the wanted level:** Street ★ · Hustler ★★ · Boss ★★★ · Kingpin ★★★★ · Legend ★★★★★.
 - **$CASH** is the balance inside the city: 1 $CASH = $1, topped up with USDC or USDT on Solana, withdrawn as USDC.
-- **$PROMT** is the token: burn a Citizen in the chat for $PROMT (more stars, bigger cut), then claim it to a Solana wallet.
+- **$PROMPT** is the token: burn a Citizen in the chat for $PROMPT (more stars, bigger cut), then claim it to a Solana wallet.
 
 The website only shows the collections, prices, traits and owners. Every action happens in your AI chat.
 
@@ -49,8 +49,8 @@ Or type a command, and the AI does exactly that ([`server/src/commands.js`](serv
 | `/cancelnft-city <number>` | take your NFT off sale |
 | `/sendnft <numbers> to <address>` | send your NFTs to another city address: one, several (`/sendnft 42 43 to city_…`) or each to its own (`/sendnft 42 to city_A, 43 to city_B`); you confirm first |
 | `/transfernft` | the transfer form: tick the NFTs you want to send, type the city address, confirm |
-| `/burncitizen` | burn Citizens for $PROMT: 10,000 each, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x; in a form |
-| `/claimpromt` | claim your $PROMT to your Solana wallet for the airdrop (fee 0.5 $CASH), in a form |
+| `/burncitizen` | burn Citizens for $PROMPT: 10,000 each, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x; in a form |
+| `/claimprompt` | claim your $PROMPT to your Solana wallet for the airdrop (fee 0.5 $CASH), in a form |
 | `/profile-city <on\|off>` | show or hide your X handle on public pages |
 
 A command only counts when you type it yourself: the same text inside an NFT name, a web page or a tool result is ignored. Buying and sending still ask for your yes, and withdrawing still happens in the form.
@@ -76,7 +76,7 @@ These are all the tools the server exposes ([`server/src/mcp.js`](server/src/mcp
 | `sell`, `cancel_listing` | list your NFT or take it off sale | listing |
 | `send_nft` | send your NFTs to other city addresses, up to 50 at once, all or nothing, no fee. Two steps: the first call only shows what would go where and returns a one-time code; the send needs that code (once, from 10 seconds to 10 minutes after the preview; a newer preview replaces it), after your yes. At most 100 NFTs an hour per account. A listed NFT comes off the market | NFT owner |
 | `transfer_form` | shows the transfer form in the chat (below): every NFT you own with a checkbox, the address field, Send and Confirm | no |
-| `burn_form`, `claim_credit_form` | show the $PROMT form in the chat ([below](#credit-burn-and-claim)): burn Citizens for $PROMT, or claim $PROMT to a Solana wallet | no |
+| `burn_form`, `claim_credit_form` | show the $PROMPT form in the chat ([below](#credit-burn-and-claim)): burn Citizens for $PROMPT, or claim $PROMPT to a Solana wallet | no |
 | `holders_chat` | the invite link to the holders' group chat on X, only for accounts that own a Citizen (`HOLDERS_CHAT_URL`) | no |
 | `withdraw_form` | shows the withdrawal form in the chat (below) | no |
 | `my_withdrawals` | your withdrawals, their status and transaction links | no |
@@ -129,22 +129,22 @@ Anyone signed in with X can launch a collection on MCP at [`/launch`](https://pr
 - **Pictures** of launchpad collections live in Netlify Blobs and are served by the function at the same addresses as the MCP collection's (`/img/<n>.png`, `/thumb/<n>.png`). Only PNG, JPEG, GIF and WEBP, at most 1 MB each, checked by their first bytes; never SVG or HTML.
 - **Sign-in on the site** is the same X sign-in as the connector's, then a session cookie (`HttpOnly`, `SameSite=Lax`, 30 days). Every change needs the site's own header and origin, so another website can't make one for you.
 
-## $PROMT: burn and claim
+## $PROMPT: burn and claim
 
-Holders can burn Citizens for **$PROMT**, the allocation of the coming $PROMT token's airdrop ([`server/src/credit.js`](server/src/credit.js)). $PROMT is a balance of its own (whole units), never $CASH: it is not in the $CASH ledger, balances or reserves.
+Holders can burn Citizens for **$PROMPT**, the allocation of the coming $PROMPT token's airdrop ([`server/src/credit.js`](server/src/credit.js)). $PROMPT is a balance of its own (whole units), never $CASH: it is not in the $CASH ledger, balances or reserves.
 
-- **Burn** (`/burncitizen`): a form in the chat ([`server/ui/credit.html`](server/ui/credit.html)) with every Citizen the account owns; tick them, press *Burn*, then *Confirm*. Each NFT gives 10,000 $PROMT (`CREDIT_PER_BURN`) times its rarity: Street 1x, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x (`RARITY_X` in credit.js); up to 500 at a time, all or nothing. A burned NFT has no owner, comes off the market and is never minted again; each one is a zero-amount `burn` row in the ledger, so the explorer shows a **burn** transaction and the NFT's page says *Burned*. Only Citizens, only after the sell-out.
+- **Burn** (`/burncitizen`): a form in the chat ([`server/ui/credit.html`](server/ui/credit.html)) with every Citizen the account owns; tick them, press *Burn*, then *Confirm*. Each NFT gives 10,000 $PROMPT (`CREDIT_PER_BURN`) times its rarity: Street 1x, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x (`RARITY_X` in credit.js); up to 500 at a time, all or nothing. A burned NFT has no owner, comes off the market and is never minted again; each one is a zero-amount `burn` row in the ledger, so the explorer shows a **burn** transaction and the NFT's page says *Burned*. Only Citizens, only after the sell-out.
 - **The card**: every burn gets a 1600 × 900 picture in the site's pixel style (`/burn/<n>.png`, drawn in [`server/src/card.js`](server/src/card.js), no image libraries) and a page whose link preview on X shows it (`/burn/<n>`). The form offers *Post on X* and *Open card*, and says when the token launches (`CREDIT_LAUNCH_AT`; without it, "soon"). Each card has one address (a query string or a leading zero redirects to it), the last few are kept in memory and the CDN keeps the rest.
-- **Claim** (`/claimpromt`): the same form; paste a Solana wallet, press *Claim*, then *Confirm*. It takes all the account's $PROMT at that moment, for 0.5 $CASH (`CREDIT_CLAIM_FEE`) to the treasury (a `claim_fee` ledger pair). Token accounts (off the ed25519 curve) and the market's deposit addresses are refused. A retry with the same request key returns the same claim. Burn more later, claim again.
-- **Free drops** (`/promptcity FREE1000`, or "FREE 1000 $PROMT"): a code from `/admin` → *Free $PROMT drops* gives each account a fixed amount of $PROMT, once. It goes through the chat's promo-code tool (`redeem_code`) and NFT card, which every connected chat already has, so nobody has to reconnect. With tasks (follow up to 3 X accounts, like + RT, a comment under the post) the AI asks for a screenshot or several first; then it shows the airdrop card (`/airdrop/<n>.png`, with a page that previews it on X) and asks the user to post it; the $PROMT is added after a screenshot of that post. The AI only looks at screenshots: an edited one can pass.
-- **The airdrop**: `/admin` → *$PROMT claims* lists the claims with their account and wallet; *Copy all* copies every pending one as `wallet,amount` lines, one per wallet, and remembers which claims it copied; *Mark … as sent* marks exactly those. A pending claim made by mistake can be voided: its $PROMT goes back to the account, the fee stays paid. A claim's wallet and amount can't be changed or deleted (a database trigger), only its status. An account's $PROMT is always its burns + finished drops − its claims that aren't void; the backup restore checks that too.
+- **Claim** (`/claimprompt`): the same form; paste a Solana wallet, press *Claim*, then *Confirm*. It takes all the account's $PROMPT at that moment, for 0.5 $CASH (`CREDIT_CLAIM_FEE`) to the treasury (a `claim_fee` ledger pair). Token accounts (off the ed25519 curve) and the market's deposit addresses are refused. A retry with the same request key returns the same claim. Burn more later, claim again.
+- **Free drops** (`/promptcity FREE1000`, or "FREE 1000 $PROMPT"): a code from `/admin` → *Free $PROMPT drops* gives each account a fixed amount of $PROMPT, once. It goes through the chat's promo-code tool (`redeem_code`) and NFT card, which every connected chat already has, so nobody has to reconnect. With tasks (follow up to 3 X accounts, like + RT, a comment under the post) the AI asks for a screenshot or several first; then it shows the airdrop card (`/airdrop/<n>.png`, with a page that previews it on X) and asks the user to post it; the $PROMPT is added after a screenshot of that post. The AI only looks at screenshots: an edited one can pass.
+- **The airdrop**: `/admin` → *$PROMPT claims* lists the claims with their account and wallet; *Copy all* copies every pending one as `wallet,amount` lines, one per wallet, and remembers which claims it copied; *Mark … as sent* marks exactly those. A pending claim made by mistake can be voided: its $PROMPT goes back to the account, the fee stays paid. A claim's wallet and amount can't be changed or deleted (a database trigger), only its status. An account's $PROMPT is always its burns + finished drops − its claims that aren't void; the backup restore checks that too.
 
 ## The game: wanted level, jobs, crews, picks, districts, crafting, Solana
 
 Everything here is free to play or shows exactly what you get before you pay: no paid randomness.
 
 - **The daily job** (`/job`): one story a day for everyone (new at 00:00 UTC), three ways in (stealth, muscle, talk). The story hints at the best one.
-  It gives XP and $PROMT (10 per XP): 20 for the job, +10 for the right way in, +10 and more when one of your Citizens has the right look
+  It gives XP and $PROMPT (10 per XP): 20 for the job, +10 for the right way in, +10 and more when one of your Citizens has the right look
   (a balaclava for stealth, a gold suit for talk…), +3 a day for a streak (up to +18), +5 in a crew of 3 or more.
 - **Wanted level** (`/wanted-city`): ★ at 0 XP, ★★ 150, ★★★ 500, ★★★★ 1,500, ★★★★★ 4,000. It gives 5–20% off picked mints and opens
   Kingpin picks at ★★★ and Legend picks at ★★★★.
@@ -317,7 +317,7 @@ npm test                  # end-to-end tests: real OAuth, real MCP client, two u
 | `RESERVE_WALLETS` | optional: your cold wallets holding swept deposits (public addresses, comma-separated), so the explorer counts them as reserves |
 | `ANCHOR_EVERY_MINUTES`, `ANCHORS_OFF`, `RESERVES_EVERY_MINUTES` | optional: how often the chain's hash goes to Solana (60), `1` stops anchors, how often reserves are read (10) |
 | `ADMIN_X_IDS` | the X account ids (numbers, not handles: a handle can change hands) of the market's owner(s), comma-separated: they review launchpad collections at `/admin` and release payouts. Sign in on the site and open `/api/me` to see yours (`x_id`) |
-| `CREDIT_LAUNCH_AT`, `CREDIT_PER_BURN`, `CREDIT_CLAIM_FEE` | when the $PROMT token launches (an ISO time, e.g. `2026-10-31T20:00:00Z`; without it the forms say "soon"), $PROMT per burned NFT (10000), the claim fee in $CASH (0.5) |
+| `CREDIT_LAUNCH_AT`, `CREDIT_PER_BURN`, `CREDIT_CLAIM_FEE` | when the $PROMPT token launches (an ISO time, e.g. `2026-10-31T20:00:00Z`; without it the forms say "soon"), $PROMPT per burned NFT (10000), the claim fee in $CASH (0.5) |
 | `HOLDERS_CHAT_URL` | the invite link to the holders' group chat on X, given by `/crewchat` only to accounts that own a Citizen (kept out of the code, which is public). Unset: holders are told it isn't set up yet |
 | `LAUNCH_FEE_BPS`, `HOLD_DAYS`, `LAUNCH_MAX_SUPPLY` | optional: the market's share of launchpad mints in basis points (1000 = 10%), the hold in days (7), the largest collection (10,000) |
 
@@ -340,10 +340,10 @@ Deposits start working once `HELIUS_API_KEY` and `DEPOSIT_POOL_KEY` are set (and
 
 ### Prompt City, next
 
-- [ ] Daily jobs in the chat (`/job`): street cred points that convert to $PROMT
+- [ ] Daily jobs in the chat (`/job`): street cred points that convert to $PROMPT
 - [ ] Crews: holders team up, crew leaderboard on the site
 - [ ] 10% of every launchpad mint to Gen 0 holders, weighted by wanted level (×1 … ×20)
-- [ ] $PROMT supply and split fixed before launch, published here
+- [ ] $PROMPT supply and split fixed before launch, published here
 
 ## Honest risks
 

@@ -386,8 +386,8 @@ export async function createPromo(db, { code, uses, follow_url, tweet_url } = {}
   checkLinks(links);
   const col = await getCollection(db, OWN_COLLECTION);
   if (!col) fail(`There is no collection "${OWN_COLLECTION}".`);
-  // free $PROMT drops (credit.js) share the name space
-  if ((await db.query('select 1 from credit_drops where code = $1', [c0])).length) fail(`${c0} is already a $PROMT drop.`);
+  // free $PROMPT drops (credit.js) share the name space
+  if ((await db.query('select 1 from credit_drops where code = $1', [c0])).length) fail(`${c0} is already a $PROMPT drop.`);
   try {
     await db.query('insert into promo_codes (code, collection_id, max_uses, follow_url, tweet_url) values ($1, $2, $3, $4, $5)',
       [c0, col.id, uses, links.follow_url || null, links.tweet_url || null]);

@@ -326,7 +326,7 @@ table.txs a.tx { color: var(--cream); }
 .crumbs a { color: var(--dim); }
 .nftpage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; padding: 14px 0 22px; }
 .nftpage .art img { width: 100%; aspect-ratio: 1; border: 2px solid var(--edge); background: var(--panel); }
-/* the Tokens page: $PROMT on the left, its airdrop live on the right */
+/* the Tokens page: $PROMPT on the left, its airdrop live on the right */
 .tk-grid { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); gap: 28px; padding: 30px 0 60px; align-items: start; }
 .tk-side { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 14px; }
 .tk-coin { width: 168px; height: 168px; }
@@ -948,8 +948,8 @@ async function loadCollectionGrid(more = false) {
   $('#cMore').hidden = cState.offset >= r.total;
 }
 
-// ---------- tokens: the $PROMT token and its airdrop, live ----------
-// Left: the coin, $PROMT, the CA to copy and the pump.fun button (both appear once the owner sets the CA in /admin).
+// ---------- tokens: the $PROMPT token and its airdrop, live ----------
+// Left: the coin, $PROMPT, the CA to copy and the pump.fun button (both appear once the owner sets the CA in /admin).
 // Right: the airdrop as it goes out, batch by batch, with a Solscan link for every wallet, the batch being sent, the
 // queue, and a search for one wallet. Everything comes from /api/credit/airdrop (one URL, cached ~3 s by the CDN),
 // polled every 5 s while the page is open and visible; a searched wallet is polled with it.
@@ -984,7 +984,7 @@ function stopTokens() {
   tk.clock = null;
   tk.reveal = null;
 }
-const coinImg = (cls = '') => `<img class="pix ${cls}" src="/credit.svg" alt="$PROMT" width="30" height="30">`;
+const coinImg = (cls = '') => `<img class="pix ${cls}" src="/credit.svg" alt="$PROMPT" width="30" height="30">`;
 
 function renderTokens(query = '') {
   stopTokens();
@@ -1001,7 +1001,7 @@ function renderTokens(query = '') {
     <aside class="tk-side" aria-labelledby="tkTitle">
       <div class="tk-coin">${coinImg()}</div>
       <div class="tk-state" id="tkState"><span class="pill wait">Loading…</span></div>
-      <h1 class="px" id="tkTitle">$PROMT</h1>
+      <h1 class="px" id="tkTitle">$PROMPT</h1>
       <p class="tk-sub">The first token inside your AI. Burn Citizens for it, claim it to your Solana wallet, get it in the airdrop.</p>
       <div class="tk-ca">
         <div class="k">Contract address (CA)</div>
@@ -1011,15 +1011,15 @@ function renderTokens(query = '') {
       <a class="btn red big" id="tkBuy" aria-disabled="true">Buy on pump.fun <span class="arr">↗</span></a>
       <div class="tk-steps">
         <div><b>1</b><span>Burn Citizens in your AI: <button class="tk-cmd" data-copy="/burncitizen">/burncitizen</button></span></div>
-        <div><b>2</b><span>Bind your wallet: <button class="tk-cmd" data-copy="/claimpromt">/claimpromt</button></span></div>
+        <div><b>2</b><span>Bind your wallet: <button class="tk-cmd" data-copy="/claimprompt">/claimprompt</button></span></div>
         <div><b>3</b><span>Watch your airdrop go out here →</span></div>
       </div>
-      <p class="note tk-warn">The only $PROMT is the CA above. Anything else with the name is not ours.</p>
+      <p class="note tk-warn">The only $PROMPT is the CA above. Anything else with the name is not ours.</p>
     </aside>
     <section class="tk-main" aria-labelledby="adTitle">
       <div class="tk-head"><h2 class="px" id="adTitle"><span class="live"></span> Airdrop · live</h2>
         <span class="note" id="tkUpdated"></span></div>
-      <div class="tiles tk-tiles" id="tkTiles">${['Wallets sent', '$PROMT sent', 'Batches', 'In queue'].map((k) => `<div class="stat"><div class="k">${k}</div><div class="v">—</div></div>`).join('')}</div>
+      <div class="tiles tk-tiles" id="tkTiles">${['Wallets sent', '$PROMPT sent', 'Batches', 'In queue'].map((k) => `<div class="stat"><div class="k">${k}</div><div class="v">—</div></div>`).join('')}</div>
       <div class="tk-prog"><div class="blocks" id="tkBlocks">${'<i></i>'.repeat(10)}<span class="pct" id="tkPct">0%</span></div>
         <div class="note" id="tkProgNote"></div></div>
       <form class="search tk-search" id="tkFind" role="search">
@@ -1045,7 +1045,7 @@ function renderTokens(query = '') {
     e.preventDefault();
     const w = $('#tkWallet').value.trim().replace(/^https?:\/\/solscan\.io\/account\//, '').replace(/[?#].*$/, '');
     if (!w) { tk.wallet = ''; tk.walletData = null; $('#tkMine').innerHTML = ''; saveWallet(''); return; }
-    if (!isWallet(w)) { $('#tkMine').innerHTML = '<div class="tk-card bad">That is not a Solana wallet address. Paste the address you gave in /claimpromt.</div>'; return; }
+    if (!isWallet(w)) { $('#tkMine').innerHTML = '<div class="tk-card bad">That is not a Solana wallet address. Paste the address you gave in /claimprompt.</div>'; return; }
     tk.wallet = w;
     saveWallet(w);
     $('#tkMine').innerHTML = '<div class="tk-card note">Looking…</div>';
@@ -1135,11 +1135,11 @@ function paintTokens() {
   const p = d.pace;
   const now = d.open
     ? `<div class="tk-now"><div class="tk-now-top"><span class="pill wait">Next batch</span><b class="px">Batch #${d.open.no}</b>
-        <span>${cr(d.open.wallets)} wallet${d.open.wallets === 1 ? '' : 's'} · ${cr(d.open.credit)} $PROMT · goes out ${d.open.eta ? until(d.open.eta) : 'any minute'}</span></div><div class="tk-stripes" aria-hidden="true"></div></div>`
+        <span>${cr(d.open.wallets)} wallet${d.open.wallets === 1 ? '' : 's'} · ${cr(d.open.credit)} $PROMPT · goes out ${d.open.eta ? until(d.open.eta) : 'any minute'}</span></div><div class="tk-stripes" aria-hidden="true"></div></div>`
     : '';
   const next = s.queued_wallets && p.next_at
     ? `<div class="tk-next">${d.open ? 'After it' : 'Up next'}: <b>Batch #${p.next_no}</b> · ${until(p.next_at)} <span class="note">(a batch about every ${p.minutes} min, ${cr(p.size)} wallets each)</span></div>`
-    : !s.wallets ? '' : !s.queued_wallets && !d.open ? '<div class="tk-next">Everyone who claimed so far got the airdrop. New claims join the queue: <b>/claimpromt</b></div>' : '';
+    : !s.wallets ? '' : !s.queued_wallets && !d.open ? '<div class="tk-next">Everyone who claimed so far got the airdrop. New claims join the queue: <b>/claimprompt</b></div>' : '';
   $('#tkNow').innerHTML = now + next;
   // the live list is not redrawn while rows are still coming in one by one (it would cut their entrance)
   if (tk.tab !== 'live' || (!tk.reveal && !tk.pending.length)) paintTkList();
@@ -1194,7 +1194,7 @@ function paintTkNumbers() {
   const sentC = Math.max(0, s.sent_credit - tk.pending.reduce((a, r) => a + r.amount, 0));
   const tiles = [
     ['Wallets sent', `${cr(sentW)}<small> / ${cr(s.wallets)}</small>`],
-    ['$PROMT sent', `${crShort(sentC)}<small> / ${crShort(s.credit)}</small>`],
+    ['$PROMPT sent', `${crShort(sentC)}<small> / ${crShort(s.credit)}</small>`],
     ['Batches', cr(Math.max(0, s.batches_sent - waitBatches.size))],
     ['In queue', `${cr(s.queued_wallets)}<small> wallets</small>`],
   ];
@@ -1202,7 +1202,7 @@ function paintTkNumbers() {
   const frac = s.credit ? sentC / s.credit : 0;
   $('#tkBlocks').querySelectorAll('i').forEach((b, i) => b.style.setProperty('--f', `${Math.max(0, Math.min(1, frac * 10 - i)) * 100}%`));
   $('#tkPct').textContent = pctText(sentC, s.credit || 1);
-  $('#tkProgNote').textContent = s.credit ? `${cr(sentC)} of ${cr(s.credit)} $PROMT claimed so far is airdropped` : 'Nothing claimed yet';
+  $('#tkProgNote').textContent = s.credit ? `${cr(sentC)} of ${cr(s.credit)} $PROMPT claimed so far is airdropped` : 'Nothing claimed yet';
 }
 function liveRow(r, fresh = false) {
   const mine = tk.wallet && r.wallet === tk.wallet;
@@ -1221,7 +1221,7 @@ function paintTkList() {
     $('#tkCount').textContent = rows.length ? `latest ${rows.length}` : '';
     list.innerHTML = rows.map((r) => liveRow(r)).join('') || `<div class="empty">${d.open ? `Batch #${d.open.no} goes out next. Wallets show up here one by one as it lands.`
       : d.totals.wallets ? `The first batch goes out ${d.token.ca ? 'any minute' : 'right after the launch'}. ${cr(d.totals.queued_wallets)} wallets are in the queue.`
-        : 'No claims yet. Burn Citizens in your AI (/burncitizen), then claim to your wallet (/claimpromt).'}</div>`;
+        : 'No claims yet. Burn Citizens in your AI (/burncitizen), then claim to your wallet (/claimprompt).'}</div>`;
     return;
   }
   if (tk.tab === 'batches') {
@@ -1232,7 +1232,7 @@ function paintTkList() {
       const extra = b.tx_count > b.txs.length ? `<span class="note">+${cr(b.tx_count - b.txs.length)} more</span>` : '';
       return `<div class="tk-batch${b.status === 'sending' ? ' open' : ''}">
         <div class="tk-batch-top"><b class="px">Batch #${b.no}</b>${b.status === 'sending' ? '<span class="pill wait">Next</span>' : '<span class="pill ok">Sent</span>'}
-          <span class="tk-batch-n">${cr(b.wallets)} wallet${b.wallets === 1 ? '' : 's'} · ${cr(b.credit)} $PROMT</span>
+          <span class="tk-batch-n">${cr(b.wallets)} wallet${b.wallets === 1 ? '' : 's'} · ${cr(b.credit)} $PROMPT</span>
           <span class="note tk-batch-t">${b.sent_at ? `${hhmm(b.sent_at)} · ${ago(b.sent_at)}` : `started ${ago(b.created_at)}`}</span></div>
         ${links.length ? `<div class="tk-txs">${links.slice(0, 8).join('')}${links.length > 8 ? `<details><summary class="note">${links.length - 8} more transactions</summary><div class="tk-txs">${links.slice(8).join('')}</div></details>` : ''}${extra}</div>` : ''}
       </div>`;
@@ -1270,14 +1270,14 @@ async function loadWallet(repaint = false) {
   const parts = [];
   for (const b of r.sent_batches) {
     const link = b.tx ? solscan('tx', b.tx) : b.txs.length === 1 ? solscan('tx', b.txs[0]) : `${solscan('account', r.wallet)}#transfers`;
-    parts.push(`<div class="tk-st ok"><span class="pill ok">Airdropped</span><div><b>${cr(b.amount)} $PROMT</b>${b.batch ? ` in batch #${b.batch}` : ''}${b.at ? ` · ${hhmm(b.at)}, ${ago(b.at)}` : ''}
+    parts.push(`<div class="tk-st ok"><span class="pill ok">Airdropped</span><div><b>${cr(b.amount)} $PROMPT</b>${b.batch ? ` in batch #${b.batch}` : ''}${b.at ? ` · ${hhmm(b.at)}, ${ago(b.at)}` : ''}
       <div><a href="${link}" target="_blank" rel="noopener">${b.tx || b.txs.length === 1 ? 'View the transaction' : 'See it on Solscan'} ↗</a></div></div></div>`);
   }
-  if (r.sending) parts.push(`<div class="tk-st"><span class="pill wait">Next batch</span><div><b>${cr(r.sending.amount)} $PROMT</b> in batch #${r.sending.batch}, the next to go out (${r.sending.eta ? until(r.sending.eta) : 'any minute'}).</div></div>`);
-  if (r.queued) parts.push(`<div class="tk-st"><span class="pill">In queue</span><div><b>${cr(r.queued.amount)} $PROMT</b> · <b>#${cr(r.queued.pos)}</b> in line · batch #${r.queued.batch} · ${until(r.queued.eta)} <span class="note">(around ${hhmm(r.queued.eta)}, an estimate)</span></div></div>`);
+  if (r.sending) parts.push(`<div class="tk-st"><span class="pill wait">Next batch</span><div><b>${cr(r.sending.amount)} $PROMPT</b> in batch #${r.sending.batch}, the next to go out (${r.sending.eta ? until(r.sending.eta) : 'any minute'}).</div></div>`);
+  if (r.queued) parts.push(`<div class="tk-st"><span class="pill">In queue</span><div><b>${cr(r.queued.amount)} $PROMPT</b> · <b>#${cr(r.queued.pos)}</b> in line · batch #${r.queued.batch} · ${until(r.queued.eta)} <span class="note">(around ${hhmm(r.queued.eta)}, an estimate)</span></div></div>`);
   $('#tkMine').innerHTML = `<div class="tk-card"><div class="tk-card-h"><span>Wallet</span> <a class="mono-link" href="${solscan('account', r.wallet)}" target="_blank" rel="noopener">${esc(shortW(r.wallet))} ↗</a>
       <button class="tk-x" id="tkClear" aria-label="Clear">×</button></div>
-    ${r.found ? parts.join('') : `<div class="tk-st"><div>No claim to this wallet yet. Burn Citizens in your AI (<b>/burncitizen</b>), then claim your $PROMT to this wallet (<b>/claimpromt</b>).</div></div>`}</div>`;
+    ${r.found ? parts.join('') : `<div class="tk-st"><div>No claim to this wallet yet. Burn Citizens in your AI (<b>/burncitizen</b>), then claim your $PROMPT to this wallet (<b>/claimprompt</b>).</div></div>`}</div>`;
   $('#tkClear').onclick = () => { tk.wallet = ''; tk.walletData = null; $('#tkWallet').value = ''; $('#tkMine').innerHTML = ''; saveWallet(''); paintTkList(); };
   if (repaint) paintTkList();
 }
@@ -1322,7 +1322,7 @@ async function renderNft(id) {
   const burnt = n.burned_at ? (n.activity || []).find((a) => a.type === 'burn') : null;
   const q = n.exported_at ? `Show me ${ref}` : n.burned_at ? `Show me ${ref}` : !minted(n) && n.collection === 'citizens' ? `/pick-city ${n.id}` : n.price != null ? `Buy ${ref} for ${n.price} $CASH` : !minted(n) ? (n.collection === 'citizens' ? 'Mint me a Citizen' : `Mint me an NFT from the ${n.collection_name} collection (${n.collection})`) : `Show me ${ref}`;
   const action = n.exported_at ? `<div class="big" style="font-size:18px">On Solana</div><div style="color:var(--dim);font-size:12px">Taken out of Prompt City to a Solana wallet${n.export_asset ? `: <a href="https://solscan.io/token/${esc(n.export_asset)}${stats?.test_mode ? '?cluster=devnet' : ''}" target="_blank" rel="noopener">asset ${esc(n.export_asset.slice(0, 6))}…</a>` : ' (being minted)'}.</div>`
-    : n.burned_at ? `<div class="big" style="font-size:18px">Burned</div><div style="color:var(--dim);font-size:12px">${burnt?.craft ? 'Burned in a craft' : 'Burned for $PROMT'}${burnt ? ` by ${who(burnt.from_addr, burnt.from_name)}` : ''}. It is gone for good.</div>`
+    : n.burned_at ? `<div class="big" style="font-size:18px">Burned</div><div style="color:var(--dim);font-size:12px">${burnt?.craft ? 'Burned in a craft' : 'Burned for $PROMPT'}${burnt ? ` by ${who(burnt.from_addr, burnt.from_name)}` : ''}. It is gone for good.</div>`
     : frozen ? `<div class="big" style="font-size:18px">Collection frozen</div><div style="color:var(--dim);font-size:12px">The Prompt City team stopped minting and trading in ${esc(n.collection_name)}.</div>`
     : n.price != null
     ? `<div class="big">${fmt(n.price)} <small style="color:var(--dim)">$CASH</small></div>
@@ -1338,7 +1338,7 @@ async function renderNft(id) {
     : a.type === 'export'
     ? `<tr><td><span class="type export">to Solana</span></td><td>${who(a.from_addr, a.from_name)}</td><td class="num note">one way</td><td class="hide-sm note">${ago(a.at)}</td><td><a class="tx" href="/tx/${a.tx}">#${a.tx}</a></td></tr>`
     : a.type === 'burn'
-    ? `<tr><td><span class="type burn">burn</span></td><td>${who(a.from_addr, a.from_name)}</td><td class="num note">${a.craft ? 'crafted' : 'for $PROMT'}</td><td class="hide-sm note">${ago(a.at)}</td><td><a class="tx" href="/tx/${a.tx}">#${a.tx}</a></td></tr>`
+    ? `<tr><td><span class="type burn">burn</span></td><td>${who(a.from_addr, a.from_name)}</td><td class="num note">${a.craft ? 'crafted' : 'for $PROMPT'}</td><td class="hide-sm note">${ago(a.at)}</td><td><a class="tx" href="/tx/${a.tx}">#${a.tx}</a></td></tr>`
     : a.type === 'transfer'
     ? `<tr><td><span class="type transfer">transfer</span></td><td>${who(a.from_addr, a.from_name)} → ${who(a.to_addr, a.to_name)}</td><td class="num note">sent</td><td class="hide-sm note">${ago(a.at)}</td><td><a class="tx" href="/tx/${a.tx}">#${a.tx}</a></td></tr>`
     : `<tr><td><span class="type buy">sale</span></td><td>${who(a.from_addr, a.from_name)} → ${who(a.to_addr, a.to_name)}</td><td class="num">${fmt(a.price)} <small style="color:var(--dim)">$CASH</small></td><td class="hide-sm note">${ago(a.at)}</td><td><a class="tx" href="/tx/${a.tx}">#${a.tx}</a></td></tr>`;
@@ -1389,11 +1389,11 @@ function txSummary(t) {
   }
   if (t.type === 'burn' && t.burn) {
     const b = t.burn;
-    return { what: `${who(b.account, b.name)} burned ${b.count > 1 ? `${b.count} NFTs, first ${nftLink(t.nft)},` : nftLink(t.nft)} for ${Number(b.credit).toLocaleString('en-US')} $PROMT${b.id ? ` · <a href="/burn/${b.id}">card</a>` : ''}`, amount: 'burned', unit: '' };
+    return { what: `${who(b.account, b.name)} burned ${b.count > 1 ? `${b.count} NFTs, first ${nftLink(t.nft)},` : nftLink(t.nft)} for ${Number(b.credit).toLocaleString('en-US')} $PROMPT${b.id ? ` · <a href="/burn/${b.id}">card</a>` : ''}`, amount: 'burned', unit: '' };
   }
   if (t.type === 'craft' && t.craft) return { what: `${who(t.craft.account, t.craft.name)} crafted ${t.craft.burned.length} Citizens into ${nftLink(t.nft)}`, amount: 'crafted', unit: '' };
   if (t.type === 'export' && t.export) return { what: `${who(t.export.account, t.export.name)} took ${nftLink(t.nft)} to Solana`, amount: 'to Solana', unit: '' };
-  if (t.type === 'claim') { const e = find('claim_fee'); if (e) return { what: `${who(e.account, e.name)} claimed $PROMT to a Solana wallet (fee)`, amount: usd(e.amount), unit: '$CASH', cls: 'minus' }; }
+  if (t.type === 'claim') { const e = find('claim_fee'); if (e) return { what: `${who(e.account, e.name)} claimed $PROMPT to a Solana wallet (fee)`, amount: usd(e.amount), unit: '$CASH', cls: 'minus' }; }
   if (t.type === 'free mint') { const e = find('free_mint'); return { what: `${who(e.account, e.name)} got ${nftLink(t.nft)} free with a code`, amount: 'free', unit: '' }; }
   if (t.type === 'mint') { const mn = find('mint'); return { what: `${who(mn.account, mn.name)} minted ${nftLink(t.nft)}${find('hold', false) ? ' · held for the creator' : ''}`, amount: usd(-mn.amount), unit: '$CASH' }; }
   if (t.type === 'payout') { const e = find('payout'); return { what: `escrow → ${who(e.account, e.name)}, creator of ${t.collection ? `<a href="/c/${esc(t.collection.slug)}">${esc(t.collection.name)}</a>` : 'a collection'}`, amount: `+${usd(e.amount)}`, unit: '$CASH', cls: 'plus' }; }
@@ -1693,9 +1693,9 @@ const CHAT_COMMANDS = [
   ['/cancelnft-city', '<number>', 'Take your NFT off sale'],
   ['/sendnft', '<numbers> to <address>', 'Send your NFTs to another city address: one, several ("/sendnft 42 43 to city_…") or each to its own; you confirm first'],
   ['/transfernft', '', 'The transfer form: tick the NFTs you want to send, type the city address, confirm'],
-  ['/burncitizen', '', 'Burn Citizens for $PROMT: 10,000 each, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x; in a form'],
-  ['/claimpromt', '', 'Claim your $PROMT to your Solana wallet for the airdrop (fee 0.5 $CASH), in a form'],
-  ['/job', '[way]', 'The daily job: stealth, muscle or talk, for XP (your wanted level) and $PROMT'],
+  ['/burncitizen', '', 'Burn Citizens for $PROMPT: 10,000 each, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x; in a form'],
+  ['/claimprompt', '', 'Claim your $PROMPT to your Solana wallet for the airdrop (fee 0.5 $CASH), in a form'],
+  ['/job', '[way]', 'The daily job: stealth, muscle or talk, for XP (your wanted level) and $PROMPT'],
   ['/wanted-city', '', 'Your wanted level, XP, streak and what each level unlocks'],
   ['/crew-city', '[create|join|leave] [name]', 'Your crew; start one, join one by name or leave. Crews of 3+ get more XP'],
   ['/craft-city', '<numbers> into [number]', 'Burn 3 Citizens of one rarity into 1 of the next rarity; you confirm first'],

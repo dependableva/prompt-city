@@ -1,5 +1,5 @@
-// The cards people post on X, 1600 x 900 in the site's pixel style: the burn card ("BURNT 5 NFTs · 50,000 $PROMT")
-// and the free airdrop card ("FREE 1,000 $PROMT").
+// The cards people post on X, 1600 x 900 in the site's pixel style: the burn card ("BURNT 5 NFTs · 50,000 $PROMPT")
+// and the free airdrop card ("FREE 1,000 $PROMPT").
 // Drawn here pixel by pixel with a small bitmap font, no image libraries: /burn/<id>.png (app.js) renders it once and
 // the CDN keeps it. The burned NFTs come from the thumbnails the function carries (collection/thumbs, 252 px).
 import fs from 'node:fs';
@@ -180,7 +180,7 @@ export function burnCard(burn, opts = {}) {
   const tag = 'INSIDE YOUR AI';
   cv.text(tag, W - 80 - textWidth(tag, 5), 86, 5, C.dim);
 
-  // left: BURNT / 5 NFTs / 50,000 $PROMT / AIRDROP
+  // left: BURNT / 5 NFTs / 50,000 $PROMPT / AIRDROP
   const left = 80;
   const colW = 740;
   cv.text('BURNT', left, 200, fit('BURNT', colW, 24), C.red);
@@ -188,9 +188,9 @@ export function burnCard(burn, opts = {}) {
   const what = `${n.toLocaleString('en-US')} NFT${n === 1 ? '' : 's'}`;
   cv.text(what, left, 405, fit(what, colW, 14), C.cream);
   const amount = Number(burn.credit).toLocaleString('en-US');
-  const sc = fit(`${amount} $PROMT`, colW, 10);
+  const sc = fit(`${amount} $PROMPT`, colW, 10);
   const end = cv.text(amount, left, 535, sc, C.cream);
-  cv.text('$PROMT', end + sc * 4, 535, sc, C.red);
+  cv.text('$PROMPT', end + sc * 4, 535, sc, C.red);
   const badge = 'AIRDROP · INSIDE AI';
   const bw = textWidth(badge, 5) + 40;
   cv.rect(left, 640, bw, 75, C.red);
@@ -232,7 +232,7 @@ export function burnCard(burn, opts = {}) {
   return encodeRgb(W, H, cv.px);
 }
 
-// The $PROMT coin, 30 x 30 cells: a round pink coin with a cream rim and a citizen face in shades (16 x 10) in the
+// The $PROMPT coin, 30 x 30 cells: a round pink coin with a cream rim and a citizen face in shades (16 x 10) in the
 // middle, light from the top left. FACE: # cream, g grey (its shade), k black, . the coin's red.
 const FACE = [
   '....########....',
@@ -264,7 +264,7 @@ export function coinCell(x, y) {
   return dark && d > R1 - 2 ? hex('#D63C8F') : C.red; // a darker crescent inside the rim, bottom right
 }
 
-// { id, amount } → PNG: "FREE / 1,000 $PROMT / AIRDROP · INSIDE AI" and a big pixel coin with sparkles
+// { id, amount } → PNG: "FREE / 1,000 $PROMPT / AIRDROP · INSIDE AI" and a big pixel coin with sparkles
 export function airdropCard(drop, { site = 'PROMPT.CITY' } = {}) {
   const cv = canvas();
   cv.rect(0, 0, W, H, C.bg);
@@ -283,7 +283,7 @@ export function airdropCard(drop, { site = 'PROMPT.CITY' } = {}) {
   const amount = Number(drop.amount).toLocaleString('en-US');
   const sc = fit(amount, colW, 18);
   cv.text(amount, left, 395, sc, C.cream);
-  cv.text('$PROMT', left, 395 + 7 * sc + 28, fit('$PROMT', colW, 10), C.red);
+  cv.text('$PROMPT', left, 395 + 7 * sc + 28, fit('$PROMPT', colW, 10), C.red);
   const badge = 'AIRDROP · INSIDE AI';
   cv.rect(left, 660, textWidth(badge, 5) + 40, 75, C.red);
   cv.text(badge, left + 20, 680, 5, C.ink);

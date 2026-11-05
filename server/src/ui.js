@@ -55,5 +55,5 @@ export const withdrawUi = (opts) => appPage('withdraw', opts);
 export const nftsUi = (opts) => appPage('nfts', opts);
 // the NFT transfer form: tick NFTs, type a city address, confirm
 export const transferUi = (opts) => appPage('transfer', opts);
-// the $PROMT form: burn Citizens for $PROMT, or claim $PROMT to a Solana wallet (one page, two views)
+// the $PROMPT form: burn Citizens for $PROMPT, or claim $PROMPT to a Solana wallet (one page, two views)
 export const creditUi = (opts) => appPage('credit', opts);

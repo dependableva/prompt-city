@@ -189,7 +189,7 @@ export async function checkMoney(db) {
     if (entryHash(prev, ledgerEntry(r)) !== r.hash) { chainOk = false; brokenAt = Number(r.seq); break; }
     prev = r.hash;
   }
-  // $PROMT (credit.js): burns + finished free drops + daily jobs (game.js) - claims that are not void
+  // $PROMPT (credit.js): burns + finished free drops + daily jobs (game.js) - claims that are not void
   const creditOff = await db.query(`select u.id from users u where u.credit_balance <>
     coalesce((select sum(credit) from burns where user_id = u.id), 0)
     + coalesce((select sum(prompt) from jobs where user_id = u.id), 0)
