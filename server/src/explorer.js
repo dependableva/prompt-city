@@ -286,7 +286,7 @@ export function createExplorer(db, opts = {}) {
     const wById = new Map(ws.map((w) => [Number(w.id), w]));
     // NFT rows (mints, buys, transfers) carry the NFT's number: its name, picture and collection for the page
     const nIds = [...new Set(rows.filter((r) => ['mint', 'team_mint', 'free_mint', 'buy', 'mint_refund', 'send', 'burn', 'craft', 'export'].includes(r.kind) && /^\d{1,9}$/.test(r.ref || '')).map((r) => Number(r.ref)))];
-    // burns: the $PROMPT each gave and its card (burns.xact is the transaction of its "burn" rows)
+    // burns: the $PROMT each gave and its card (burns.xact is the transaction of its "burn" rows)
     const bX = [...new Set(rows.filter((r) => r.kind === 'burn').map((r) => String(r.xact)))];
     const bs = bX.length ? await db.query('select id, xact::text as xact, credit from burns where xact = any($1::bigint[])', [bX]) : [];
     const burnByX = new Map(bs.map((b) => [b.xact, { id: Number(b.id), credit: Number(b.credit) }]));
@@ -342,7 +342,7 @@ export function createExplorer(db, opts = {}) {
         if (first != null) t.nft = n ? { id: first, name: n.name, rarity: n.rarity, collection: n.slug, collection_name: n.collection_name,
           image: `/img/${first}.png`, thumb: `/thumb/${first}.png`, pixel: n.pixel } : { id: first, name: nftName(first) };
       } else if (type === KINDS.burn) {
-        // NFTs burned for $PROMPT: one or many from one account, in one transaction
+        // NFTs burned for $PROMT: one or many from one account, in one transaction
         const burned = g.filter((r) => r.kind === 'burn');
         const info = burnByX.get(String(g[0].xact));
         t.burn = { count: burned.length, account: burned[0].public_id || null, name: burned[0].name || null, credit: info?.credit ?? null, id: info?.id ?? null };

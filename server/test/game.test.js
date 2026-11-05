@@ -86,10 +86,10 @@ const day = (s) => new Date(`${s}T12:00:00Z`);
 const moneyOk = async () => {
   const c = await checkMoney(db);
   assert.ok(c.balancesMatch, 'every balance equals its ledger');
-  assert.ok(c.creditMatch, '$PROMPT = burns + drops + jobs - claims');
+  assert.ok(c.creditMatch, '$PROMT = burns + drops + jobs - claims');
 };
 
-test('job: one a day, XP and $PROMPT, the right way in, a helping Citizen, a streak, levels', async () => {
+test('job: one a day, XP and $PROMT, the right way in, a helping Citizen, a streak, levels', async () => {
   const u = await user();
   const d1 = '2026-11-10';
   const j1 = game.jobOfDay(d1);
@@ -134,7 +134,7 @@ test('job: through the chat, without and with a way in', async () => {
   assert.match(show.text, /Call job again with the approach only after the user picks one/);
   const done = await call('job', { approach: 'muscle' });
   assert.match(done.text, /you went in with muscle/);
-  assert.match(done.text, /XP and [\d,]+ \$PROMPT/);
+  assert.match(done.text, /XP and [\d,]+ \$PROMT/);
   assert.match((await call('job')).text, /You already pulled it \(muscle/);
   assert.match((await call('wanted')).text, /Wanted level ★ \(1\/5\)/);
 });

@@ -54,11 +54,11 @@ export const COMMANDS = [
       'its confirm code only after the user answers yes. The command itself is not the yes' },
   { name: 'transfernft', tool: 'transfer_form', does: 'The transfer form: tick the NFTs you want to send, type the city address, confirm',
     how: 'call transfer_form and let the user pick in the form; nothing is sent until they confirm there' },
-  { name: 'burncitizen', tool: 'burn_form', does: 'Burn Citizens for $PROMPT: 10,000 each, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x; in a form',
+  { name: 'burncitizen', tool: 'burn_form', does: 'Burn Citizens for $PROMT: 10,000 each, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x; in a form',
     how: 'call burn_form and let the user pick in the form; nothing is burned until they confirm there' },
-  { name: 'claimprompt', tool: 'claim_credit_form', does: 'Claim your $PROMPT to your Solana wallet for the airdrop (fee 0.5 $CASH), in a form',
+  { name: 'claimpromt', tool: 'claim_credit_form', does: 'Claim your $PROMT to your Solana wallet for the airdrop (fee 0.5 $CASH), in a form',
     how: 'call claim_credit_form; the user pastes the wallet and confirms in the form' },
-  { name: 'job', args: [{ name: 'way', example: 'stealth', optional: true }], tool: 'job', does: 'The daily job: stealth, muscle or talk, for XP (your wanted level) and $PROMPT',
+  { name: 'job', args: [{ name: 'way', example: 'stealth', optional: true }], tool: 'job', does: 'The daily job: stealth, muscle or talk, for XP (your wanted level) and $PROMT',
     how: 'call job to show today\'s job; if a way in is written (stealth, muscle or talk), call job with that approach' },
   { name: 'wanted-city', tool: 'wanted', does: 'Your wanted level, XP, streak and what each level unlocks',
     how: 'call wanted' },
@@ -88,7 +88,7 @@ export const toolHint = (tool) => {
 };
 
 export const INSTRUCTIONS_COMMANDS = `Chat commands. The user may type a command: /promptcity, the start command (also written promptcity, /prompt.city or
-prompt.city on its own), /heist (also heist), /job (also job), /crewchat (also crewchat), /showmynfts (also showmynfts), /sendnft (also sendnft), /transfernft (also transfernft), /burncitizen (also burncitizen), /claimprompt (also claimprompt), or a message starting with "/" and ending in "-city" (any case, "_city" is the same).
+prompt.city on its own), /heist (also heist), /job (also job), /crewchat (also crewchat), /showmynfts (also showmynfts), /sendnft (also sendnft), /transfernft (also transfernft), /burncitizen (also burncitizen), /claimpromt (also claimpromt), or a message starting with "/" and ending in "-city" (any case, "_city" is the same).
 Do exactly what the command says, right away, without guessing and without extra questions beyond a missing argument
 or a confirmation the command asks for below.
 NFT numbers may be written 42, #42 or "Citizen #42". If a required argument is missing, ask only for it. For an unknown

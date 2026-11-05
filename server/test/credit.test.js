@@ -1,4 +1,4 @@
-// $PROMPT: Citizens burned for $PROMPT (10,000 each) in the burn form, $PROMPT claimed to a Solana wallet for the airdrop
+// $PROMT: Citizens burned for $PROMT (10,000 each) in the burn form, $PROMT claimed to a Solana wallet for the airdrop
 // in the claim form (fee 0.5 $CASH), the owner's list in /admin, the burn card for X, the explorer, and the Tokens page.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -50,7 +50,7 @@ const nftsOf = async (u, k, rarity = 'Street') => (await db.query(`update nfts s
     select n.id from nfts n join collections c on c.id = n.collection_id where c.slug = 'citizens' and n.minted_at is null and n.rarity = $2
     order by random() limit $3) returning id`, [u.id, rarity, k])).map((x) => Number(x.id));
 const creditOf = async (u) => Number((await db.query('select credit_balance from users where id = $1', [u.id]))[0].credit_balance);
-// the invariant: an account's $PROMPT is what its burns gave minus what its claims took
+// the invariant: an account's $PROMT is what its burns gave minus what its claims took
 async function creditMatches() {
   const off = await db.query(`select u.id from users u where u.credit_balance <>
     coalesce((select sum(credit) from burns where user_id = u.id), 0)
@@ -71,7 +71,7 @@ async function chat(u) {
   return { client: c, raw, txt };
 }
 
-test('burn: NFTs gone for good, 10,000 $PROMPT each, one explorer transaction, listed ones off the market', async () => {
+test('burn: NFTs gone for good, 10,000 $PROMT each, one explorer transaction, listed ones off the market', async () => {
   const a = await user();
   const [x, y, z, keep] = await nftsOf(a, 4);
   await m.list(db, a.id, y, 7_000_000);
@@ -138,11 +138,11 @@ test('burn: all or nothing; only your own Citizens; not before the sell-out of a
   assert.ok(await creditMatches());
 });
 
-test('claim: all the $PROMPT to a wallet for 0.5 $CASH to the treasury; a retry never claims twice; bad addresses refused', async () => {
+test('claim: all the $PROMT to a wallet for 0.5 $CASH to the treasury; a retry never claims twice; bad addresses refused', async () => {
   const a = await user(undefined, 1);
   const w = wallet();
   assert.ok(sol.isWallet(w));
-  await assert.rejects(credit.claim(db, a.id, { wallet: w }), /No \$PROMPT to claim yet/);
+  await assert.rejects(credit.claim(db, a.id, { wallet: w }), /No \$PROMT to claim yet/);
   await credit.burn(db, a.id, await nftsOf(a, 2));
   // not a wallet
   await assert.rejects(credit.claim(db, a.id, { wallet: 'city_AbC123xyZ789' }), /not a Solana address/);
@@ -166,7 +166,7 @@ test('claim: all the $PROMPT to a wallet for 0.5 $CASH to the treasury; a retry 
   assert.equal(again.id, c.id);
   assert.equal(again.repeated, true);
   assert.equal(await treasury(), t0 + 500_000);
-  await assert.rejects(credit.claim(db, a.id, { wallet: w, requestKey: 'key-two-12345' }), /No \$PROMPT to claim yet/);
+  await assert.rejects(credit.claim(db, a.id, { wallet: w, requestKey: 'key-two-12345' }), /No \$PROMT to claim yet/);
   // more burns later: claim again; not enough $CASH for the fee
   const poor = await user(undefined, 0);
   await credit.burn(db, poor.id, await nftsOf(poor, 1));
@@ -184,17 +184,17 @@ test('launch time: CREDIT_LAUNCH_AT gives the countdown; without it, "soon"; aft
   const at = (iso) => new Date(iso);
   assert.equal(credit.launchAt({}), null);
   assert.equal(credit.launchText(at('2026-10-31T11:00:00Z'), {}), null);
-  assert.equal(credit.launchLine(at('2026-10-31T11:00:00Z'), {}), 'The $PROMPT token launches soon.');
+  assert.equal(credit.launchLine(at('2026-10-31T11:00:00Z'), {}), 'The $PROMT token launches soon.');
   const today = { CREDIT_LAUNCH_AT: '2026-10-31T20:00:00Z' };
   assert.equal(credit.launchText(at('2026-10-31T11:00:00Z'), today), 'in 9 hours, at 20:00 UTC');
   assert.equal(credit.launchText(at('2026-10-31T19:20:00Z'), today), 'in 40 minutes, at 20:00 UTC');
-  assert.equal(credit.launchLine(at('2026-10-31T21:00:00Z'), today), 'The $PROMPT token is live.');
+  assert.equal(credit.launchLine(at('2026-10-31T21:00:00Z'), today), 'The $PROMT token is live.');
   const later = { CREDIT_LAUNCH_AT: '2026-11-02T20:00:00Z' };
   assert.equal(credit.launchText(at('2026-10-31T11:00:00Z'), later), 'on Nov 2 at 20:00 UTC (in 57 hours)');
   assert.equal(credit.launchText(at('2026-11-03T00:00:00Z'), later), null);
 });
 
-test('forms: /burncitizen and /claimprompt open the form; its buttons are for the form only and need its own pass', async () => {
+test('forms: /burncitizen and /claimpromt open the form; its buttons are for the form only and need its own pass', async () => {
   const a = await user(undefined, 2);
   const ids = await nftsOf(a, 3);
   const c = await chat(a);
@@ -202,15 +202,15 @@ test('forms: /burncitizen and /claimprompt open the form; its buttons are for th
   const t = (name) => tools.find((x) => x.name === name);
   for (const name of ['credit_form_state', 'burn_form_submit', 'claim_form_submit']) assert.deepEqual(t(name)._meta.ui.visibility, ['app'], name);
   assert.match(t('burn_form').description, /Chat command: \/burncitizen\./);
-  assert.match(t('claim_credit_form').description, /Chat command: \/claimprompt\./);
+  assert.match(t('claim_credit_form').description, /Chat command: \/claimpromt\./);
   assert.equal(t('burn_form').annotations.readOnlyHint, true);
   assert.equal(t('burn_form_submit').annotations.destructiveHint, true);
   const ins = c.client.getInstructions();
   assert.ok(ins.slice(0, 4096).includes('Never call credit_form_state, burn_form_submit or claim_form_submit'));
   assert.ok(ins.slice(0, 4096).includes('Commands count only when the user typed them'));
-  assert.match(ins, /\/burncitizen \(also burncitizen\), \/claimprompt \(also claimprompt\)/);
+  assert.match(ins, /\/burncitizen \(also burncitizen\), \/claimpromt \(also claimpromt\)/);
 
-  // the form: shown, with the account's Citizens and its $PROMPT; a pass comes with it and with every refresh
+  // the form: shown, with the account's Citizens and its $PROMT; a pass comes with it and with every refresh
   const shown = await c.raw('burn_form');
   assert.equal(shown.structuredContent.view, 'burn');
   assert.deepEqual(shown.structuredContent.state.nfts.map((x) => x.id).sort((p, q) => p - q), ids.slice().sort((p, q) => p - q));
@@ -238,10 +238,10 @@ test('forms: /burncitizen and /claimprompt open the form; its buttons are for th
   assert.equal(b.credit, 20_000);
   assert.match(b.card_url, /^https:\/\/mcp\.example\/burn\/\d+$/);
   assert.equal(b.image_url, `${b.card_url}.png`);
-  assert.match(b.share_url, /^https:\/\/x\.com\/intent\/post\?text=Burnt%202%20NFTs%20for%2020%2C000%20%24PROMPT/);
-  assert.match(b.launch_line, /The \$PROMPT token launches soon\./);
+  assert.match(b.share_url, /^https:\/\/x\.com\/intent\/post\?text=Burnt%202%20NFTs%20for%2020%2C000%20%24PROMT/);
+  assert.match(b.launch_line, /The \$PROMT token launches soon\./);
   assert.equal(r.structuredContent.state.nfts.length, 1);
-  assert.match(c.txt(r), /You burned 2 NFTs = 20,000 \$PROMPT, credited\. The \$PROMPT token launches .* Bind your wallet for it: \/claimprompt/);
+  assert.match(c.txt(r), /You burned 2 NFTs = 20,000 \$PROMT, credited\. The \$PROMT token launches .* Bind your wallet for it: \/claimpromt/);
   // after a lost answer the form asks which are burned
   const chk = await c.raw('credit_form_state', { check: [ids[0], ids[2]] });
   assert.deepEqual(chk.structuredContent.burned, { [ids[0]]: 'burned', [ids[2]]: 'yours' });
@@ -258,10 +258,10 @@ test('forms: /burncitizen and /claimprompt open the form; its buttons are for th
   assert.equal(r.structuredContent.claimed.repeated, true);
   r = await c.raw('claim_form_submit', { wallet: 'bad', request_key: 'form-key-0002', form_token: pass });
   assert.ok(r.structuredContent.refused);
-  // the account shows $PROMPT; the form page is an MCP App that allows the site's pictures
+  // the account shows $PROMT; the form page is an MCP App that allows the site's pictures
   await credit.burn(db, a.id, [ids[2]]);
-  assert.match(c.txt(await c.raw('account')), /\$PROMPT: 10,000 \(claim it to a Solana wallet: \/claimprompt\)/);
-  assert.match(c.txt(await c.raw('account')), /burned Citizen #\d+ for \$PROMPT/);
+  assert.match(c.txt(await c.raw('account')), /\$PROMT: 10,000 \(claim it to a Solana wallet: \/claimpromt\)/);
+  assert.match(c.txt(await c.raw('account')), /burned Citizen #\d+ for \$PROMT/);
   const uri = t('burn_form')._meta.ui.resourceUri;
   assert.match(uri, /^ui:\/\/mcp-market\/credit-[0-9a-f]{12}\.html$/);
   const page = (await c.client.readResource({ uri })).contents[0];
@@ -284,12 +284,12 @@ test('the burn card: a 1600 x 900 PNG and a page that previews it on X; the expl
   const html = await page.text();
   assert.match(html, new RegExp(`<meta property="og:image" content="http://localhost/burn/${b.id}\\.png">`));
   assert.match(html, /<meta name="twitter:card" content="summary_large_image">/);
-  assert.match(html, /BURNT 12 NFTs · 120,000 \$PROMPT/);
+  assert.match(html, /BURNT 12 NFTs · 120,000 \$PROMT/);
   assert.match(page.headers.get('content-security-policy'), /default-src 'none'/);
   assert.equal((await fetch(`${base}/burn/99999.png`)).status, 404);
   assert.equal((await fetch(`${base}/burn/99999`)).status, 404);
 
-  // explorer: a "burn" transaction with its $PROMPT and card; the burns filter; a claim's fee
+  // explorer: a "burn" transaction with its $PROMT and card; the burns filter; a claim's fee
   const burns = await (await fetch(`${base}/api/explorer/txs?type=burn`)).json();
   const tx = burns.find((x) => x.burn?.id === b.id);
   assert.ok(tx);
@@ -342,15 +342,15 @@ test('admin: claims with wallets, copied as wallet,amount lines (one per wallet)
   assert.equal((await nobody.call('POST', '/admin/credit/mark', { ids: [c3.id], status: 'sent' })).status, 403);
   // the admin page has the section and the copy button
   const js = fs.readFileSync(path.join(root, 'site', 'launch.js'), 'utf8');
-  assert.match(js, /\$PROMPT claims/);
+  assert.match(js, /\$PROMT claims/);
   assert.match(js, /navigator\.clipboard\.writeText\(lines\)/);
 });
 
-test('Tokens page: its own address, in the menu, $PROMPT with its CA and the airdrop feed', () => {
+test('Tokens page: its own address, in the menu, $PROMT with its CA and the airdrop feed', () => {
   assert.ok(SITE_PAGES.test('/tokens'));
   const site = fs.readFileSync(path.join(root, 'site', 'index.html'), 'utf8');
   assert.match(site, /<a href="\/tokens" data-nav="tokens">Tokens<\/a>/);
-  assert.match(site, /<h1 class="px" id="tkTitle">\$PROMPT<\/h1>/);
+  assert.match(site, /<h1 class="px" id="tkTitle">\$PROMT<\/h1>/);
   assert.match(site, /Contract address \(CA\)/);
   assert.match(site, /Buy on pump\.fun/);
   assert.match(site, /if \(pathPart === '\/tokens'\) return renderTokens\(query\);/);
@@ -358,15 +358,15 @@ test('Tokens page: its own address, in the menu, $PROMPT with its CA and the air
   assert.match(fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8'), /from = "\/tokens"/);
 });
 
-test('free $PROMPT drop through the promo-code tool: tasks, the card to post, the post, then the $PROMPT; once per account', async () => {
+test('free $PROMT drop through the promo-code tool: tasks, the card to post, the post, then the $PROMT; once per account', async () => {
   const d = await credit.createDrop(db, { code: 'free1000', amount: 1000, uses: 2, follow_url: 'https://x.com/mcpmarkets  https://x.com/founder_1/', tweet_url: 'https://x.com/mcpmarkets/status/123456789' });
   assert.equal(d.follow_url, 'https://x.com/mcpmarkets https://x.com/founder_1');
   assert.equal(d.code, 'FREE1000');
-  await assert.rejects(m.createPromo(db, { code: 'FREE1000', uses: 5 }), /already a \$PROMPT drop/);
+  await assert.rejects(m.createPromo(db, { code: 'FREE1000', uses: 5 }), /already a \$PROMT drop/);
   await assert.rejects(credit.createDrop(db, { code: 'FREE-1000', amount: 5, uses: 5 }), /already exists/);
   await assert.rejects(credit.createDrop(db, { code: 'CREDIT', amount: 5, uses: 5 }), /more than the words/);
   await assert.rejects(credit.createDrop(db, { code: 'BIGDROP', amount: 0, uses: 5 }), /per account/);
-  for (const typed of ['FREE 1000 $PROMPT Prompt City', '/promptcity FREE1000', 'free 1,000 $PROMPT', 'FREE1000']) assert.equal(await credit.findDrop(db, typed), 'FREE1000', typed);
+  for (const typed of ['FREE 1000 $PROMT Prompt City', '/promptcity FREE1000', 'free 1,000 $PROMT', 'FREE1000']) assert.equal(await credit.findDrop(db, typed), 'FREE1000', typed);
   assert.equal(await credit.findDrop(db, 'EARLY'), null);
   // a drop's tasks: a comment under the post comes with like + RT
   assert.deepEqual(credit.dropTasks({ tweet_url: 'https://x.com/a/status/1' }).map((t) => t.kind), ['like_rt', 'comment']);
@@ -380,21 +380,21 @@ test('free $PROMPT drop through the promo-code tool: tasks, the card to post, th
   const say = (code, proof) => c.raw('redeem_code', { code, ...(proof ? { proof } : {}) });
   const older = () => db.query("update credit_drop_claims set shown_at = shown_at - interval '20 seconds' where user_id = $1", [a.id]);
   // /promptcity says the drop is live
-  assert.match(c.txt(await c.raw('promptcity')), /FREE 1,000 \$PROMPT airdrop is live: send \/promptcity FREE1000/);
+  assert.match(c.txt(await c.raw('promptcity')), /FREE 1,000 \$PROMT airdrop is live: send \/promptcity FREE1000/);
   // 1. the tasks
-  let r = await say('FREE 1000 $PROMPT Prompt City');
-  assert.match(c.txt(r), /FREE 1,000 \$PROMPT airdrop 🎁 Before you get it:\n1\. Follow @mcpmarkets on X: https:\/\/x\.com\/mcpmarkets\n2\. Follow @founder_1 on X: https:\/\/x\.com\/founder_1\n3\. Like \+ RT this post: (\S+)\n4\. Comment on this post: https:\/\/x\.com\/mcpmarkets\/status\/123456789\n\nDone all 4\? Send one screenshot that shows them all, or a few \(following @mcpmarkets, following @founder_1, like \+ RT, your comment\)\./);
+  let r = await say('FREE 1000 $PROMT Prompt City');
+  assert.match(c.txt(r), /FREE 1,000 \$PROMT airdrop 🎁 Before you get it:\n1\. Follow @mcpmarkets on X: https:\/\/x\.com\/mcpmarkets\n2\. Follow @founder_1 on X: https:\/\/x\.com\/founder_1\n3\. Like \+ RT this post: (\S+)\n4\. Comment on this post: https:\/\/x\.com\/mcpmarkets\/status\/123456789\n\nDone all 4\? Send one screenshot that shows them all, or a few \(following @mcpmarkets, following @founder_1, like \+ RT, your comment\)\./);
   assert.match(c.txt(r), /The user may send one screenshot or several\. When they show all of it \(@mcpmarkets followed; @founder_1 followed; the post liked and reposted; the user's own comment under the post\)/);
   assert.equal(r.structuredContent.nfts.view, 'tasks');
   assert.deepEqual(r.structuredContent.nfts.tasks.map((t) => t.kind), ['follow', 'follow', 'like_rt', 'comment']);
   assert.match(r.structuredContent.nfts.note, /Done all 4\?/);
-  assert.match(r.structuredContent.nfts.intro, /FREE 1,000 \$PROMPT/);
+  assert.match(r.structuredContent.nfts.intro, /FREE 1,000 \$PROMT/);
   r = await say('FREE1000', 'liked, reposted, following, commented');
   assert.match(c.txt(r), /Do all 4 tasks first, then send the screenshots again\./, 'a screenshot right away is too soon');
   await older();
-  // 2. the card to post: a use is counted, no $PROMPT yet
+  // 2. the card to post: a use is counted, no $PROMT yet
   r = await say('FREE1000', 'post liked and reposted, following @mcpmarkets and @founder_1, their comment under the post');
-  assert.match(c.txt(r), /Your FREE 1,000 \$PROMPT AIRDROP is reserved 🎁\nTo confirm your allocation you must post your card on X: https:\/\/x\.com\/intent\/post\?text=/);
+  assert.match(c.txt(r), /Your FREE 1,000 \$PROMT AIRDROP is reserved 🎁\nTo confirm your allocation you must post your card on X: https:\/\/x\.com\/intent\/post\?text=/);
   assert.ok(r.content.some((x) => x.type === 'image' && x.mimeType === 'image/png'), 'the card comes as a picture too');
   const card = r.structuredContent.nfts;
   assert.equal(card.view, 'drop');
@@ -405,13 +405,13 @@ test('free $PROMPT drop through the promo-code tool: tasks, the card to post, th
   r = await say('FREE1000', 'a post with the card');
   assert.match(c.txt(r), /Post it first/, 'a screenshot right away is too soon');
   await older();
-  // 3. the post: the $PROMPT
-  r = await say('FREE1000', 'their post on X with the FREE 1,000 $PROMPT card');
-  assert.match(c.txt(r), /Allocation confirmed ✅ FREE 1,000 \$PROMPT is on your account\. Your \$PROMPT: 1,000\./);
-  assert.match(c.txt(r), /\/claimprompt/);
+  // 3. the post: the $PROMT
+  r = await say('FREE1000', 'their post on X with the FREE 1,000 $PROMT card');
+  assert.match(c.txt(r), /Allocation confirmed ✅ FREE 1,000 \$PROMT is on your account\. Your \$PROMT: 1,000\./);
+  assert.match(c.txt(r), /\/claimpromt/);
   assert.equal(await creditOf(a), 1000);
   r = await say('FREE1000', 'again');
-  assert.match(c.txt(r), /already got your FREE 1,000 \$PROMPT/);
+  assert.match(c.txt(r), /already got your FREE 1,000 \$PROMT/);
   assert.equal(await creditOf(a), 1000);
   assert.ok(await creditMatches());
   // the card's picture and page
@@ -448,16 +448,16 @@ test('free $PROMPT drop through the promo-code tool: tasks, the card to post, th
   assert.ok(totals.drops >= 1 && totals.drop_credit >= 1000);
 });
 
-test('review fixes: void returns the $PROMPT, the copied claims are what gets marked, retries and changed amounts, closed burns, one card address', async () => {
+test('review fixes: void returns the $PROMT, the copied claims are what gets marked, retries and changed amounts, closed burns, one card address', async () => {
   const a = await user(undefined, 3);
   await credit.burn(db, a.id, await nftsOf(a, 1));
   // the amount the user confirmed has to be the amount claimed
-  await assert.rejects(credit.claim(db, a.id, { wallet: wallet(), expected: 5 }), /Your \$PROMPT is now 10,000, not 5\. Check it and confirm again\./);
+  await assert.rejects(credit.claim(db, a.id, { wallet: wallet(), expected: 5 }), /Your \$PROMT is now 10,000, not 5\. Check it and confirm again\./);
   // the market's own payout wallet
   const hot = wallet();
   await assert.rejects(credit.claim(db, a.id, { wallet: hot, blocked: [hot] }), /an address of this market/);
   const c1 = await credit.claim(db, a.id, { wallet: wallet(), expected: 10_000 });
-  // void: the $PROMPT comes back, the fee stays; only a pending claim; mark leaves it alone
+  // void: the $PROMT comes back, the fee stays; only a pending claim; mark leaves it alone
   const v = await credit.voidClaim(db, c1.id);
   assert.deepEqual([v.returned, v.credit_balance], [10_000, 10_000]);
   await assert.rejects(credit.voidClaim(db, c1.id), /only a pending claim/);
@@ -516,7 +516,7 @@ test('rarer NFTs burn for more: Street 1x, Hustler 2x, Boss 4x, Kingpin 8x, Lege
   const a = await user(undefined, 0);
   const ids = [];
   for (const r of ['Street', 'Hustler', 'Boss', 'Kingpin', 'Legend']) ids.push(...await nftsOf(a, 1, r));
-  // the form shows each NFT's $PROMPT
+  // the form shows each NFT's $PROMT
   const c = await chat(a);
   const st = (await c.raw('burn_form')).structuredContent.state;
   assert.deepEqual(st.nfts.map((n) => [n.rarity, n.credit]).sort((x, y) => x[1] - y[1]),

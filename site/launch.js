@@ -259,22 +259,22 @@
     const field = (id, label, attrs = '') => `<label style="display:grid;gap:4px"><span class="note">${label}</span>
       <input id="${id}" ${attrs} style="background:var(--bg);color:var(--cream);border:2px solid var(--edge);padding:9px 10px;font:inherit"></label>`;
     app.innerHTML = `<div class="wrap">
-      <div class="ex-head"><div><h1 class="px">$PROMPT airdrop</h1>
+      <div class="ex-head"><div><h1 class="px">$PROMT airdrop</h1>
       <p>Batch by batch, shown live on <a href="/tokens">/tokens</a>. <b>Make next batch</b> takes the oldest pending claims (one line per wallet), <b>Copy lines</b> gives <code>wallet,amount</code> for the multisender. After sending, paste the transaction signatures or Solscan links and press <b>Mark sent</b>; wallets that failed go back to the queue. One batch is open at a time.</p></div></div>
       <div id="ab" class="note">Loading…</div>
       <div class="ex-head" style="margin-top:28px"><div><h2 class="px" style="margin:0">Lost deposits</h2>
       <p>Reports from <a href="/lost-deposit">/lost-deposit</a>. Each shows whose deposit address it is (as the person typed it: check on Solscan where the transaction really went) and whether that transaction was already credited. Crediting is still done by hand; a report moves no money.</p></div>
       <div class="tabs" role="tablist" id="ldTabs" style="margin-left:auto">${[['new', 'New'], ['all', 'All']].map(([k, v]) => `<button class="tab" role="tab" data-ld="${k}" aria-selected="${k === 'new'}">${v}</button>`).join('')}</div></div>
       <div id="ld" class="note">Loading…</div>
-      <div class="ex-head" style="margin-top:28px"><div><h2 class="px" style="margin:0">$PROMPT claims</h2>
-      <p>Burns (<b>/burncitizen</b>) give $PROMPT for Citizens. A claim (<b>/claimprompt</b>) takes all of an account's $PROMPT to the Solana wallet it gave, for a fee in $CASH. Claims go out in the airdrop batches above.</p></div></div>
+      <div class="ex-head" style="margin-top:28px"><div><h2 class="px" style="margin:0">$PROMT claims</h2>
+      <p>Burns (<b>/burncitizen</b>) give $PROMT for Citizens. A claim (<b>/claimpromt</b>) takes all of an account's $PROMT to the Solana wallet it gave, for a fee in $CASH. Claims go out in the airdrop batches above.</p></div></div>
       <div id="crOut" class="note" aria-live="polite" style="margin:0 0 8px"></div>
       <div id="cr" class="note">Loading…</div>
-      <div class="ex-head" style="margin-top:28px"><div><h2 class="px" style="margin:0">Free $PROMPT drops</h2>
-      <p>A code people type in their AI chat (<b>/promptcity FREE1000</b>, or "FREE 1000 $PROMPT") for a fixed amount of $PROMPT, once per account. With tasks the AI asks for them and a screenshot first; then it gives the airdrop card to post on X, and the $PROMPT is added after a screenshot of that post. It goes through the chat's promo-code tool, so nobody has to reconnect the connector. The AI only looks at screenshots: an edited one can pass.</p></div></div>
+      <div class="ex-head" style="margin-top:28px"><div><h2 class="px" style="margin:0">Free $PROMT drops</h2>
+      <p>A code people type in their AI chat (<b>/promptcity FREE1000</b>, or "FREE 1000 $PROMT") for a fixed amount of $PROMT, once per account. With tasks the AI asks for them and a screenshot first; then it gives the airdrop card to post on X, and the $PROMT is added after a screenshot of that post. It goes through the chat's promo-code tool, so nobody has to reconnect the connector. The AI only looks at screenshots: an edited one can pass.</p></div></div>
       <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));align-items:end">
         ${field('dpCode', 'Code', 'placeholder="FREE1000" maxlength="32" autocomplete="off" spellcheck="false"')}
-        ${field('dpAmount', '$PROMPT per account', 'type="number" min="1" step="1" value="1000" inputmode="numeric"')}
+        ${field('dpAmount', '$PROMT per account', 'type="number" min="1" step="1" value="1000" inputmode="numeric"')}
         ${field('dpUses', 'Uses (accounts)', 'type="number" min="1" max="100000" step="1" value="5000" inputmode="numeric"')}
         ${field('dpFollow', 'Task: follow, up to 3 accounts with a space between (optional)', 'placeholder="https://x.com/mcpmarkets https://x.com/founder" autocomplete="off" spellcheck="false"')}
         ${field('dpTweet', 'Task: like + RT + comment on post (optional)', 'placeholder="https://x.com/mcpmarkets/status/…" autocomplete="off" spellcheck="false"')}
@@ -497,7 +497,7 @@
     });
   }
 
-  // $PROMPT: what burns and drops gave, and every claim with its batch. Sending goes through the batches (loadAirdrop).
+  // $PROMT: what burns and drops gave, and every claim with its batch. Sending goes through the batches (loadAirdrop).
   let crData = null;
   async function loadCredit() {
     const el = $('#cr');
@@ -506,10 +506,10 @@
     const t = crData.totals;
     const n = (v) => Number(v || 0).toLocaleString('en-US');
     const PILL = { pending: 'wait', sent: 'ok', void: 'bad' };
-    el.innerHTML = `<div class="tiles" style="margin:0 0 12px">${[['Burned NFTs', n(t.burned_nfts)], ['$PROMPT given', `${n(t.issued + t.drop_credit)}${t.drops ? ` <small>· ${n(t.drops)} free drops</small>` : ''}`], ['Not claimed yet', n(t.unclaimed)],
+    el.innerHTML = `<div class="tiles" style="margin:0 0 12px">${[['Burned NFTs', n(t.burned_nfts)], ['$PROMT given', `${n(t.issued + t.drop_credit)}${t.drops ? ` <small>· ${n(t.drops)} free drops</small>` : ''}`], ['Not claimed yet', n(t.unclaimed)],
       ['Pending claims', `${n(t.pending)} <small>· ${n(t.pending_credit)}</small>`], ['Sent', `${n(t.sent)} <small>· ${n(t.sent_credit)}</small>`], ['Claim fees', `${fmt(t.fees)} <small>$CASH</small>`]]
       .map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}</div>
-      <table class="txs"><thead><tr><th>#</th><th>Account</th><th>Wallet</th><th style="text-align:right">$PROMPT</th><th>Status</th><th></th></tr></thead><tbody>
+      <table class="txs"><thead><tr><th>#</th><th>Account</th><th>Wallet</th><th style="text-align:right">$PROMT</th><th>Status</th><th></th></tr></thead><tbody>
       ${crData.claims.map((c) => `<tr><td>#${c.id}<div class="note">${esc(new Date(c.at).toLocaleString())}</div></td>
         <td><a class="addr" href="/a/${esc(c.addr)}">${esc(c.addr)}</a><div class="note">@${esc(c.handle)}</div></td>
         <td><a class="mono-link" href="https://solscan.io/account/${encodeURIComponent(c.wallet)}" target="_blank" rel="noopener">${esc(c.wallet)}</a></td>
@@ -528,9 +528,9 @@
       loadAirdrop();
     });
     el.querySelectorAll('[data-crvoid]').forEach((b) => b.onclick = async () => {
-      if (!window.confirm(`Void claim #${b.dataset.crvoid}? Its $PROMPT goes back to the account (the fee stays paid). Use it for a claim made by mistake.`)) return;
+      if (!window.confirm(`Void claim #${b.dataset.crvoid}? Its $PROMT goes back to the account (the fee stays paid). Use it for a claim made by mistake.`)) return;
       b.disabled = true;
-      try { const r = await send('POST', `/admin/credit/void/${b.dataset.crvoid}`); $('#crOut').textContent = `Claim #${r.id} void: ${n(r.returned)} $PROMPT back on the account.`; } catch (e) { alert(e.message); }
+      try { const r = await send('POST', `/admin/credit/void/${b.dataset.crvoid}`); $('#crOut').textContent = `Claim #${r.id} void: ${n(r.returned)} $PROMT back on the account.`; } catch (e) { alert(e.message); }
       loadCredit();
       loadAirdrop();
     });
@@ -557,7 +557,7 @@
     const o = d.open;
     const open = o
       ? `<div class="panel" style="margin:0 0 14px;border-color:var(--cream)"><h2 style="font-size:18px">Batch #${o.no} <span class="pill wait">open</span></h2>
-          <div class="kv"><span>Wallets</span><span>${n(o.wallets)}</span><span>$PROMPT</span><span>${n(o.credit)}</span></div>
+          <div class="kv"><span>Wallets</span><span>${n(o.wallets)}</span><span>$PROMT</span><span>${n(o.credit)}</span></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn red" id="abCopy">Copy lines (${n(o.wallets)})</button><span class="note" id="abCopyOut" aria-live="polite" style="align-self:center"></span></div>
           <textarea id="abLines" readonly rows="6" style="${taStyle}">${esc(o.text)}</textarea>
           <label style="display:grid;gap:4px"><span class="note">Optional: the Solscan links (or signatures) of the multisender's transactions, one per line. Without them each wallet on /tokens links to its own Solscan page, where the transfer shows.</span>
@@ -569,13 +569,13 @@
             <span class="note" style="align-self:center">wallets (0: none)</span>
             <button class="btn ghost" id="abCancel" style="margin-left:auto">Cancel batch</button></div></div>`
       : `<div class="panel" style="margin:0 0 14px"><h2 style="font-size:18px">Next batch</h2>
-          <div class="kv"><span>Waiting</span><span>${n(d.queue.wallets)} wallets · ${n(d.queue.credit)} $PROMPT</span></div>
+          <div class="kv"><span>Waiting</span><span>${n(d.queue.wallets)} wallets · ${n(d.queue.credit)} $PROMT</span></div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
             <label style="display:grid;gap:4px"><span class="note">Wallets in the batch</span><input id="abSize" type="number" min="1" max="1000" step="1" value="${Number(d.size)}" inputmode="numeric" style="width:140px;background:var(--bg);color:var(--cream);border:2px solid var(--edge);padding:9px 10px;font:inherit"></label>
             <button class="btn red" id="abMake" ${d.queue.wallets ? '' : 'disabled'}>Make next batch</button></div></div>`;
     const rows = d.batches.filter((b) => b.status === 'sent');
     el.innerHTML = `<div id="abOut" class="note" aria-live="polite" style="margin:0 0 8px"></div>${tok}${open}
-      ${rows.length ? `<table class="txs"><thead><tr><th>Batch</th><th style="text-align:right">Wallets</th><th style="text-align:right">$PROMPT</th><th>Transactions</th><th>Sent</th><th></th></tr></thead><tbody>
+      ${rows.length ? `<table class="txs"><thead><tr><th>Batch</th><th style="text-align:right">Wallets</th><th style="text-align:right">$PROMT</th><th>Transactions</th><th>Sent</th><th></th></tr></thead><tbody>
         ${rows.map((b) => `<tr><td>#${b.no}</td><td class="num">${n(b.wallets)}</td><td class="num">${n(b.credit)}</td>
           <td>${b.txs.slice(0, 3).map((x) => `<a class="mono-link" href="https://solscan.io/tx/${encodeURIComponent(x)}" target="_blank" rel="noopener">${esc(x.slice(0, 8))}…</a>`).join(' ')}${b.txs.length > 3 ? ` <span class="note">+${b.txs.length - 3}</span>` : ''}</td>
           <td class="note">${b.sent_at ? esc(new Date(b.sent_at).toLocaleString()) : ''}</td>
@@ -591,14 +591,14 @@
       const ca = $('#abCa').value.trim();
       const url = $('#abUrl').value.trim();
       if (!ca) return;
-      if (!window.confirm(`Set the $PROMPT CA to\n\n${ca}\n\n${url ? `Buy link: ${url}` : `Buy link: https://pump.fun/coin/${ca}`}\n\nIt shows on /tokens right away and can't be changed from here. Check every character.`)) return;
+      if (!window.confirm(`Set the $PROMT CA to\n\n${ca}\n\n${url ? `Buy link: ${url}` : `Buy link: https://pump.fun/coin/${ca}`}\n\nIt shows on /tokens right away and can't be changed from here. Check every character.`)) return;
       e.target.disabled = true;
       try { await send('POST', '/admin/airdrop/token', { ca, url }); out('CA set: it is on /tokens now.'); } catch (x) { alert(x.message); }
       loadAirdrop();
     };
     if ($('#abMake')) $('#abMake').onclick = async (e) => {
       e.target.disabled = true;
-      try { const b = await send('POST', '/admin/airdrop/batch', { size: Number($('#abSize').value) }); out(`Batch #${b.no}: ${n(b.wallets)} wallets, ${n(b.credit)} $PROMPT. Copy the lines and send them.`); } catch (x) { alert(x.message); }
+      try { const b = await send('POST', '/admin/airdrop/batch', { size: Number($('#abSize').value) }); out(`Batch #${b.no}: ${n(b.wallets)} wallets, ${n(b.credit)} $PROMT. Copy the lines and send them.`); } catch (x) { alert(x.message); }
       after();
     };
     if ($('#abCopy')) $('#abCopy').onclick = async () => {
@@ -640,14 +640,14 @@
     };
   }
 
-  // free $PROMPT drops: code, $PROMPT each, uses, tasks; pause, resume, change uses or tasks
+  // free $PROMT drops: code, $PROMT each, uses, tasks; pause, resume, change uses or tasks
   async function loadDrops() {
     const el = $('#dp');
     if (!el) return;
     let list;
     try { list = await send('GET', '/admin/drops'); } catch (e) { el.textContent = e.message; return; }
     const n = (v) => Number(v || 0).toLocaleString('en-US');
-    el.innerHTML = `<table class="txs"><thead><tr><th>Code</th><th style="text-align:right">$PROMPT each</th><th style="text-align:right">Cards / done / max</th><th>Status</th><th></th></tr></thead><tbody>
+    el.innerHTML = `<table class="txs"><thead><tr><th>Code</th><th style="text-align:right">$PROMT each</th><th style="text-align:right">Cards / done / max</th><th>Status</th><th></th></tr></thead><tbody>
       ${list.map((d) => `<tr><td><code>${esc(d.code)}</code><div class="note">type: /promptcity ${esc(d.code)}</div>
         ${d.follow_url || d.tweet_url ? `<div class="note">tasks: ${d.follow_url ? `follow ${d.follow_url.split(/\s+/).map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https:\/\//, ''))}</a>`).join(', ')}` : ''}${d.follow_url && d.tweet_url ? ' · ' : ''}${d.tweet_url ? `like + RT + comment <a href="${esc(d.tweet_url)}" target="_blank" rel="noopener">post</a>` : ''}</div>` : '<div class="note">no tasks</div>'}</td>
         <td class="num">${n(d.amount)}</td>
@@ -658,7 +658,7 @@
           <button class="btn ghost" data-dp="${esc(d.code)}" data-da="uses" data-used="${Number(d.used)}" data-max="${Number(d.max_uses)}" style="padding:4px 8px">Change uses</button>
           <button class="btn ghost" data-dp="${esc(d.code)}" data-da="tasks" data-follow="${esc(d.follow_url || '')}" data-tweet="${esc(d.tweet_url || '')}" style="padding:4px 8px">Tasks</button></div></td></tr>`).join('')
         || '<tr><td colspan="5" class="note">No drops yet.</td></tr>'}
-      </tbody></table><p class="note" style="margin:6px 0 0">Cards: accounts that did the tasks and got the card (each takes a use). Done: posted it and got the $PROMPT.</p>`;
+      </tbody></table><p class="note" style="margin:6px 0 0">Cards: accounts that did the tasks and got the card (each takes a use). Done: posted it and got the $PROMT.</p>`;
     el.querySelectorAll('[data-dp]').forEach((b) => b.onclick = async () => {
       const a = b.dataset.da;
       let body;
@@ -690,7 +690,7 @@
       $('#dpGo').disabled = true;
       try {
         const d = await send('POST', '/admin/drops', { code, amount, uses, follow_url: $('#dpFollow').value.trim(), tweet_url: $('#dpTweet').value.trim() });
-        out.innerHTML = `Made <code>${esc(d.code)}</code>: ${Number(d.amount).toLocaleString('en-US')} $PROMPT each, for ${Number(d.max_uses).toLocaleString('en-US')} accounts. In the chat: <code>/promptcity ${esc(d.code)}</code>`;
+        out.innerHTML = `Made <code>${esc(d.code)}</code>: ${Number(d.amount).toLocaleString('en-US')} $PROMT each, for ${Number(d.max_uses).toLocaleString('en-US')} accounts. In the chat: <code>/promptcity ${esc(d.code)}</code>`;
         $('#dpCode').value = '';
         loadDrops();
       } catch (e) {
