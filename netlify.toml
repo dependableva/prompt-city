@@ -22,6 +22,17 @@
 
 # The website's own pages (/c/citizens, /nft/42, /explorer, ...) are all index.html, which draws them in the browser.
 # Keep in step with SITE_PAGES in server/src/app.js. /admin/* (the manual credit endpoint) still goes to the function.
+# The arena: its own page (site/play.html)
+[[redirects]]
+  from = "/play"
+  to = "/play.html"
+  status = 200
+
+[[redirects]]
+  from = "/arena"
+  to = "/arena.html"
+  status = 200
+
 [[redirects]]
   from = "/market"
   to = "/index.html"

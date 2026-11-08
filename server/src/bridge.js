@@ -52,7 +52,9 @@ export function exportConfig(env = process.env) {
   };
 }
 
-export const explorerAsset = (asset, cluster) => `https://solscan.io/token/${asset}${cluster === 'mainnet' ? '' : `?cluster=${cluster}`}`;
+// a Core asset on mainnet opens on Solscan; on devnet Solscan doesn't show Core assets, the Solana Explorer does
+export const explorerAsset = (asset, cluster) => cluster === 'mainnet' ? `https://solscan.io/token/${asset}`
+  : `https://explorer.solana.com/address/${asset}?cluster=${cluster}`;
 
 export function createBridge(db, { rpc: rpcOpt, config, publicUrl } = {}) {
   const cfg = config || exportConfig();

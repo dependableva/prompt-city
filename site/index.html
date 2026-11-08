@@ -489,7 +489,7 @@ a.nftl img { width: 22px; height: 22px; border: 1px solid var(--edge); }
 <header class="top">
   <div class="wrap">
     <a class="brand" href="/" aria-label="Prompt City, home"><img class="pix" src="/logo.png" alt=""><b class="px"><span class="script">Prompt</span>City</b></a>
-    <nav class="main" aria-label="Main"><a href="/" data-nav="market">Market</a><a href="/collections" data-nav="collections">Collections</a><a href="/explorer" data-nav="explorer">Explorer</a><a href="/tokens" data-nav="tokens">Tokens</a></nav>
+    <nav class="main" aria-label="Main"><a href="/" data-nav="market">Market</a><a href="/collections" data-nav="collections">Collections</a><a href="/explorer" data-nav="explorer">Explorer</a><a href="/tokens" data-nav="tokens">Tokens</a><a href="/play">Play</a></nav>
     <span class="spacer"></span>
     <a class="btn red" id="connectBtn" href="/connect"><span class="long">Connect to your AI</span><span class="short">Connect</span></a>
   </div>
@@ -650,8 +650,8 @@ async function loadCity() {
   const el = (id) => document.getElementById(id);
   if (job && el('cJob')) {
     el('cJob').innerHTML = `<h3>Today's job</h3><b class="px" style="font-size:18px">${esc(job.title)}</b><div class="story">${esc(job.story)}</div>
-      <div class="ways">${job.approaches.map((a) => `<a class="btn ghost" href="${claudeLink('/job ' + a.key)}" target="_blank" rel="noopener" title="${esc(a.does)}">${esc(a.label)}</a>`).join('')}</div>
-      <div class="note how">type <code>/job</code> in your AI · XP raises your wanted level: ${job.levels.map((x, i) => `${'★'.repeat(i + 1)} ${x.toLocaleString('en-US')}`).join(' · ')} XP.
+      <div class="ways"><a class="btn" href="${claudeLink('/job')}" target="_blank" rel="noopener">Do today's job</a></div>
+      <div class="note how">one command, <code>/job</code> in your AI, pays right away · XP raises your wanted level: ${job.levels.map((x, i) => `${'★'.repeat(i + 1)} ${x.toLocaleString('en-US')}`).join(' · ')} XP.
         Pick a Citizen by its looks (<code>/find-city</code>, Street ${fmt(job.pick_prices.Street)} … Legend ${fmt(job.pick_prices.Legend)} $CASH), craft 3 into 1 (<code>/craft-city</code>, ${fmt(job.craft_fee)} $CASH)${job.export.enabled ? `, take one to Solana (<code>/export-city</code>, ${fmt(job.export.fee)} $CASH)` : ''}.</div>`;
   }
   if (ds && el('districts')) {
@@ -1321,7 +1321,7 @@ async function renderNft(id) {
   const frozen = n.collection_status === 'frozen';
   const burnt = n.burned_at ? (n.activity || []).find((a) => a.type === 'burn') : null;
   const q = n.exported_at ? `Show me ${ref}` : n.burned_at ? `Show me ${ref}` : !minted(n) && n.collection === 'citizens' ? `/pick-city ${n.id}` : n.price != null ? `Buy ${ref} for ${n.price} $CASH` : !minted(n) ? (n.collection === 'citizens' ? 'Mint me a Citizen' : `Mint me an NFT from the ${n.collection_name} collection (${n.collection})`) : `Show me ${ref}`;
-  const action = n.exported_at ? `<div class="big" style="font-size:18px">On Solana</div><div style="color:var(--dim);font-size:12px">Taken out of Prompt City to a Solana wallet${n.export_asset ? `: <a href="https://solscan.io/token/${esc(n.export_asset)}${stats?.test_mode ? '?cluster=devnet' : ''}" target="_blank" rel="noopener">asset ${esc(n.export_asset.slice(0, 6))}…</a>` : ' (being minted)'}.</div>`
+  const action = n.exported_at ? `<div class="big" style="font-size:18px">On Solana</div><div style="color:var(--dim);font-size:12px">Taken out of Prompt City to a Solana wallet${n.export_asset ? `: <a href="https://${stats?.test_mode ? 'explorer.solana.com/address/' : 'solscan.io/token/'}${esc(n.export_asset)}${stats?.test_mode ? '?cluster=devnet' : ''}" target="_blank" rel="noopener">asset ${esc(n.export_asset.slice(0, 6))}…</a>` : ' (being minted)'}.</div>`
     : n.burned_at ? `<div class="big" style="font-size:18px">Burned</div><div style="color:var(--dim);font-size:12px">${burnt?.craft ? 'Burned in a craft' : 'Burned for $PROMPT'}${burnt ? ` by ${who(burnt.from_addr, burnt.from_name)}` : ''}. It is gone for good.</div>`
     : frozen ? `<div class="big" style="font-size:18px">Collection frozen</div><div style="color:var(--dim);font-size:12px">The Prompt City team stopped minting and trading in ${esc(n.collection_name)}.</div>`
     : n.price != null
@@ -1672,7 +1672,7 @@ document.addEventListener('click', async (e) => {
 // chat commands, same list as server/src/commands.js (a test checks they match)
 const CHAT_COMMANDS = [
   ['/promptcity', '[code]', 'Start here: your balance, the mint and all commands; with a code, your free mint'],
-  ['/heist', '[code]', 'With a code: your free mint ("/heist with code EARLY"). Without one: mint for 5 $CASH'],
+  ['/heist', '[code]', 'With a code: your free mint ("/heist with code EARLY"). Without one: a random mint'],
   ['/crewchat', '', 'The holders-only group chat on X: your invite link, if you hold a Citizen'],
   ['/help-city', '', 'All commands'],
   ['/balance-city', '', 'Balance, city address, your NFTs and recent activity'],
@@ -1695,7 +1695,8 @@ const CHAT_COMMANDS = [
   ['/transfernft', '', 'The transfer form: tick the NFTs you want to send, type the city address, confirm'],
   ['/burncitizen', '', 'Burn Citizens for $PROMPT: 10,000 each, Hustler 2x, Boss 4x, Kingpin 8x, Legend 20x; in a form'],
   ['/claimprompt', '', 'Claim your $PROMPT to your Solana wallet for the airdrop (fee 0.5 $CASH), in a form'],
-  ['/job', '[way]', 'The daily job: stealth, muscle or talk, for XP (your wanted level) and $PROMPT'],
+  ['/job', '', 'The daily job: one command, XP (your wanted level) and $PROMPT right away'],
+  ['/arena-city', '', 'The arena: your fighter, kills, $PROMPT won today, the top 10 and the link to play'],
   ['/wanted-city', '', 'Your wanted level, XP, streak and what each level unlocks'],
   ['/crew-city', '[create|join|leave] [name]', 'Your crew; start one, join one by name or leave. Crews of 3+ get more XP'],
   ['/craft-city', '<numbers> into [number]', 'Burn 3 Citizens of one rarity into 1 of the next rarity; you confirm first'],

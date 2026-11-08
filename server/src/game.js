@@ -120,18 +120,19 @@ export async function todayJob(db, userId, now = new Date()) {
   const day = dayOf(now);
   const job = jobOfDay(day);
   const [done] = await db.query('select * from jobs where user_id = $1 and day = $2', [userId, day]);
-  const helpers = {};
-  for (const a of Object.keys(APPROACHES)) helpers[a] = await helperFor(db.query, userId, a);
-  return { day, job, done: done ? jobView(done) : null, helpers, wanted: await wanted(db, userId) };
+  const helper = await helperFor(db.query, userId, job.best);
+  return { day, job, done: done ? jobView(done) : null, helper, wanted: await wanted(db, userId) };
 }
 
 const jobView = (j) => ({ day: String(j.day instanceof Date ? j.day.toISOString().slice(0, 10) : j.day).slice(0, 10), job: j.job, approach: j.approach,
   xp: Number(j.xp), prompt: Number(j.prompt), helper_nft: j.helper_nft == null ? null : Number(j.helper_nft), breakdown: j.breakdown });
 
-export async function doJob(db, userId, approach, now = new Date()) {
-  if (!Object.hasOwn(APPROACHES, approach)) fail(`Pick a way in: ${Object.keys(APPROACHES).join(', ')}.`);
+// One step, no choices: the job is done the way the story calls for (job.best), so a lazy /job pays as much as a
+// careful one. A Citizen with the right look for that way in still adds XP.
+export async function doJob(db, userId, now = new Date()) {
   const day = dayOf(now);
   const job = jobOfDay(day);
+  const approach = job.best;
   return db.tx(async (t) => {
     const [u] = await t.query('select id, xp, job_streak, last_job_day::text as last from users where id = $1 for update', [userId]);
     const [had] = await t.query('select * from jobs where user_id = $1 and day = $2', [userId, day]);
@@ -140,8 +141,7 @@ export async function doJob(db, userId, approach, now = new Date()) {
     const streak = u.last && u.last.slice(0, 10) === prevDay(day) ? Number(u.job_streak) + 1 : 1;
     const [crew] = await t.query(`select c.name, (select count(*)::int from crew_members x where x.crew_id = c.id) as size
       from crew_members cm join crews c on c.id = cm.crew_id where cm.user_id = $1`, [userId]);
-    const breakdown = [['the job', 20]];
-    if (approach === job.best) breakdown.push(['the right way in', 10]);
+    const breakdown = [['the job', 30]];
     if (helper) breakdown.push([`${helper.name} (${helper.trait})`, helper.bonus]);
     if (streak > 1) breakdown.push([`${streak} days in a row`, Math.min(streak - 1, 6) * 3]);
     if (crew && crew.size >= 3) breakdown.push([`crew ${crew.name}`, 5]);
@@ -153,7 +153,7 @@ export async function doJob(db, userId, approach, now = new Date()) {
     const [after] = await t.query(`update users set xp = xp + $1, job_streak = $2, last_job_day = $3, credit_balance = credit_balance + $4
       where id = $5 returning xp, credit_balance`, [xp, streak, day, prompt, userId]);
     const level = levelOf(after.xp);
-    return { day, job, approach, best: approach === job.best, xp, prompt, breakdown, helper, streak, crew: crew?.name ?? null,
+    return { day, job, approach, xp, prompt, breakdown, helper, streak, crew: crew?.name ?? null,
       total_xp: Number(after.xp), level, level_up: level > before, credit_balance: Number(after.credit_balance), next: level < 5 ? LEVELS[level] : null };
   });
 }

@@ -1,0 +1,16 @@
+# The Prompt City shooter's game server on Cloudflare (deployed by .github/workflows/game.yml).
+# Secrets (wrangler secret put): GAME_SECRET, the same as GAME_SECRET on Netlify.
+name = "prompt-city-game"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+REPORT_URL = "https://prompt-city-test.netlify.app/api/shooter/report"
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "GameRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameRoom"]

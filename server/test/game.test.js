@@ -89,53 +89,55 @@ const moneyOk = async () => {
   assert.ok(c.creditMatch, '$PROMPT = burns + drops + jobs - claims');
 };
 
-test('job: one a day, XP and $PROMPT, the right way in, a helping Citizen, a streak, levels', async () => {
+test('job: one a day, one step, XP and $PROMPT, a helping Citizen, a streak, levels', async () => {
   const u = await user();
   const d1 = '2026-11-10';
   const j1 = game.jobOfDay(d1);
   const t = await game.todayJob(db, u.id, day(d1));
   assert.equal(t.job.key, j1.key);
   assert.equal(t.done, null);
-  assert.equal(t.helpers.stealth, null);
-  // the right way in: 20 + 10
-  const r1 = await game.doJob(db, u.id, j1.best, day(d1));
+  assert.equal(t.helper, null);
+  // no choices: the job pays 30 XP
+  const r1 = await game.doJob(db, u.id, day(d1));
   assert.equal(r1.xp, 30);
   assert.equal(r1.prompt, 300);
   assert.equal(r1.streak, 1);
-  await assert.rejects(game.doJob(db, u.id, 'talk', day(d1)), /already pulled today's job/);
-  await assert.rejects(game.doJob(db, u.id, 'charm', day('2026-11-11')), /Pick a way in/);
-  // a Boss in a balaclava helps the stealth way in: +10 +4
+  assert.equal(r1.approach, j1.best);
+  await assert.rejects(game.doJob(db, u.id, day(d1)), /already pulled today's job/);
+  // a Citizen with the right look for the day's job helps: a Boss in a balaclava on a stealth day, +10 +4
+  const stealthDay = ['2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14', '2026-11-15', '2026-11-16'].find((d) => game.jobOfDay(d).best === 'stealth');
   const [boss] = await give(u, 1, 'Boss', [['Lid', 'Balaclava']]);
-  const t2 = await game.todayJob(db, u.id, day('2026-11-11'));
-  assert.equal(t2.helpers.stealth.id, boss);
-  assert.equal(t2.helpers.stealth.bonus, 14);
-  const r2 = await game.doJob(db, u.id, 'stealth', day('2026-11-11'));
-  const best2 = game.jobOfDay('2026-11-11').best === 'stealth' ? 10 : 0;
-  assert.equal(r2.xp, 20 + best2 + 14 + 3, JSON.stringify(r2.breakdown)); // + streak of 2 days
-  assert.equal(r2.streak, 2);
+  const t2 = await game.todayJob(db, u.id, day(stealthDay));
+  assert.equal(t2.helper.id, boss);
+  assert.equal(t2.helper.bonus, 14);
+  const r2 = await game.doJob(db, u.id, day(stealthDay));
+  assert.ok(r2.breakdown.some(([w, x]) => w.startsWith(`Citizen #${boss}`) && x === 14), JSON.stringify(r2.breakdown));
   // a day missed: the streak starts over
-  const r3 = await game.doJob(db, u.id, 'muscle', day('2026-11-13'));
+  const r3 = await game.doJob(db, u.id, day('2026-11-20'));
   assert.equal(r3.streak, 1);
   const w = await game.wanted(db, u.id);
   assert.equal(w.xp, r1.xp + r2.xp + r3.xp);
   assert.equal(w.jobs, 3);
   assert.equal(Number((await db.query('select credit_balance from users where id = $1', [u.id]))[0].credit_balance), (r1.xp + r2.xp + r3.xp) * 10);
+  // a streak: two days in a row adds 3
+  const r4 = await game.doJob(db, u.id, day('2026-11-21'));
+  assert.equal(r4.streak, 2);
+  assert.ok(r4.breakdown.some(([w0, x]) => w0 === '2 days in a row' && x === 3), JSON.stringify(r4.breakdown));
   // levels: ★ at 0, ★★ from 150 …
   assert.deepEqual([0, 149, 150, 499, 500, 1500, 3999, 4000].map(game.levelOf), [1, 1, 2, 2, 3, 4, 4, 5]);
   await moneyOk();
 });
 
-test('job: through the chat, without and with a way in', async () => {
+test('job: through the chat, one command does it', async () => {
   const u = await user();
   const call = await mcp(u);
-  const show = await call('job');
-  assert.match(show.text, /^Today's job: /);
-  assert.match(show.text, /- stealth \(Sneak in quietly\)/);
-  assert.match(show.text, /Call job again with the approach only after the user picks one/);
-  const done = await call('job', { approach: 'muscle' });
-  assert.match(done.text, /you went in with muscle/);
-  assert.match(done.text, /XP and [\d,]+ \$PROMPT/);
-  assert.match((await call('job')).text, /You already pulled it \(muscle/);
+  const done = await call('job');
+  assert.match(done.text, /Job done\./);
+  assert.match(done.text, /\+30 the job/);
+  assert.match(done.text, /= 30 XP and 300 \$PROMPT/);
+  assert.doesNotMatch(done.text, /which way|stealth \(|Note for the assistant/);
+  const again = await call('job');
+  assert.match(again.text, /Done already: \+30 XP, \+300 \$PROMPT/);
   assert.match((await call('wanted')).text, /Wanted level ★ \(1\/5\)/);
 });
 
@@ -149,10 +151,10 @@ test('crews: start, join, the +5 XP of a crew of 3, the boss leaves, the last on
   await assert.rejects(game.joinCrew(db, b.id, 'Nobody Here'), /no crew called/);
   await game.joinCrew(db, b.id, 'VICE KINGS');
   await assert.rejects(game.createCrew(db, b.id, 'Other'), /already in the crew Vice Kings/);
-  const r1 = await game.doJob(db, a.id, 'talk', day('2026-12-01'));
+  const r1 = await game.doJob(db, a.id, day('2026-12-01'));
   assert.ok(!r1.breakdown.some(([w]) => w.startsWith('crew')), 'two members: no crew bonus');
   await game.joinCrew(db, c.id, 'vice kings');
-  const r2 = await game.doJob(db, a.id, 'talk', day('2026-12-02'));
+  const r2 = await game.doJob(db, a.id, day('2026-12-02'));
   assert.ok(r2.breakdown.some(([w, x]) => w === 'crew Vice Kings' && x === 5));
   // the boss leaves: the next longest member takes over
   await game.leaveCrew(db, a.id);
@@ -334,7 +336,7 @@ test('bridge: a Citizen goes to a Solana wallet: off the market here, minted the
   assert.equal(x.asset, ixn.accounts[0]);
   assert.equal((await db.query('select export_asset from nfts where id = $1', [id]))[0].export_asset, x.asset);
   assert.deepEqual(await bridge.tick(), { minted: 0, sent: 0, failed: 0, waiting: 0 }, 'nothing left to do');
-  assert.match((await call('export_nft')).text, new RegExp(`Citizen #${id} → ${to} · minted · https://solscan.io/token/${x.asset}\\?cluster=devnet`));
+  assert.match((await call('export_nft')).text, new RegExp(`Citizen #${id} → ${to} · minted · https://explorer.solana.com/address/${x.asset}\\?cluster=devnet`));
   // the metadata of the asset
   const meta = await fetch(`${base}/meta/${id}.json`).then((res) => res.json());
   assert.equal(meta.name, `Citizen #${id}`);

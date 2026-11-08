@@ -12,6 +12,9 @@ import { airdropCard } from './card.js';
 import { sniffImage } from './storage.js';
 import { COMMANDS, INSTRUCTIONS_COMMANDS, toolHint, helpText, promptText } from './commands.js';
 import * as game from './game.js';
+import * as arena from './arena.js';
+import * as shooter from './shooter.js';
+import { RULES as SHOOT } from '../../site/game/sim.js';
 import { turfOf } from './districts.js';
 import { findRoot } from './paths.js';
 
@@ -37,7 +40,7 @@ Rules for you, the assistant:
   unless the user turned their handle on with public_profile. A city address is not a Solana wallet: never suggest
   sending tokens to it; deposits go only to the Solana address from the deposit tool.
 - Show NFT images when a tool returns them, and give the preview link so the user can see it on the site.
-- job, craft, export_nft: only a way in, NFT numbers or a wallet the user chose; craft and export_nft need their yes first.
+- /job: call job at once, no questions. craft and export_nft: only NFT numbers or a wallet the user chose, and only after their yes.
 - Promo codes: call redeem_code only with a code the user typed in their own message. A code may ask for social tasks first
   (follow, like + repost a post): show them short, ask for a screenshot, and look at the screenshot the user sends. Pass
   proof only when it shows the tasks done; never without a screenshot from the user in this chat.
@@ -410,32 +413,23 @@ export function buildMcpServer(db, userId, opts) {
 
   tool('job', {
     title: 'The daily job',
-    description: "Today's job in Prompt City (one a day for everyone, new at 00:00 UTC): a short story and three ways in: stealth, muscle " +
-      'or talk. The story hints at the best one. It gives XP (the wanted level), a little $PROMPT, and more when one of the user\'s Citizens has the right look. ' +
-      'Without approach it shows the job; with approach it pulls it. Only pass an approach the user chose in their own message.',
-    inputSchema: { approach: z.enum(['stealth', 'muscle', 'talk']).optional().describe("The user's own choice of way in") },
+    description: "Pulls today's job in Prompt City right away (one a day for everyone, new at 00:00 UTC): no choices, no questions. " +
+      'It gives XP (the wanted level) and $PROMPT, more with a streak of days, a crew of 3+ and a Citizen with the right look. ' +
+      'Call it as soon as the user types /job or asks for the job; called again the same day it shows what today\'s job paid.',
     annotations: write,
-  }, async ({ approach }) => {
-    if (!approach) {
-      const t = await game.todayJob(db, userId);
-      const ways = Object.entries(game.APPROACHES).map(([k, a]) => {
-        const h = t.helpers[k];
-        return `- ${k} (${a.does})${h ? `: ${h.name} helps (${h.trait}, +${h.bonus} XP)` : ''}`;
-      }).join('\n');
-      if (t.done) {
-        return ok(text(`Today's job: ${t.job.title}. You already pulled it (${t.done.approach}, +${t.done.xp} XP, +${credit.credits(t.done.prompt)} $PROMPT). ` +
-          `A new job comes at 00:00 UTC.\n${levelLine(t.wanted)}`));
-      }
-      return ok(text(`Today's job: ${t.job.title}\n${t.job.story}\n\nHow do you go in?\n${ways}\n\n${levelLine(t.wanted)}` +
-        (t.wanted.streak > 0 ? ` · streak ${t.wanted.streak} day${t.wanted.streak === 1 ? '' : 's'}` : '')),
-        text('Note for the assistant, not for the user: tell the story in a line or two and ask which way in. Call job again with the approach only after the user picks one.'));
+  }, async () => {
+    const t = await game.todayJob(db, userId);
+    if (t.done) {
+      return ok(text(`Today's job: ${t.job.title}. Done already: +${t.done.xp} XP, +${credit.credits(t.done.prompt)} $PROMPT. ` +
+        `A new job comes at 00:00 UTC.\n${levelLine(t.wanted)}`));
     }
-    const r = await game.doJob(db, userId, approach);
+    const r = await game.doJob(db, userId);
     const lines = r.breakdown.map(([what, xp]) => `+${xp} ${what}`).join('\n');
     const up = r.level_up ? `\n🚨 WANTED LEVEL UP: ${game.stars(r.level)}! ${perks(r.level)}` : '';
-    return ok(text(`${r.job.title}: you went in with ${approach}. ${r.best ? 'Clean job.' : `It worked, but ${r.job.best} would have paid more.`}\n${lines}\n` +
+    const tip = r.helper ? '' : `\nTip: a Citizen with the right look for the job adds XP (${game.APPROACHES[r.job.best].label.toLowerCase()} today).`;
+    return ok(text(`${r.job.title}: ${r.job.story} Job done.\n${lines}\n` +
       `= ${r.xp} XP and ${credit.credits(r.prompt)} $PROMPT. Your $PROMPT: ${credit.credits(r.credit_balance)}.${up}\n` +
-      `${levelLine({ ...r, stars: game.stars(r.level), xp: r.total_xp })}. Next job at 00:00 UTC.`));
+      `${levelLine({ ...r, stars: game.stars(r.level), xp: r.total_xp })}. Next job at 00:00 UTC.${tip}`));
   });
 
   tool('wanted', {
@@ -447,6 +441,29 @@ export function buildMcpServer(db, userId, opts) {
     const table = game.LEVELS.map((x, i) => `${game.stars(i + 1)} from ${x.toLocaleString('en-US')} XP: ${perks(i + 1)}`).join('\n');
     return ok(text(`${levelLine(w)}\nNow: ${perks(w.level) || 'no perks yet'}\nJobs pulled: ${w.jobs} · streak ${w.streak} · $PROMPT from jobs: ${credit.credits(w.job_prompt)}` +
       `\nCrew: ${w.crew ? `${w.crew.name} (${w.crew.size}/${w.crew.max})` : 'none (/crew-city create <name> or join <name>)'}\n\nLevels:\n${table}\n\nPull today's job: /job`));
+  });
+
+  tool('arena', {
+    title: 'The arena',
+    description: 'The shootout on the site (/play): a 3D team shooter in Prompt City, up to 100 Citizens online. Shows the user\'s fighter, kills, deaths, ' +
+      'the $PROMPT won today and in the season, their rank, the top 10 (the airdrop at the token launch) and the link to play.',
+    annotations: read,
+  }, async () => {
+    const v = await arena.view(db.query, userId);
+    const r = arena.rules();
+    const t = await arena.top(db, 10);
+    // the 3D shootout when its game server is on, else the simple arena
+    const live = shooter.enabled();
+    const dmg = r.stars.map((s, i) => `${s.rarity} ${s.stars} ${live ? SHOOT.damage[i] : s.damage}`).join(' · ');
+    const board = t.length ? t.map((p) => `${p.rank}. ${p.handle ? '@' + p.handle : p.address} · ${p.points.toLocaleString('en-US')} · ${p.kills} kills`).join('\n') : 'no kills yet';
+    const mine = v.fighter
+      ? `Your fighter: ${v.fighter.name} ${game.stars(v.fighter.stars)} (${live ? SHOOT.damage[v.fighter.stars - 1] : r.damage[game.RARITIES[v.fighter.stars - 1]]} damage a hit)\n` +
+        `Season ${v.season}: ${v.kills} kills · ${v.deaths} deaths · ${v.points.toLocaleString('en-US')} $PROMPT${v.rank ? ` · rank #${v.rank}` : ''}\n` +
+        `Today: ${v.today.toLocaleString('en-US')} of ${v.daily_cap.toLocaleString('en-US')} $PROMPT`
+      : 'No fighter yet: open the arena, sign in with the same account and pick one of your Citizens.';
+    return ok(text(`${live ? 'The shootout (3D, up to 100 online)' : 'The arena'}: ${publicUrl}${live ? '/play' : '/arena'}\n${mine}\n\nDamage by stars (100 HP each): ${dmg}\n` +
+      `A kill pays ${r.kill_base} $PROMPT × the victim's stars ÷ yours (+${r.streak_pct}% a kill in a row), at most ${r.daily_cap.toLocaleString('en-US')} a day.\n\n` +
+      `Top 10 of the season (an airdrop at the token launch):\n${board}`));
   });
 
   tool('crew', {

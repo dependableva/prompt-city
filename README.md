@@ -114,7 +114,7 @@ NFT images, site ──▶ CDN (static)
 
 **Citizens** are 5,555 pixel characters, each with 11 traits (Rarity, Turf, Skin, Hair, Hair Color, Lid, Optics, Mouth, Fit, Bling, Ink). Rarity tiers (the wanted level): Street 2,900 · Hustler 1,500 · Boss 700 · Kingpin 300 · Legend 155. Higher tiers unlock rarer traits: gold and chrome skin, crowns, balaclavas, laser eyes, police-light and cash-rain turfs, gold suits, and a neon outline for every Legend. The generator is [`collection/generator/citizens.py`](collection/generator/citizens.py): the same seed gives the same collection (`python3 citizens.py OUT_DIR --seed 20261105`). Every NFT has its own page (`/nft/<number>`) with its traits, how many NFTs share each one, the owner and every mint and sale, each linked to its transaction in the explorer. The collection page (`/c/citizens`) filters by any combination of traits.
 
-- **Minting** gives a random NFT nobody has minted yet, for 5 $CASH, at most 5 per account (`MINT_PRICE_USD`, `MINT_LIMIT_PER_USER`). Mint money goes to the treasury. **Mint phase:** Citizens can't be listed or bought until all 5,555 are minted; trading opens by itself with the last mint (`MCP_TRADING=open` opens it earlier).
+- **Minting** gives a random NFT nobody has minted yet, for 5 $CASH by default (2 on Prompt City), at most 5 per account (`MINT_PRICE_USD`, `MINT_LIMIT_PER_USER`). Mint money goes to the treasury. **Mint phase:** Citizens can't be listed or bought until all 5,555 are minted; trading opens by itself with the last mint (`MCP_TRADING=open` opens it earlier).
 - **Metadata** is [`collection/collection.json`](collection/collection.json): every NFT's traits, public before anyone mints. The server loads it into the database on its first start.
 - **Pictures** ship as two archives, [`collection/citizens-images.tar.gz`](collection/citizens-images.tar.gz) (`/img/<n>.png`) and [`collection/citizens-thumbs.tar.gz`](collection/citizens-thumbs.tar.gz) (`/thumb/<n>.png`, 252 px), unpacked by the build ([`server/src/assets.js`](server/src/assets.js)). All 5,555 are 28×28 pixel art stored at their native size (the site scales them up without smoothing). The build also makes a 1,008 px copy of each pixel one (`/big/<n>.png`, every pixel a 36×36 block, ~2 KB each, [`server/src/png.js`](server/src/png.js)): the NFT's page shows it and its Download button saves it.
 
@@ -139,13 +139,41 @@ Holders can burn Citizens for **$PROMPT**, the allocation of the coming $PROMPT 
 - **Free drops** (`/promptcity FREE1000`, or "FREE 1000 $PROMPT"): a code from `/admin` → *Free $PROMPT drops* gives each account a fixed amount of $PROMPT, once. It goes through the chat's promo-code tool (`redeem_code`) and NFT card, which every connected chat already has, so nobody has to reconnect. With tasks (follow up to 3 X accounts, like + RT, a comment under the post) the AI asks for a screenshot or several first; then it shows the airdrop card (`/airdrop/<n>.png`, with a page that previews it on X) and asks the user to post it; the $PROMPT is added after a screenshot of that post. The AI only looks at screenshots: an edited one can pass.
 - **The airdrop**: `/admin` → *$PROMPT claims* lists the claims with their account and wallet; *Copy all* copies every pending one as `wallet,amount` lines, one per wallet, and remembers which claims it copied; *Mark … as sent* marks exactly those. A pending claim made by mistake can be voided: its $PROMPT goes back to the account, the fee stays paid. A claim's wallet and amount can't be changed or deleted (a database trigger), only its status. An account's $PROMPT is always its burns + finished drops − its claims that aren't void; the backup restore checks that too.
 
+## The shootout (/play) and the arena (/arena)
+
+**The shootout** is a 3D team shooter for Citizen holders (three.js, simple blocky graphics): the camera follows your
+Citizen from behind the shoulder, or **V** switches to its own eyes. The Citizen wears its NFT: the face on its head,
+the outfit on its body, the hat on top; a belt and a ring under its feet in the crew's colour. One map, downtown Prompt
+City by the bay, with up to 100 players online at once; when it's full, a page waits for a free seat. Two crews (Neon
+and Tide) fight in rounds: a round ends when one crew is out or after 2:30, who's down watches the crew until the next
+one (joining with more than 30 s left puts you in right away). **W A S D** walk like in a shooter (W where you look,
+A / D sideways), the **mouse** looks and aims, **click** shoots, **R** reloads, **Tab** shows the score, **Esc** the menu.
+Shots fly level at chest height; the crosshair sits where the bullet lands. 100 HP; a bullet's damage by stars: Street
+14, Hustler 17, Boss 20, Kingpin 25, Legend 34. Someone who does nothing for 2 minutes loses the seat.
+
+A kill in a live round pays $PROMPT like an arena kill (below). Warmup kills (before both crews have someone) don't.
+
+- `game/`: the game server. `room.js` runs the city at 20 ticks a second (the rules: `site/game/sim.js`, shared with the
+  page); `worker.js` runs it as one Durable Object on Cloudflare (`wrangler.toml`, deployed by `.github/workflows/game.yml`);
+  `node-server.js` runs it in Node for local play and the tests. `site/game/three.min.js` is the part of three.js the
+  page uses (MIT), bundled with esbuild.
+- The main server signs a 10-minute game pass for a signed-in player with a fighter (`POST /api/arena/ticket`) and pays
+  the kills the game server reports (`POST /api/shooter/report`, HMAC-signed, each kill once).
+- Settings: `GAME_SECRET` (the same on Netlify and Cloudflare, 32+ characters), `GAME_URL` on Netlify
+  (`wss://prompt-city-game.<subdomain>.workers.dev`). Without them `/play` sends players to the arena.
+
+**The arena** (/arena, the simple version that needs no game server): click to walk and to hit; damage by stars
+10/12/14/17/20. In both, a kill pays 50 $PROMPT × the victim's stars ÷ the killer's (+10% a kill in a row, up to +50%),
+at most 1,500 $PROMPT a day and 3 paid kills of one victim a day (`ARENA_*` settings in `server/src/arena.js`). The
+season's top 10 (`ARENA_SEASON`) get an airdrop at the token launch.
+
 ## The game: wanted level, jobs, crews, picks, districts, crafting, Solana
 
 Everything here is free to play or shows exactly what you get before you pay: no paid randomness.
 
-- **The daily job** (`/job`): one story a day for everyone (new at 00:00 UTC), three ways in (stealth, muscle, talk). The story hints at the best one.
-  It gives XP and $PROMPT (10 per XP): 20 for the job, +10 for the right way in, +10 and more when one of your Citizens has the right look
-  (a balaclava for stealth, a gold suit for talk…), +3 a day for a streak (up to +18), +5 in a crew of 3 or more.
+- **The daily job** (`/job`): one command, no choices, paid at once. One story a day for everyone (new at 00:00 UTC), done the way the
+  story calls for (stealth, muscle or talk). It gives XP and $PROMPT (10 per XP): 30 for the job, +10 and more when one of your Citizens has
+  the right look for that way in (a balaclava for stealth, a gold suit for talk…), +3 a day for a streak (up to +18), +5 in a crew of 3 or more.
 - **Wanted level** (`/wanted-city`): ★ at 0 XP, ★★ 150, ★★★ 500, ★★★★ 1,500, ★★★★★ 4,000. It gives 5–20% off picked mints and opens
   Kingpin picks at ★★★ and Legend picks at ★★★★.
 - **Crews** (`/crew-city create|join|leave <name>`): up to 10 players; the site ranks players and crews by XP.
@@ -340,7 +368,7 @@ Deposits start working once `HELIUS_API_KEY` and `DEPOSIT_POOL_KEY` are set (and
 
 ### Prompt City, next
 
-- [ ] Daily jobs in the chat (`/job`): street cred points that convert to $PROMPT
+- [x] Daily jobs in the chat (`/job`): street cred points that convert to $PROMPT
 - [ ] Crews: holders team up, crew leaderboard on the site
 - [ ] 10% of every launchpad mint to Gen 0 holders, weighted by wanted level (×1 … ×20)
 - [ ] $PROMPT supply and split fixed before launch, published here

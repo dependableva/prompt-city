@@ -560,6 +560,53 @@ create table if not exists nft_exports (
 create index if not exists nft_exports_status on nft_exports(status, id);
 create index if not exists nft_exports_user on nft_exports(user_id, id desc);
 
+-- The arena (arena.js, /play): one fighter per account, a Citizen it owns. Where it is comes from (x, y) -> (tx, ty)
+-- since moved_at, its HP from hp, hurt_at and the time since: nothing has to run between requests. A kill pays
+-- $PROMPT into users.credit_balance (arena_kills.points keeps what each paid) and season points (arena_scores).
+create table if not exists arena_fighters (
+  user_id int primary key references users(id),
+  nft_id int not null references nfts(id),
+  stars int not null check (stars between 1 and 5),
+  hp int not null check (hp >= 0),
+  x double precision not null, y double precision not null,
+  tx double precision not null, ty double precision not null,
+  moved_at timestamptz not null,
+  hurt_at timestamptz,
+  dead_until timestamptz,
+  shield_until timestamptz,
+  last_hit_at timestamptz,
+  last_seen timestamptz not null,
+  switched_at timestamptz not null,
+  streak int not null default 0 check (streak >= 0)
+);
+create index if not exists arena_fighters_seen on arena_fighters(last_seen desc);
+create table if not exists arena_kills (
+  id bigserial primary key,
+  season text not null,
+  day date not null,                     -- the UTC day, for the daily limits
+  killer_id int not null references users(id),
+  victim_id int not null references users(id),
+  killer_nft int not null references nfts(id),
+  victim_nft int not null references nfts(id),
+  killer_stars int not null,
+  victim_stars int not null,
+  points bigint not null default 0 check (points >= 0), -- $PROMPT it paid
+  created_at timestamptz not null default now()
+);
+create index if not exists arena_kills_killer_day on arena_kills(killer_id, day);
+alter table arena_kills add column if not exists ref text;               -- the shooter's id of a kill: a report sent twice pays once
+create unique index if not exists arena_kills_ref on arena_kills(ref) where ref is not null;
+create index if not exists arena_kills_season on arena_kills(season, id desc);
+create table if not exists arena_scores (
+  season text not null,
+  user_id int not null references users(id),
+  kills int not null default 0 check (kills >= 0),
+  deaths int not null default 0 check (deaths >= 0),
+  points bigint not null default 0 check (points >= 0),
+  primary key (season, user_id)
+);
+create index if not exists arena_scores_rank on arena_scores(season, points desc, kills desc);
+
 -- OAuth for the Prompt City connector. Codes and tokens are stored as sha256 hashes, never in plain text.
 create table if not exists oauth_clients (
   client_id text primary key,
@@ -626,6 +673,9 @@ alter table crews enable row level security;
 alter table crew_members enable row level security;
 alter table crafts enable row level security;
 alter table nft_exports enable row level security;
+alter table arena_fighters enable row level security;
+alter table arena_kills enable row level security;
+alter table arena_scores enable row level security;
 do $$ begin
   if exists (select 1 from pg_roles where rolname = 'anon') and exists (select 1 from pg_roles where rolname = 'authenticated') then
     revoke all on all tables in schema public from anon, authenticated;

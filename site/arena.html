@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Prompt City · Arena</title>
+<link rel="icon" href="/favicon.png">
+<style>
+@font-face { font-family: Anton; src: url(/fonts/anton-latin-400-normal.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: Yellowtail; src: url(/fonts/yellowtail-latin-400-normal.woff2) format('woff2'); font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url(/fonts/space-grotesk-latin-500-normal.woff2) format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Space Grotesk'; src: url(/fonts/space-grotesk-latin-700-normal.woff2) format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'JetBrains Mono'; src: url(/fonts/jetbrains-mono-latin-400-normal.woff2) format('woff2'); font-display: swap; }
+:root { --bg: #120626; --panel: #1B0B33ee; --edge: #2E1A4D; --line: #4A2E70; --pink: #FF4FA3; --cyan: #2DE2E6; --gold: #FFD23F; --orange: #FF8A3D; --cream: #FFF3E6; --dim: #B9A6D6; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--cream); font: 500 14px 'Space Grotesk', system-ui, sans-serif; overflow: hidden; }
+canvas { display: block; position: fixed; inset: 0; width: 100vw; height: 100vh; cursor: crosshair; touch-action: none; }
+a { color: var(--cyan); }
+.bar { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 14px; padding: 10px 14px; background: linear-gradient(#120626f2, #12062600); pointer-events: none; z-index: 2; }
+.bar > * { pointer-events: auto; }
+.logo { font: 400 22px Anton, sans-serif; letter-spacing: .5px; color: var(--cream); text-decoration: none; }
+.logo i { font: 400 24px Yellowtail, cursive; color: var(--pink); font-style: normal; margin-right: 2px; }
+.tag { font: 400 13px Anton; color: var(--gold); letter-spacing: 1px; border: 2px solid var(--gold); padding: 2px 8px; }
+.grow { flex: 1; }
+.stat { font: 12px 'JetBrains Mono', monospace; color: var(--dim); white-space: nowrap; }
+.stat b { color: var(--cream); font-weight: 400; }
+.btn { font: 700 13px 'Space Grotesk'; background: var(--pink); color: var(--bg); border: 0; padding: 8px 14px; cursor: pointer; text-decoration: none; box-shadow: 3px 3px 0 var(--gold); }
+.btn.ghost { background: transparent; color: var(--cream); border: 2px solid var(--line); box-shadow: none; }
+.side { position: fixed; right: 12px; top: 60px; width: 270px; max-height: calc(100vh - 80px); overflow: auto; display: grid; gap: 10px; z-index: 2; }
+.card { background: var(--panel); border: 2px solid var(--edge); padding: 10px 12px; }
+.card h3 { margin: 0 0 6px; font: 400 15px Anton; letter-spacing: 1px; color: var(--gold); }
+.card ol { margin: 0; padding-left: 20px; display: grid; gap: 3px; font: 12px 'JetBrains Mono'; }
+.card .row { display: flex; justify-content: space-between; gap: 8px; font: 12px 'JetBrains Mono'; color: var(--dim); }
+.card .row b { color: var(--cream); font-weight: 400; }
+.feed div { font: 11px 'JetBrains Mono'; color: var(--dim); padding: 2px 0; border-bottom: 1px solid var(--edge); }
+.feed div b { color: var(--cream); font-weight: 400; } .feed div em { color: var(--gold); font-style: normal; }
+.me { color: var(--pink) !important; }
+.hint { position: fixed; left: 12px; bottom: 12px; font: 12px 'JetBrains Mono'; color: var(--dim); background: var(--panel); border: 2px solid var(--edge); padding: 8px 10px; z-index: 2; max-width: 420px; }
+.toast { position: fixed; left: 50%; top: 70px; transform: translateX(-50%); background: var(--panel); border: 2px solid var(--pink); padding: 8px 14px; font: 13px 'JetBrains Mono'; z-index: 5; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.on { opacity: 1; }
+.modal { position: fixed; inset: 0; background: #120626cc; display: none; place-items: center; z-index: 10; }
+.modal.on { display: grid; }
+.modal .box { background: var(--bg); border: 3px solid var(--pink); box-shadow: 6px 6px 0 var(--gold); padding: 18px; width: min(560px, 92vw); max-height: 86vh; overflow: auto; }
+.modal h2 { margin: 0 0 4px; font: 400 26px Anton; letter-spacing: 1px; }
+.modal p { color: var(--dim); margin: 6px 0 12px; }
+.pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.pick button { background: var(--panel); border: 2px solid var(--edge); color: var(--cream); padding: 6px; cursor: pointer; font: 11px 'JetBrains Mono'; }
+.pick button:hover { border-color: var(--pink); }
+.pick img { width: 72px; height: 72px; image-rendering: pixelated; display: block; margin: 0 auto 4px; }
+.pick .st { color: var(--gold); }
+table.rules { width: 100%; border-collapse: collapse; font: 12px 'JetBrains Mono'; margin: 6px 0; }
+table.rules td, table.rules th { border-bottom: 1px solid var(--edge); padding: 3px 4px; text-align: left; }
+table.rules th { color: var(--dim); font-weight: 400; }
+@media (max-width: 760px) { .side { display: none; } .stat.wide { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="bar">
+  <a class="logo" href="/"><i>Prompt</i>CITY</a><span class="tag">ARENA</span>
+  <span class="stat wide" id="sSeason"></span>
+  <span class="grow"></span>
+  <span class="stat" id="sMe"></span>
+  <button class="btn ghost" id="bRules" type="button">Rules</button>
+  <a class="btn" id="bAuth" href="/login/site?return=/arena">Sign in</a>
+</div>
+<div class="side">
+  <div class="card"><h3>Top 10 · season</h3><ol id="top"><li>no kills yet</li></ol><div class="row" style="margin-top:6px"><span>airdrop</span><b>top 10 at the token launch</b></div></div>
+  <div class="card"><h3>Kills</h3><div class="feed" id="feed"><div>nothing yet</div></div></div>
+</div>
+<div class="hint" id="hint">Click the street to walk. Click a Citizen to fight it. More stars hit harder; a kill of a stronger Citizen pays more $PROMPT.</div>
+<div class="toast" id="toast"></div>
+<div class="modal" id="mPick"><div class="box">
+  <h2>Pick your fighter</h2>
+  <p id="pickNote">One of your Citizens fights for you. Its stars set how hard it hits. You can change it once a day.</p>
+  <div class="pick" id="pickList"></div>
+  <p style="margin-top:12px"><button class="btn ghost" type="button" data-close>Just watch</button></p>
+</div></div>
+<div class="modal" id="mRules"><div class="box">
+  <h2>Arena rules</h2>
+  <p>Every Citizen has <b id="rHp">100</b> HP and hits once a second. Stars set the damage:</p>
+  <table class="rules"><thead><tr><th>Rarity</th><th>Stars</th><th>Damage</th><th>Hits to kill</th></tr></thead><tbody id="rDmg"></tbody></table>
+  <p>A kill pays <b id="rBase">50</b> $PROMPT × the victim's stars ÷ your stars: a Street that takes down a Legend gets 5×, a Legend that
+  takes down a Street gets ⅕. Each kill in a row adds <b id="rStreak">10%</b>. At most <b id="rCap">1,500</b> $PROMPT a day, and only
+  <b id="rVictim">3</b> kills of the same Citizen a day pay. After a respawn you are protected for a few seconds, until you hit someone.</p>
+  <p>The season's points are the $PROMPT you won in the arena. The <b>top 10</b> get an airdrop when the token launches.</p>
+  <p><button class="btn" type="button" data-close>Got it</button></p>
+</div></div>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const cv = $('cv'); const ctx = cv.getContext('2d');
+const STAR = '★';
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const short = (a) => (a ? `${a.slice(0, 9)}…` : '?');
+const fmt = (n) => Number(n || 0).toLocaleString('en-US');
+let rules = null; let world = { fighters: [], kills: [], top: [] }; let me = null; let signedIn = false;
+let offset = 0; // server time minus local time
+const now = () => Date.now() + offset;
+const sprites = new Map();
+const sprite = (id) => { let im = sprites.get(id); if (!im) { im = new Image(); im.src = `/img/${id}.png`; sprites.set(id, im); } return im; };
+const effects = []; // floating numbers and flashes
+let toastT = 0;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2200); }
+
+async function api(path, body) {
+  const r = await fetch(`/api${path}`, body ? { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json', 'x-mcp-site': '1' }, body: JSON.stringify(body) } : { credentials: 'same-origin' });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(j.error || `error ${r.status}`); e.status = r.status; throw e; }
+  return j;
+}
+
+// ---------- the map: Prompt City, drawn once from the server's district layout (an original city, seeded) ----------
+const PAL = ['#2a1050', '#3a1458', '#26124a', '#401a5c', '#2d0f4f', '#331a5e', '#1f1a4f', '#3b1050', '#2a1a55', '#3a1648'];
+const NEON = ['#FF4FA3', '#2DE2E6', '#FFD23F', '#FF8A3D', '#B26BFF'];
+let mapCanvas = null;
+function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function drawMap() {
+  const { map, districts } = rules;
+  const c = document.createElement('canvas'); c.width = map.w; c.height = map.h;
+  const g = c.getContext('2d'); const r = rng(20261105);
+  // asphalt
+  g.fillStyle = '#17092d'; g.fillRect(0, 0, map.w, map.h);
+  // the ocean and the beach
+  const oy = map.h - map.ocean;
+  const sea = g.createLinearGradient(0, oy, 0, map.h); sea.addColorStop(0, '#1b6f8a'); sea.addColorStop(1, '#0b2e4a');
+  g.fillStyle = '#e8b27a'; g.fillRect(0, oy - 26, map.w, 26);
+  g.fillStyle = sea; g.fillRect(0, oy, map.w, map.ocean);
+  g.strokeStyle = '#2DE2E655'; g.lineWidth = 2;
+  for (let y = oy + 18; y < map.h; y += 22) { g.beginPath(); for (let x = 0; x <= map.w; x += 20) g.lineTo(x, y + Math.sin(x / 40 + y) * 3); g.stroke(); }
+  // street markings
+  g.strokeStyle = '#FFD23F66'; g.lineWidth = 3; g.setLineDash([18, 16]);
+  const xs = [...new Set(districts.map((d) => d.x))].sort((a, b) => a - b); const ys = [...new Set(districts.map((d) => d.y))].sort((a, b) => a - b);
+  for (const x of [...xs.map((x) => x - map.street / 2), xs[xs.length - 1] + districts[0].w + map.street / 2]) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, oy - 26); g.stroke(); }
+  for (const y of [...ys.map((y) => y - map.street / 2), ys[ys.length - 1] + districts[0].h + map.street / 2]) { g.beginPath(); g.moveTo(0, y); g.lineTo(map.w, y); g.stroke(); }
+  g.setLineDash([]);
+  // districts: a block of buildings each, neon on the roofs, the name painted on the ground
+  districts.forEach((d, i) => {
+    g.fillStyle = PAL[i % PAL.length]; g.fillRect(d.x, d.y, d.w, d.h);
+    g.strokeStyle = NEON[i % NEON.length]; g.lineWidth = 3; g.strokeRect(d.x + 1.5, d.y + 1.5, d.w - 3, d.h - 3);
+    for (let k = 0; k < 9; k++) {
+      const bw = 50 + r() * 70; const bh = 40 + r() * 70;
+      const bx = d.x + 16 + r() * (d.w - bw - 32); const by = d.y + 16 + r() * (d.h - bh - 32);
+      g.fillStyle = '#0f0622'; g.fillRect(bx + 6, by + 6, bw, bh); // shadow
+      g.fillStyle = ['#4b2575', '#5a2a7a', '#3c2a6e', '#53306f'][k % 4]; g.fillRect(bx, by, bw, bh);
+      g.fillStyle = NEON[(i + k) % NEON.length]; g.fillRect(bx, by, bw, 4);
+      g.fillStyle = '#FFD23F99';
+      for (let wx = bx + 8; wx < bx + bw - 8; wx += 12) for (let wy = by + 12; wy < by + bh - 8; wy += 12) if (r() > 0.45) g.fillRect(wx, wy, 4, 4);
+    }
+    g.save(); g.globalAlpha = 0.35; g.fillStyle = NEON[i % NEON.length]; g.font = '400 34px Anton, sans-serif'; g.textAlign = 'center';
+    g.fillText(d.name.toUpperCase(), d.x + d.w / 2, d.y + d.h / 2 + 12); g.restore();
+  });
+  // palms along the beach
+  for (let x = 40; x < map.w; x += 120 + r() * 60) palm(g, x, oy - 22, r);
+  mapCanvas = c;
+}
+function palm(g, x, y, r) {
+  g.fillStyle = '#5b3a1f'; for (let k = 0; k < 7; k++) g.fillRect(x + Math.round(Math.sin(k / 2) * 3), y - k * 8, 5, 8);
+  g.fillStyle = '#1fa36a'; const top = y - 56;
+  for (const [dx, dy] of [[-22, 6], [22, 6], [-14, -6], [14, -6], [0, -10]]) { g.beginPath(); g.ellipse(x + 2 + dx / 2, top + dy / 2, 16, 5, Math.atan2(dy, dx), 0, Math.PI * 2); g.fill(); }
+}
+
+// ---------- the camera and the fighters ----------
+const cam = { x: 1250, y: 700, z: 1 };
+let follow = true;
+function resize() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; }
+addEventListener('resize', resize); resize();
+const toWorld = (sx, sy) => [(sx * devicePixelRatio - cv.width / 2) / cam.z + cam.x, (sy * devicePixelRatio - cv.height / 2) / cam.z + cam.y];
+// where a fighter is now on this screen: it walks from its last known spot to its target at the server's speed
+function here(f) {
+  const t = Math.max(0, now() - f.seen);
+  const dx = f.tx - f.x; const dy = f.ty - f.y; const d = Math.hypot(dx, dy); const go = (rules.speed * t) / 1000;
+  if (!d || go >= d) return [f.tx, f.ty];
+  return [f.x + (dx * go) / d, f.y + (dy * go) / d];
+}
+const mine = () => (me?.fighter ? world.fighters.find((f) => f.address === me.fighter.address) : null);
+let target = null; // the address I am after
+let lastHit = 0;
+
+function frame() {
+  requestAnimationFrame(frame);
+  if (!rules || !mapCanvas) return;
+  const my = mine();
+  if (my && follow) { const [x, y] = here(my); cam.x += (x - cam.x) * 0.15; cam.y += (y - cam.y) * 0.15; }
+  cam.z = Math.max(0.5, Math.min(2, (cv.height / 900) * 1.1));
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#0b0418'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(cam.z, 0, 0, cam.z, cv.width / 2 - cam.x * cam.z, cv.height / 2 - cam.y * cam.z);
+  ctx.drawImage(mapCanvas, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  const t = now();
+  const list = [...world.fighters].sort((a, b) => a.y - b.y);
+  for (const f of list) {
+    if (f.dead_until && f.dead_until > t) continue;
+    const [x, y] = here(f);
+    const isMe = my && f.address === my.address;
+    const size = 52;
+    if (f.address === target) { ctx.strokeStyle = '#FF4FA3'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, size * 0.75, 0, Math.PI * 2); ctx.stroke(); }
+    if (isMe) { ctx.strokeStyle = '#2DE2E6'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, rules.range, 0, Math.PI * 2); ctx.setLineDash([6, 8]); ctx.stroke(); ctx.setLineDash([]); }
+    if (f.shield && !(f.shieldOff < t)) { ctx.fillStyle = '#2DE2E633'; ctx.beginPath(); ctx.arc(x, y, size * 0.7, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = '#00000066'; ctx.beginPath(); ctx.ellipse(x, y + size / 2, size / 2.6, 6, 0, 0, Math.PI * 2); ctx.fill();
+    const im = sprite(f.nft);
+    if (im.complete && im.naturalWidth) ctx.drawImage(im, x - size / 2, y - size / 2, size, size); else { ctx.fillStyle = '#4A2E70'; ctx.fillRect(x - size / 2, y - size / 2, size, size); }
+    if (f.flash && f.flash > t) { ctx.fillStyle = '#ffffff88'; ctx.fillRect(x - size / 2, y - size / 2, size, size); }
+    // HP, stars and the name
+    const hpw = 50; const hp = Math.max(0, Math.min(1, f.hp / f.max_hp));
+    ctx.fillStyle = '#120626'; ctx.fillRect(x - hpw / 2 - 1, y - size / 2 - 13, hpw + 2, 7);
+    ctx.fillStyle = hp > 0.5 ? '#2DE2E6' : hp > 0.25 ? '#FFD23F' : '#FF4FA3'; ctx.fillRect(x - hpw / 2, y - size / 2 - 12, hpw * hp, 5);
+    ctx.font = '12px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFD23F'; ctx.fillText(STAR.repeat(f.stars), x, y - size / 2 - 17);
+    ctx.fillStyle = isMe ? '#FF4FA3' : '#FFF3E6'; ctx.fillText(f.handle ? `@${f.handle}` : short(f.address), x, y + size / 2 + 16);
+  }
+  for (let i = effects.length - 1; i >= 0; i--) {
+    const e = effects[i]; const a = (t - e.at) / 900;
+    if (a > 1) { effects.splice(i, 1); continue; }
+    ctx.globalAlpha = 1 - a; ctx.fillStyle = e.color; ctx.font = '400 20px Anton, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(e.text, e.x, e.y - 30 - a * 30); ctx.globalAlpha = 1;
+  }
+  // my own fighter while it is down
+  if (my && my.dead_until && my.dead_until > t) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#120626aa'; ctx.fillRect(0, cv.height / 2 - 40 * devicePixelRatio, cv.width, 80 * devicePixelRatio);
+    ctx.fillStyle = '#FF4FA3'; ctx.font = `400 ${32 * devicePixelRatio}px Anton`; ctx.textAlign = 'center';
+    ctx.fillText(`TAKEN DOWN · BACK IN ${Math.ceil((my.dead_until - t) / 1000)}`, cv.width / 2, cv.height / 2 + 12 * devicePixelRatio);
+  }
+}
+
+// ---------- the server: the world every second, my own state every few, moves and hits right away ----------
+async function pullWorld() {
+  try {
+    const sent = Date.now();
+    const w = await api('/arena/world');
+    offset = w.t - (sent + Date.now()) / 2;
+    const old = new Map(world.fighters.map((f) => [f.address, f]));
+    for (const f of w.fighters) {
+      f.seen = w.t;
+      const o = old.get(f.address);
+      if (o && o.hp > f.hp) f.flash = now() + 150;
+      // keep a move I just sent, until the server has it
+      if (o && o.local && o.local > w.t) { f.x = o.x; f.y = o.y; f.tx = o.tx; f.ty = o.ty; f.seen = o.seen; f.local = o.local; }
+    }
+    world = w; renderSide();
+  } catch (e) { /* a missed second is fine */ }
+}
+async function pullMe() {
+  if (!signedIn) return;
+  try { me = await api('/arena/me'); renderMe(); } catch (e) { if (e.status === 401) { signedIn = false; renderAuth(); } }
+}
+function renderSide() {
+  const myAddr = me?.fighter?.address;
+  $('top').innerHTML = world.top.length ? world.top.map((p) => `<li class="${p.address === myAddr ? 'me' : ''}">${esc(p.handle ? '@' + p.handle : short(p.address))} · <b>${fmt(p.points)}</b> · ${p.kills} K</li>`).join('') : '<li>no kills yet</li>';
+  $('feed').innerHTML = world.kills.length ? world.kills.map((k) => `<div><b class="${k.killer === myAddr ? 'me' : ''}">${esc(k.killer_handle ? '@' + k.killer_handle : short(k.killer))}</b> ${STAR.repeat(k.killer_stars)} ▸ <b class="${k.victim === myAddr ? 'me' : ''}">${esc(k.victim_handle ? '@' + k.victim_handle : short(k.victim))}</b> ${STAR.repeat(k.victim_stars)} <em>+${fmt(k.points)}</em></div>`).join('') : '<div>nothing yet</div>';
+  $('sSeason').innerHTML = `season ${esc(world.season)} · <b>${world.fighters.length}</b> online`;
+}
+function renderMe() {
+  if (!me) return;
+  $('sMe').innerHTML = me.fighter ? `${STAR.repeat(me.fighter.stars)} <b>${esc(me.fighter.name)}</b> · today <b>${fmt(me.today)}</b>/${fmt(me.daily_cap)} $PROMPT · ${me.kills} K / ${me.deaths} D${me.rank ? ` · #${me.rank}` : ''}` : 'no fighter yet';
+  if (!me.fighter && !$('mPick').dataset.shown) openPick();
+}
+function renderAuth() {
+  const b = $('bAuth');
+  if (signedIn) { b.textContent = 'Fighter'; b.removeAttribute('href'); b.onclick = (e) => { e.preventDefault(); openPick(); }; }
+  else { b.textContent = 'Sign in'; b.href = '/login/site?return=/arena'; b.onclick = null; }
+}
+function openPick() {
+  const m = $('mPick'); m.dataset.shown = '1'; m.classList.add('on');
+  const list = me?.citizens || [];
+  const order = ['Street', 'Hustler', 'Boss', 'Kingpin', 'Legend'];
+  $('pickNote').innerHTML = list.length ? 'One of your Citizens fights for you. Its stars set how hard it hits. You can change it once a day.'
+    : 'You need a Citizen to fight. Mint one in your AI: <code>/mint-city</code> (<a href="/connect">connect Prompt City</a>), then come back.';
+  $('pickList').innerHTML = list.map((n) => `<button type="button" data-id="${n.id}"><img src="/img/${n.id}.png" alt=""><span class="st">${STAR.repeat(order.indexOf(n.rarity) + 1)}</span><br>${esc(n.name)}<br>${rules ? rules.damage[n.rarity] : ''} dmg</button>`).join('');
+}
+$('pickList').addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-id]'); if (!b) return;
+  try { const r = await api('/arena/join', { nft_id: Number(b.dataset.id) }); $('mPick').classList.remove('on'); toast(r.changed ? 'New fighter. Go!' : 'In the arena. Go!'); follow = true; await pullMe(); await pullWorld(); }
+  catch (err) { toast(err.message); }
+});
+document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => b.closest('.modal').classList.remove('on')));
+$('bRules').addEventListener('click', () => $('mRules').classList.add('on'));
+
+// a click: on a Citizen, go after it; on the street, walk there
+let lastMove = 0;
+async function walk(x, y) {
+  const my = mine(); if (!my || !me?.fighter) return;
+  const [cx, cy] = here(my);
+  Object.assign(my, { x: cx, y: cy, tx: x, ty: y, seen: now(), local: now() + 1500 });
+  lastMove = Date.now();
+  try { await api('/arena/move', { x, y }); } catch (e) { toast(e.message); }
+}
+cv.addEventListener('pointerdown', (e) => {
+  if (!rules) return;
+  const [wx, wy] = toWorld(e.clientX, e.clientY);
+  if (!signedIn) { toast('Sign in to fight. Watching for now.'); return; }
+  if (!me?.fighter) { openPick(); return; }
+  const hit = world.fighters.filter((f) => f.address !== me.fighter.address && !(f.dead_until > now()))
+    .map((f) => { const [x, y] = here(f); return { f, d: Math.hypot(x - wx, y - wy) }; }).sort((a, b) => a.d - b.d)[0];
+  follow = true;
+  if (hit && hit.d < 40) { target = hit.f.address; chase(); return; }
+  target = null; walk(...[wx, wy]);
+});
+addEventListener('keydown', (e) => {
+  const k = { ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], ArrowLeft: [-1, 0], KeyA: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0] }[e.code];
+  const my = mine(); if (!k || !my || Date.now() - lastMove < 150) return;
+  const [x, y] = here(my); target = null; walk(x + k[0] * 160, y + k[1] * 160);
+});
+// after a target: walk up to it and hit it once a second while in range
+async function chase() {
+  const my = mine(); if (!my || !target) return;
+  const f = world.fighters.find((x) => x.address === target);
+  if (!f || (f.dead_until && f.dead_until > now())) { target = null; return; }
+  const [mx, my2] = here(my); const [fx, fy] = here(f);
+  const d = Math.hypot(mx - fx, my2 - fy);
+  if (d > rules.range) {
+    if (Date.now() - lastMove > 400) { const k = (d - rules.range * 0.6) / d; walk(mx + (fx - mx) * k, my2 + (fy - my2) * k); }
+    return;
+  }
+  if (Date.now() - lastHit < rules.hit_ms + 50) return;
+  if (f.shield) { toast('Just spawned: protected for a few seconds.'); return; }
+  lastHit = Date.now();
+  try {
+    const r = await api('/arena/attack', { target });
+    effects.push({ text: `-${r.damage}`, color: '#FF4FA3', x: fx, y: fy, at: now() });
+    f.hp = r.hp; f.flash = now() + 150;
+    if (r.killed) {
+      effects.push({ text: `+${fmt(r.points)} $PROMPT`, color: '#FFD23F', x: mx, y: my2, at: now() });
+      toast(r.points ? `Kill! +${fmt(r.points)} $PROMPT${r.streak > 1 ? ` · ${r.streak} in a row` : ''}` : `Kill, no $PROMPT: ${r.why}`);
+      target = null; pullMe();
+    }
+  } catch (e) { toast(e.message); if (/away|left|Already/.test(e.message)) target = null; }
+}
+setInterval(chase, 150);
+
+// ---------- start ----------
+(async () => {
+  try { rules = await api('/arena/rules'); } catch { toast('The arena is closed right now.'); return; }
+  $('rHp').textContent = rules.hp; $('rBase').textContent = rules.kill_base; $('rStreak').textContent = `${rules.streak_pct}%`;
+  $('rCap').textContent = fmt(rules.daily_cap); $('rVictim').textContent = rules.per_victim;
+  $('rDmg').innerHTML = rules.stars.map((s) => `<tr><td>${s.rarity}</td><td style="color:var(--gold)">${s.stars}</td><td>${s.damage}</td><td>${Math.ceil(rules.hp / s.damage)}</td></tr>`).join('');
+  cam.x = rules.map.w / 2; cam.y = rules.map.h / 2;
+  drawMap();
+  try { await api('/me'); signedIn = true; } catch { signedIn = false; }
+  renderAuth();
+  await pullMe(); await pullWorld();
+  setInterval(pullWorld, 1000);
+  setInterval(pullMe, 5000);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

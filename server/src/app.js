@@ -25,6 +25,8 @@ import * as credit from './credit.js';
 import * as airdrop from './airdrop.js';
 import { burnCard, airdropCard } from './card.js';
 import * as game from './game.js';
+import * as arena from './arena.js';
+import * as shooter from './shooter.js';
 import { createBridge, metadata } from './bridge.js';
 
 const sameSecret = (given, key) => {
@@ -209,6 +211,17 @@ export async function createApp(opts) {
       levels: game.LEVELS, discount: game.DISCOUNT, pick_prices: Object.fromEntries(Object.entries(game.CONFIG.pickPrices).map(([k, v]) => [k, num(v)])),
       pick_level: game.PICK_LEVEL, craft_fee: num(game.CONFIG.craftFee), export: { enabled: bridge.enabled, fee: num(bridge.fee), network: bridge.cluster } });
   });
+  // the arena (arena.js, /play): the map as everyone sees it, cached a second by the CDN so the function runs about once a
+  // second however many people play; a player's own moves go straight to the function
+  api.get('/arena/world', async (req, res) => cdn(res, 1).json(await arena.world(db)));
+  api.get('/arena/rules', async (req, res) => cdn(res, 60).json(arena.rules()));
+  // the shooter (shooter.js, game/): where the game server is; its signed kill reports (the raw body is what is signed)
+  api.get('/shooter/config', async (req, res) => cdn(res, 30).json({ enabled: shooter.enabled(), url: shooter.enabled() ? shooter.CONFIG.url : null }));
+  api.post('/shooter/report', express.text({ type: '*/*', limit: '256kb' }), async (req, res) => {
+    const body = shooter.verify(typeof req.body === 'string' ? req.body : '', req.get('x-game-signature'));
+    if (!body) return res.status(403).json({ error: 'forbidden' });
+    res.json({ results: await shooter.report(db, body.kills) });
+  });
   api.get('/collections/:slug', async (req, res) => {
     const c = await visible(req, String(req.params.slug).toLowerCase());
     if (!c) return res.status(404).json({ error: 'not found' });
@@ -271,6 +284,14 @@ export async function createApp(opts) {
   const idOf = (req) => nftIdOr(req.params.id) ?? -1;
   const draftView = (c) => ({ ...c, mint_price: num(c.mint_price), traits: undefined, trait_order: undefined });
   api.get('/me', guard, wrap(async (req) => ({ handle: req.user.handle, public_id: req.user.public_id, x_id: req.user.x_id, admin: isAdmin(req.user) })));
+  const fight = express.Router();
+  fight.use(guard, express.json({ limit: '4kb' }));
+  fight.get('/me', wrap(async (req) => arena.me(db, req.user.id)));
+  fight.post('/join', wrap(async (req) => arena.join(db, req.user.id, nftIdOr(req.body?.nft_id) ?? -1)));
+  fight.post('/move', wrap(async (req) => arena.move(db, req.user.id, req.body?.x, req.body?.y)));
+  fight.post('/attack', wrap(async (req) => arena.attack(db, req.user.id, req.body?.target)));
+  fight.post('/ticket', wrap(async (req) => shooter.ticket(db, req.user.id)));
+  api.use('/arena', fight);
   const launch = express.Router();
   launch.use(guard, express.json({ limit: '5mb' }));
   launch.get('/mine', wrap(async (req) => {
@@ -478,6 +499,8 @@ export async function createApp(opts) {
     app.use(express.static(path.join(root, 'site')));
     // the site's pages (/c/citizens, /nft/42, ...) are all index.html; on Netlify netlify.toml does the same
     app.get(SITE_PAGES, (req, res) => res.sendFile(path.join(root, 'site', 'index.html')));
+    app.get(['/play', '/play/'], (req, res) => res.sendFile(path.join(root, 'site', 'play.html')));
+    app.get(['/arena', '/arena/'], (req, res) => res.sendFile(path.join(root, 'site', 'arena.html')));
   }
   // A burn's card for X: /burn/<n>.png (the picture, drawn once and kept by the CDN; a burn never changes) and
   // /burn/<n> (a small page with the picture whose link previews show the card)
