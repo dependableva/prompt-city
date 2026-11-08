@@ -1,0 +1,41 @@
+# The shootout's game server (game/) on Cloudflare Workers: one Durable Object for the city, up to 100 players.
+# Deploys on a push to main that changes game/ or the shared rules (site/game/sim.js), and by hand (Run workflow).
+# Needs the repository secrets CLOUDFLARE_API_TOKEN (the "Edit Cloudflare Workers" template), CLOUDFLARE_ACCOUNT_ID and
+# GAME_SECRET (the same value as on Netlify); until they are set it does nothing.
+name: game
+on:
+  push:
+    branches: [main]
+    paths: ['game/**', 'site/game/sim.js', '.github/workflows/game.yml']
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - id: check
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SECRET: ${{ secrets.GAME_SECRET }}
+        run: |
+          if [ -n "$TOKEN" ] && [ -n "$ACCOUNT" ] && [ "${#SECRET}" -ge 32 ]; then echo "go=1" >> "$GITHUB_OUTPUT"
+          else echo "The Cloudflare secrets are not set yet: nothing to deploy"; fi
+      - if: steps.check.outputs.go == '1'
+        uses: actions/checkout@v4
+      - if: steps.check.outputs.go == '1'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - if: steps.check.outputs.go == '1'
+        uses: cloudflare/wrangler-action@v3
+        env:
+          GAME_SECRET: ${{ secrets.GAME_SECRET }}
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          workingDirectory: game
+          command: deploy
+          secrets: |
+            GAME_SECRET
