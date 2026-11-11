@@ -101,9 +101,9 @@ table.rules th { color: var(--dim); font-weight: 400; }
 
 <div class="modal on" id="mStart"><div class="box">
   <h2>Prompt City shootout</h2>
-  <p>Two crews, Neon and Tide, fight across downtown Prompt City: one city, up to 100 players online at once. A round ends when one crew is out or after 2:30; who's down watches the crew until the next round. Your Citizen's stars set how hard its bullets hit.</p>
+  <p>Two crews, Neon and Tide, fight across downtown Prompt City: one city, up to 100 players online at once. A round ends when one crew is out or after 2:30; who's down watches the crew until the next round. Your Citizen's stars pick its gun: more stars, a stronger one.</p>
   <div class="keys"><b>W A S D</b><span>walk: W where you look, A / D to the sides (arrows too)</span><b>mouse</b><span>look and aim</span><b>click / hold</b><span>shoot</span><b>R</b><span>reload</span><b>V</b><span>camera: behind your Citizen or its own eyes</span><b>Tab</b><span>score</span><b>Esc</b><span>menu</span></div>
-  <table class="rules"><thead><tr><th>Rarity</th><th>Stars</th><th>Bullet</th><th>Hits to kill</th></tr></thead><tbody id="rDmg"></tbody></table>
+  <table class="rules"><thead><tr><th>Rarity</th><th>Stars</th><th>Gun</th><th>Damage</th><th>Shots/s</th><th>Hits to kill</th><th>Range</th></tr></thead><tbody id="rDmg"></tbody></table>
   <p>A kill in a live round pays 50 $PROMPT × the victim's stars ÷ yours, +10% for each kill in a row, at most 1,500 $PROMPT a day and 3 paid kills of the same Citizen a day. Warmup kills don't pay. The season's top 10 get an airdrop at the token launch.</p>
   <div id="startPick"><p>Loading the city…</p></div>
 </div></div>
@@ -123,7 +123,7 @@ table.rules th { color: var(--dim); font-weight: 400; }
 
 <script type="module">
 import * as THREE from '/game/three.min.js';
-import { MAPS, TILE, TEAMS, RULES, moveStep, shotWallDistance, rayCircle, tileAt } from '/game/sim.js';
+import { MAPS, TILE, TEAMS, RULES, moveStep, shotWallDistance, rayCircle, tileAt, weaponOf } from '/game/sim.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -143,7 +143,8 @@ const store = {
   set(k, v) { try { localStorage.setItem(`pc.play.${k}`, JSON.stringify(v)); } catch {} },
 };
 const settings = { sens: store.get('sens', 2.2), mute: store.get('mute', false), low: store.get('low', false), fp: store.get('fp', false) };
-$('rDmg').innerHTML = RULES.damage.map((d, i) => `<tr><td>${RAR[i]}</td><td style="color:var(--gold)">${STAR.repeat(i + 1)}</td><td>${d}</td><td>${Math.ceil(RULES.hp / d)}</td></tr>`).join('');
+const RANGE = (r) => (r >= 1000 ? 'very long' : r >= 800 ? 'long' : r >= 600 ? 'medium' : r >= 450 ? 'short' : 'close');
+$('rDmg').innerHTML = RULES.weapons.map((w, i) => `<tr><td>${RAR[i]}</td><td style="color:var(--gold)">${STAR.repeat(i + 1)}</td><td>${w.name}</td><td>${w.pellets > 1 ? `${w.pellets} × ${w.dmg}` : w.dmg}</td><td>${(1000 / w.fireMs).toFixed(1)}</td><td>${Math.ceil(RULES.hp / (w.dmg * w.pellets))}${w.pellets > 1 ? ' up close' : ''}</td><td>${RANGE(w.range)}</td></tr>`).join('');
 
 // ---------- the 3D world: 1 px of the map is 1/22 m, a tile about 1.5 m ----------
 const S = 1 / 22;
@@ -171,8 +172,9 @@ scene.background = new THREE.Color(FOG);
 scene.fog = new THREE.Fog(FOG, 24, 66);
 const camera = new THREE.PerspectiveCamera(62, 1, 0.05, 600);
 scene.add(camera);
+let lowRes = false;
 function resize() {
-  renderer.setPixelRatio(settings.low ? 1 : Math.min(devicePixelRatio, 1.5));
+  renderer.setPixelRatio(settings.low ? (lowRes ? 0.75 : 1) : Math.min(devicePixelRatio, 1.25));
   renderer.setSize(innerWidth, innerHeight, false);
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
 }
@@ -459,12 +461,15 @@ const GEO = {
   hat: new THREE.BoxGeometry(0.5, 0.13, 0.5),
   cap: new THREE.BoxGeometry(0.46, 0.06, 0.46),
   gun: new THREE.BoxGeometry(0.58, 0.12, 0.08),
+  scope: new THREE.BoxGeometry(0.22, 0.06, 0.06),
   belt: new THREE.BoxGeometry(0.32, 0.07, 0.54),
   ring: new THREE.RingGeometry(0.44, 0.58, 28).rotateX(-Math.PI / 2),
 };
 const PANTS = new THREE.MeshLambertMaterial({ color: 0x2b2540 });
 const SHOE = new THREE.MeshLambertMaterial({ color: 0x120c18 });
 const GUN = new THREE.MeshLambertMaterial({ color: 0x1a1622 });
+const GUN_GOLD = new THREE.MeshLambertMaterial({ color: 0xd8a93a });
+const GUN_WOOD = new THREE.MeshLambertMaterial({ color: 0x6b4426 });
 const BELT = TEAMS.map((t) => new THREE.MeshBasicMaterial({ color: t.color }));
 const RING = TEAMS.map((t) => new THREE.MeshBasicMaterial({ color: t.color, transparent: true, opacity: 0.55, depthWrite: false }));
 const GRAY = new THREE.MeshLambertMaterial({ color: 0x8a7fa0 });
@@ -505,7 +510,7 @@ class Avatar {
     this.armMat = [GRAY, GRAY, GRAY, GRAY, GRAY, GRAY];
     this.armL = mesh(GEO.arm, this.armMat, 0, 1.4, -0.33); this.armR = mesh(GEO.arm, this.armMat, 0, 1.4, 0.33);
     this.armL.rotation.set(0.32, 0, Math.PI / 2 - 0.12); this.armR.rotation.set(-0.32, 0, Math.PI / 2 - 0.12);
-    this.gun = mesh(GEO.gun, GUN, 0.62, 1.3, 0.0);
+    this.gun = mesh(GEO.gun, GUN, 0.62, 1.3, 0.0); this.gunKey = 'pistol'; this.scope = null;
     this.head = mesh(GEO.head, GRAY, 0, 1.69, 0);
     this.hat = null;
     this.ring = new THREE.Mesh(GEO.ring, RING[team]); this.ring.position.y = 0.03; this.g.add(this.ring);
@@ -525,6 +530,14 @@ class Avatar {
     const top = l.hat ? [GEO.hat, l.hat, 1.99] : l.cap ? [GEO.cap, l.cap, 1.96] : null;
     if (top) { this.hat = new THREE.Mesh(top[0], top[1]); this.hat.position.set(0, top[2], 0); this.hat.castShadow = true; this.body.add(this.hat); }
     this.look = l;
+  }
+  setGun(key) {
+    if (key === this.gunKey) return; this.gunKey = key;
+    const L = GUN_LOOK[key];
+    this.gun.scale.set(L.body, L.h / 0.075, 1); this.gun.position.x = 0.34 + 0.28 * L.body;
+    this.gun.material = key === 'marksman' ? GUN_GOLD : key === 'shotgun' ? GUN_WOOD : GUN;
+    if (L.scope && !this.scope) { this.scope = new THREE.Mesh(GEO.scope, GUN); this.scope.position.set(0.62, 1.39, 0); this.body.add(this.scope); }
+    if (this.scope) this.scope.visible = !!L.scope;
   }
   setTeam(t) { if (t === this.team) return; this.team = t; this.belt.material = BELT[t]; this.ring.material = RING[t]; this.tagKey = ''; }
   label(name, stars, hp) {
@@ -560,18 +573,44 @@ class Avatar {
   remove() { scene.remove(this.g); this.tag.t.dispose(); this.sprite.material.dispose(); for (const m of this.torsoMats) m.dispose(); }
 }
 
+// ---------- the guns ----------
+const starsOf = (id) => roster.get(id)?.stars || 1;
+const myGun = () => weaponOf(starsOf(myId), rules);
+// how each gun looks: in your hands (first person) and on a Citizen (third person)
+const GUN_LOOK = {
+  pistol: { len: 0.2, h: 0.07, barrel: 0.06, mag: 0, scope: false, body: 0.55 },
+  smg: { len: 0.28, h: 0.075, barrel: 0.08, mag: 0.09, scope: false, body: 0.8 },
+  shotgun: { len: 0.4, h: 0.085, barrel: 0.16, mag: 0, scope: false, body: 1.05, pump: true },
+  rifle: { len: 0.38, h: 0.075, barrel: 0.12, mag: 0.11, scope: false, body: 1.1 },
+  marksman: { len: 0.46, h: 0.075, barrel: 0.2, mag: 0.07, scope: true, body: 1.3 },
+};
+
 // the first-person gun, drawn over everything so it never pokes into a wall
 const view = new THREE.Group();
 const vmMat = (c) => new THREE.MeshLambertMaterial({ color: c, depthTest: false });
 const vArm = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.22), vmMat(0x8a7fa0)); vArm.position.set(0.03, -0.07, 0.08);
 const vHand = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.07), vmMat(0xc08a5c)); vHand.position.set(0, -0.045, -0.02);
-const vGun = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.065, 0.3), vmMat(0x1a1622)); vGun.position.set(0, 0, -0.12);
-const vBarrel = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.022, 0.12), vmMat(0x2a2434)); vBarrel.position.set(0, 0.012, -0.32);
-const vStripe = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.008, 0.2), new THREE.MeshBasicMaterial({ color: 0xFF4FA3, depthTest: false })); vStripe.position.set(0, 0.036, -0.12);
-for (const [i, m] of [vArm, vHand, vGun, vBarrel, vStripe].entries()) { m.renderOrder = 10 + i; view.add(m); }
+const vParts = new THREE.Group(); view.add(vArm, vHand, vParts); vArm.renderOrder = 10; vHand.renderOrder = 11;
+const vDark = vmMat(0x1a1622); const vMetal = vmMat(0x2a2434); const vWood = vmMat(0x6b4426); const vGold = vmMat(0xd8a93a);
+const vStripeMat = new THREE.MeshBasicMaterial({ color: 0xFF4FA3, depthTest: false });
+const MUZZLE = new THREE.Vector3(0, 0.012, -0.39);
+let vKey = '';
+function buildViewGun(key) {
+  if (key === vKey) return; vKey = key;
+  vParts.clear();
+  const L = GUN_LOOK[key]; const part = (w, h, d, mat, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.renderOrder = 12 + vParts.children.length; vParts.add(m); return m; };
+  const body = key === 'marksman' ? vGold : key === 'shotgun' ? vWood : vDark;
+  part(0.05, L.h, L.len, body, 0, 0, -0.02 - L.len / 2);
+  part(0.022, 0.022, L.barrel, vMetal, 0, 0.012, -0.02 - L.len - L.barrel / 2);
+  if (L.mag) part(0.035, L.mag, 0.05, vMetal, 0, -L.h / 2 - L.mag / 2, -0.02 - L.len * 0.45);
+  if (L.scope) { part(0.03, 0.03, 0.14, vDark, 0, L.h / 2 + 0.02, -0.02 - L.len * 0.5); }
+  if (L.pump) part(0.045, 0.04, 0.09, vDark, 0, -0.045, -0.02 - L.len * 0.75);
+  part(0.016, 0.008, L.len * 0.6, vStripeMat, 0, L.h / 2 + 0.004, -0.02 - L.len * 0.5);
+  MUZZLE.set(0, 0.012, -0.02 - L.len - L.barrel);
+}
+buildViewGun('pistol');
 const VIEW = { x: 0.13, y: -0.135, z: -0.24 };
 view.position.set(VIEW.x, VIEW.y, VIEW.z); view.rotation.y = 0.05; view.scale.setScalar(0.72);
-const MUZZLE = new THREE.Vector3(0, 0.012, -0.39);
 camera.add(view); view.visible = false;
 
 // ---------- effects: tracers, muzzle flashes, sparks ----------
@@ -603,7 +642,12 @@ function sfx(kind, vol = 1) {
   if (!noiseBuf) { const n = Math.floor(actx.sampleRate * 0.3); noiseBuf = actx.createBuffer(1, n, actx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1; }
   const noise = (f0, f1, d, a) => { const s = actx.createBufferSource(); s.buffer = noiseBuf; const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + d); s.connect(f); env(f, a, d); s.start(t); s.stop(t + d + 0.02); };
   const tone = (type, f0, f1, d, a, delay = 0) => { const o = actx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t + delay); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + delay + d); const g = actx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.setValueAtTime(a, t + delay); g.gain.exponentialRampToValueAtTime(0.001, t + delay + d); o.connect(g).connect(out); o.start(t); o.stop(t + delay + d + 0.02); };
-  if (kind === 'shot') { noise(3600, 420, 0.13, 0.9); tone('sine', 150, 45, 0.09, 0.7); }
+  if (kind === 'pistol') { noise(3600, 420, 0.12, 0.85); tone('sine', 160, 50, 0.08, 0.6); }
+  if (kind === 'smg') { noise(4200, 900, 0.07, 0.6); tone('sine', 190, 80, 0.05, 0.4); }
+  if (kind === 'shotgun') { noise(2400, 160, 0.26, 1.0); tone('sine', 110, 35, 0.18, 0.9); }
+  if (kind === 'rifle') { noise(3800, 500, 0.11, 0.9); tone('sine', 140, 45, 0.09, 0.65); }
+  if (kind === 'marksman') { noise(5200, 260, 0.28, 1.0); tone('sine', 95, 30, 0.22, 0.85); tone('triangle', 1200, 300, 0.12, 0.08, 0.02); }
+  if (kind === 'pump') { tone('square', 300, 0, 0.04, 0.12, 0.25); tone('square', 220, 0, 0.05, 0.12, 0.38); }
   if (kind === 'hit') tone('square', 1900, 0, 0.05, 0.22);
   if (kind === 'kill') { tone('triangle', 880, 0, 0.14, 0.5); tone('triangle', 1320, 0, 0.18, 0.5, 0.08); }
   if (kind === 'hurt') noise(700, 200, 0.2, 0.8);
@@ -653,6 +697,7 @@ function onMsg(m) {
   }
   if (m.t === 'roster') return setRoster(m.roster);
   if (m.t === 'board') { board = m; if (!$('board').hidden) renderBoard(); return; }
+  if (m.t === 'pong') { rtt = Math.round(performance.now() - m.c); return; }
   if (m.t === 'paid') { if (m.points) { todayPaid += m.points; toast(`+${fmt(m.points)} $PROMPT`); } else if (m.why) toast(`Kill, no $PROMPT: ${m.why}`); return; }
   if (m.t === 's') return onSnap(m);
 }
@@ -668,9 +713,8 @@ function onSnap(s) {
   for (const [id, x, y, a, hp, alive, team, kills] of s.p) {
     seen.add(id);
     if (id === myId) {
-      if (!me.alive && alive) { me.x = x; me.y = y; yaw = a; me.av?.revive(); }
-      else if (Math.hypot(me.x - x, me.y - y) > 48) { me.x = x; me.y = y; }
-      else { me.x += (x - me.x) * 0.2; me.y += (y - me.y) * 0.2; }
+      if (!me.alive && alive) { me.x = x; me.y = y; yaw = a; me.av?.revive(); sent.length = 0; err.x = err.y = 0; }
+      else if (alive) reconcile(x, y, s.me?.q || 0);
       if (alive && me.alive && hp < me.hp) { me.av?.flash(); sfx('hurt', 0.9); $('vign').style.opacity = '0.75'; setTimeout(() => { $('vign').style.opacity = '0'; }, 160); }
       if (me.alive && !alive) me.av?.die(now);
       Object.assign(me, { hp, alive: !!alive, team, kills });
@@ -686,24 +730,26 @@ function onSnap(s) {
     if (!o.alive && alive) { o.x = x; o.y = y; o.av?.revive(); }
     Object.assign(o, { tx: x, ty: y, ta: a, hp, alive: !!alive, team, kills, out: false });
     if (!o.av && roster.has(id)) { o.av = new Avatar(roster.get(id).nft, team); if (!alive) o.av.g.visible = false; }
-    if (o.av) { o.av.setTeam(team); if (alive) o.av.g.visible = true; }
+    if (o.av) { o.av.setTeam(team); o.av.setGun(weaponOf(starsOf(id), rules).key); if (alive) o.av.g.visible = true; }
   }
   for (const [id, o] of others) if (!seen.has(id) && !o.out) { o.out = true; if (o.av) o.av.g.visible = false; }
   if (s.me) { if (!me.reloading && s.me.reloading) sfx('reload', 0.8); me.ammo = s.me.ammo; me.reloading = s.me.reloading; }
+  const fired = new Set();
   for (const [ox, oy, ex, ey, team, hit, sid] of s.shots) {
     const shooter = sid === myId ? me : others.get(sid);
+    const gun = weaponOf(starsOf(sid), rules); const first = !fired.has(sid); fired.add(sid);
     let from = new THREE.Vector3(ox * S, CHEST, oy * S);
     const mineFp = sid === myId && settings.fp && me.alive;
     if (mineFp) { from = view.localToWorld(MUZZLE.clone()); view.position.z = VIEW.z + 0.04; }
     else if (shooter?.av?.g.visible) from = shooter.av.g.localToWorld(new THREE.Vector3(0.95, 1.3, 0));
-    flashAt(from, mineFp ? 0.07 : 0.55, 55, now);
+    if (first) flashAt(from, mineFp ? (gun.key === 'shotgun' ? 0.11 : 0.07) : (gun.key === 'shotgun' ? 0.75 : 0.55), 55, now);
     // my own tracer starts a little ahead of my gun, so it doesn't flash across the screen
     if (mineFp) { const dx = ex * S - from.x; const dz = ey * S - from.z; const l = Math.hypot(dx, dz) || 1; const k = Math.min(1.6, l * 0.5) / l; from.x += dx * k; from.z += dz * k; }
     tracer(from.x, from.y, from.z, ex * S, ey * S, team, now);
     flashAt(new THREE.Vector3(ex * S, CHEST, ey * S), hit ? 0.5 : 0.3, 110, now);
     const dist = Math.hypot(ox - me.x, oy - me.y);
-    sfx('shot', sid === myId ? 1 : Math.max(0, 1 - dist / rules.view) * 0.7);
-    if (sid === myId && hit) { sfx('hit', 1); $('hitm').classList.add('on'); clearTimeout(hitT); hitT = setTimeout(() => $('hitm').classList.remove('on'), 140); }
+    if (first) { const vol = sid === myId ? 1 : Math.max(0, 1 - dist / rules.view) * 0.7; sfx(gun.key, vol); if (gun.key === 'shotgun') sfx('pump', vol); }
+    if (sid === myId && hit && !fired.has(`hit${sid}`)) { fired.add(`hit${sid}`); sfx('hit', 1); $('hitm').classList.add('on'); clearTimeout(hitT); hitT = setTimeout(() => $('hitm').classList.remove('on'), 140); }
     if (sid !== myId && team !== me.team) pings.set(sid, { x: ox, y: oy, at: now });
   }
   for (const ev of s.ev) {
@@ -716,16 +762,19 @@ function onSnap(s) {
     if (ev.t === 'round') banner(`ROUND ${ev.round}`, 'Neon vs Tide · the kills pay now');
     if (ev.t === 'end') banner(ev.winner == null ? 'DRAW' : `${TEAMS[ev.winner].name.toUpperCase()} TAKES IT`, `${ev.score[0]} : ${ev.score[1]}`);
   }
-  feed.splice(6);
-  $('feed').innerHTML = feed.map((f) => `<div class="t${f.team}${f.me ? ' me' : ''}">${f.html}</div>`).join('');
-  $('sA').textContent = s.score[0]; $('sB').textContent = s.score[1];
+  if (s.ev.length) {
+    feed.splice(6);
+    $('feed').innerHTML = feed.map((f) => `<div class="t${f.team}${f.me ? ' me' : ''}">${f.html}</div>`).join('');
+  }
+  setText($('sA'), s.score[0]); setText($('sB'), s.score[1]);
   const sec = Math.ceil(s.left / 1000);
-  $('time').textContent = s.phase === 'live' ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}` : s.phase === 'end' ? '—' : 'WARMUP';
-  $('phase').textContent = (s.phase === 'warmup' ? 'waiting for both crews · kills don\'t pay' : s.phase === 'live' ? `${s.alive[0]} vs ${s.alive[1]} alive` : 'next round…') + ` · ${online}/${rules.maxPlayers} online`;
-  $('hp').textContent = me.alive ? me.hp : '—'; $('hpBar').style.width = `${me.alive ? (me.hp / rules.hp) * 100 : 0}%`;
-  $('ammo').textContent = me.reloading ? '…' : me.ammo; $('ammoL').textContent = me.reloading ? 'RELOADING' : `AMMO / ${rules.mag}`;
-  $('kills').textContent = `${me.kills} · ${fmt(todayPaid)}`;
+  setText($('time'), s.phase === 'live' ? `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}` : s.phase === 'end' ? '—' : 'WARMUP');
+  setText($('phase'), (s.phase === 'warmup' ? 'waiting for both crews · kills don\'t pay' : s.phase === 'live' ? `${s.alive[0]} vs ${s.alive[1]} alive` : 'next round…') + ` · ${online}/${rules.maxPlayers} online`);
+  setText($('hp'), me.alive ? me.hp : '—'); $('hpBar').style.width = `${me.alive ? (me.hp / rules.hp) * 100 : 0}%`;
+  setText($('ammo'), me.reloading ? '…' : me.ammo); setText($('ammoL'), me.reloading ? 'RELOADING' : `${myGun().name.toUpperCase()} · ${myGun().mag}`);
+  setText($('kills'), `${me.kills} · ${fmt(todayPaid)}`);
 }
+const setText = (el, v) => { if (el.textContent !== String(v)) el.textContent = v; };
 let hitT; let bannerT;
 function banner(big, small, ms = 2400) { $('banner').innerHTML = `${esc(big)}<small>${esc(small || '')}</small>`; clearTimeout(bannerT); bannerT = setTimeout(() => { $('banner').innerHTML = ''; }, ms); }
 
@@ -778,13 +827,41 @@ $('sens').oninput = (e) => { settings.sens = Number(e.target.value); store.set('
 function toggleCam() { settings.fp = !settings.fp; store.set('fp', settings.fp); drawSettings(); toast(settings.fp ? 'First person' : 'Third person'); }
 function toggleSound() { settings.mute = !settings.mute; store.set('mute', settings.mute); drawSettings(); toast(settings.mute ? 'Sound off' : 'Sound on'); }
 $('bCam').onclick = toggleCam; $('bSnd').onclick = toggleSound;
-$('bGfx').onclick = () => { settings.low = !settings.low; store.set('low', settings.low); sun.castShadow = !settings.low; resize(); drawSettings(); };
+$('bGfx').onclick = () => { settings.low = !settings.low; lowRes = false; store.set('low', settings.low); sun.castShadow = !settings.low; resize(); drawSettings(); };
+setInterval(() => { if (ws && ws.readyState === 1 && myId != null) ws.send(JSON.stringify({ t: 'ping', c: performance.now() })); }, 2000);
+let rtt = 0;
+// every input is numbered; the page remembers where its Citizen was when it sent each one
+let seq = 0; const sent = []; const err = { x: 0, y: 0 };
 setInterval(() => {
   if (!ws || ws.readyState !== 1 || myId == null) return;
   const play = locked && me.alive;
-  ws.send(JSON.stringify({ t: 'in', k: play ? keys : NOKEYS, a: Math.round(yaw * 1000) / 1000, f: play && mouseDown, r: play && reloadPress }));
+  seq++; sent.push([seq, me.x, me.y]); if (sent.length > 120) sent.shift();
+  ws.send(JSON.stringify({ t: 'in', q: seq, k: play ? keys : NOKEYS, a: Math.round(yaw * 1000) / 1000, f: play && mouseDown, r: play && reloadPress }));
   reloadPress = false;
 }, 33);
+// the server's word on my position, compared with where I was when I sent the input it has applied (not with where I
+// am now: that is a ping ahead). Small differences are noise and stay; a real one is corrected gently, a big one at once.
+function reconcile(x, y, q) {
+  const i = sent.findIndex((e) => e[0] === q);
+  const h = i >= 0 ? sent[i] : null;
+  if (i > 0) sent.splice(0, i);
+  const ex = x - (h ? h[1] : me.x); const ey = y - (h ? h[2] : me.y);
+  const moving = locked && (keys.u || keys.d || keys.l || keys.r);
+  if (Math.hypot(ex, ey) > 96 || !h) {
+    if (Math.hypot(x - me.x, y - me.y) > 96) { me.x = x; me.y = y; sent.length = 0; err.x = err.y = 0; }
+    return;
+  }
+  err.x = err.x * 0.7 + ex * 0.3; err.y = err.y * 0.7 + ey * 0.3;
+  if (!moving) {
+    // standing still nothing is in flight: settle exactly on the server's spot
+    const dx = x - me.x; const dy = y - me.y;
+    if (Math.hypot(dx, dy) > 0.5) { me.x += dx * 0.25; me.y += dy * 0.25; }
+  } else if (Math.hypot(err.x, err.y) > 14) {
+    const kx = err.x * 0.2; const ky = err.y * 0.2;
+    me.x += kx; me.y += ky; err.x -= kx; err.y -= ky;
+    for (const e of sent) { e[1] += kx; e[2] += ky; }
+  }
+}
 
 // ---------- the camera: behind the shoulder (GTA-style) or the Citizen's own eyes (V) ----------
 const tmp = new THREE.Vector3(); const dir = new THREE.Vector3();
@@ -845,7 +922,7 @@ function placeCamera() {
 // where my next bullet goes: the first wall or Citizen on the line, shown by the crosshair
 function aim() {
   const ox = me.x + Math.cos(yaw) * (rules.radius + 2); const oy = me.y + Math.sin(yaw) * (rules.radius + 2);
-  let d = shotWallDistance(map, ox, oy, yaw, rules.range); let who = null;
+  let d = shotWallDistance(map, ox, oy, yaw, myGun().range); let who = null;
   for (const [id, o] of others) {
     if (!o.alive || o.out || (o.team === me.team && phase !== 'warmup')) continue;
     const h = rayCircle(ox, oy, yaw, o.x, o.y, rules.radius); if (h != null && h < d) { d = h; who = id; }
@@ -883,9 +960,22 @@ function drawRadar(cx, cy, a, now) {
 // ---------- every frame ----------
 let last = performance.now();
 const proj = new THREE.Vector3();
+// frames a second, shown with the ping; a computer that can't keep up gets the fast graphics by itself
+const perf = { n: 0, since: performance.now(), fps: 60, slow: 0 };
+function measure(t) {
+  perf.n++;
+  if (t - perf.since < 2000) return;
+  perf.fps = Math.round((perf.n * 1000) / (t - perf.since)); perf.n = 0; perf.since = t;
+  if (inGame && $('hint')) $('hint').innerHTML = `<b>${perf.fps}</b> fps · <b>${rtt || '—'}</b> ms · <b>Tab</b> score · <b>V</b> camera · <b>M</b> sound · <b>Esc</b> menu`;
+  if (!inGame || document.hidden) return;
+  perf.slow = perf.fps < 40 ? perf.slow + 1 : 0;
+  if (perf.slow >= 2 && !settings.low) { settings.low = true; sun.castShadow = false; resize(); drawSettings(); perf.slow = 0; toast('Fast graphics on for smoother play (Esc → Graphics to change)'); }
+  else if (perf.slow >= 3 && settings.low && !lowRes) { lowRes = true; resize(); perf.slow = 0; }
+}
 function frame(t) {
   requestAnimationFrame(frame);
   const dt = Math.min(50, t - last); last = t;
+  measure(t);
   if (!city) return;
   if (me.alive && inGame) {
     const [nx, ny] = moveStep(map, me.x, me.y, locked ? keys : NOKEYS, yaw, dt, rules);
@@ -893,7 +983,7 @@ function frame(t) {
   } else me.speed = 0;
   for (const [id, o] of others) {
     if (o.out) continue;
-    const k = Math.min(1, dt / 80); const ox = o.x; const oy = o.y;
+    const k = Math.min(1, dt / 70); const ox = o.x; const oy = o.y;
     o.x += (o.tx - o.x) * k; o.y += (o.ty - o.y) * k;
     let da = o.ta - o.a; da = Math.atan2(Math.sin(da), Math.cos(da)); o.a += da * Math.min(1, dt / 60);
     o.speed = (Math.hypot(o.x - ox, o.y - oy) / Math.max(1, dt)) * 1000;
@@ -907,7 +997,8 @@ function frame(t) {
   }
   if (me.av) {
     me.av.place(me.x, me.y, yaw, me.speed, dt, t); me.av.sprite.visible = false;
-    if (me.av.look && view.userData.look !== me.av.look) { view.userData.look = me.av.look; vArm.material.color.copy(me.av.look.sleeve); vHand.material.color.copy(me.av.look.skin); vStripe.material.color.set(TEAMS[me.team].color); }
+    if (me.av.look && view.userData.look !== me.av.look) { view.userData.look = me.av.look; vArm.material.color.copy(me.av.look.sleeve); vHand.material.color.copy(me.av.look.skin); }
+    vStripeMat.color.set(TEAMS[me.team].color); buildViewGun(myGun().key); me.av.setGun(myGun().key);
   }
   if (!inGame) yaw += dt * 0.00012;
   const { fx, fy } = placeCamera();
@@ -960,7 +1051,7 @@ requestAnimationFrame(frame);
     const list = m.citizens || [];
     if (!list.length) { $('startPick').innerHTML = '<p>You need a Citizen to fight: mint one in your AI with <code>/mint-city</code> (<a href="/connect">connect Prompt City</a>).</p>'; return; }
     $('startPick').innerHTML = `<h2 style="font-size:20px">${m.fighter ? 'Your fighter' : 'Pick your fighter'}</h2><p>${m.fighter ? `${esc(m.fighter.name)} ${STAR.repeat(m.fighter.stars)}. You can change it once a day.` : 'One of your Citizens fights for you, with its face and its outfit. You can change it once a day.'}</p>` +
-      `<div class="pick">${list.map((n) => `<button type="button" data-id="${n.id}"><img src="/img/${n.id}.png" alt=""><span style="color:var(--gold)">${STAR.repeat(RAR.indexOf(n.rarity) + 1)}</span><br>${esc(n.name)}</button>`).join('')}</div>` +
+      `<div class="pick">${list.map((n) => `<button type="button" data-id="${n.id}"><img src="/img/${n.id}.png" alt=""><span style="color:var(--gold)">${STAR.repeat(RAR.indexOf(n.rarity) + 1)}</span><br>${esc(n.name)}<br><span style="color:var(--cyan)">${weaponOf(RAR.indexOf(n.rarity) + 1).name}</span></button>`).join('')}</div>` +
       (m.fighter ? `<p style="margin-top:12px"><button class="btn big" type="button" id="bGo">${inGame ? 'Back to the fight' : 'Fight'}</button></p>` : '');
     const go = async () => {
       $('mStart').classList.remove('on'); lock();

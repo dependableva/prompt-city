@@ -454,14 +454,15 @@ export function buildMcpServer(db, userId, opts) {
     const t = await arena.top(db, 10);
     // the 3D shootout when its game server is on, else the simple arena
     const live = shooter.enabled();
-    const dmg = r.stars.map((s, i) => `${s.rarity} ${s.stars} ${live ? SHOOT.damage[i] : s.damage}`).join(' · ');
+    const gun = (i) => { const w = SHOOT.weapons[i]; return `${w.name.toLowerCase()} ${w.pellets > 1 ? `${w.pellets}×${w.dmg}` : w.dmg}`; };
+    const dmg = r.stars.map((s, i) => `${s.rarity} ${s.stars} ${live ? gun(i) : s.damage}`).join(' · ');
     const board = t.length ? t.map((p) => `${p.rank}. ${p.handle ? '@' + p.handle : p.address} · ${p.points.toLocaleString('en-US')} · ${p.kills} kills`).join('\n') : 'no kills yet';
     const mine = v.fighter
-      ? `Your fighter: ${v.fighter.name} ${game.stars(v.fighter.stars)} (${live ? SHOOT.damage[v.fighter.stars - 1] : r.damage[game.RARITIES[v.fighter.stars - 1]]} damage a hit)\n` +
+      ? `Your fighter: ${v.fighter.name} ${game.stars(v.fighter.stars)} (${live ? `${gun(v.fighter.stars - 1)} damage a hit` : `${r.damage[game.RARITIES[v.fighter.stars - 1]]} damage a hit`})\n` +
         `Season ${v.season}: ${v.kills} kills · ${v.deaths} deaths · ${v.points.toLocaleString('en-US')} $PROMPT${v.rank ? ` · rank #${v.rank}` : ''}\n` +
         `Today: ${v.today.toLocaleString('en-US')} of ${v.daily_cap.toLocaleString('en-US')} $PROMPT`
       : 'No fighter yet: open the arena, sign in with the same account and pick one of your Citizens.';
-    return ok(text(`${live ? 'The shootout (3D, up to 100 online)' : 'The arena'}: ${publicUrl}${live ? '/play' : '/arena'}\n${mine}\n\nDamage by stars (100 HP each): ${dmg}\n` +
+    return ok(text(`${live ? 'The shootout (3D, up to 100 online)' : 'The arena'}: ${publicUrl}${live ? '/play' : '/arena'}\n${mine}\n\n${live ? "Guns by stars" : "Damage by stars"} (100 HP each): ${dmg}\n` +
       `A kill pays ${r.kill_base} $PROMPT × the victim's stars ÷ yours (+${r.streak_pct}% a kill in a row), at most ${r.daily_cap.toLocaleString('en-US')} a day.\n\n` +
       `Top 10 of the season (an airdrop at the token launch):\n${board}`));
   });

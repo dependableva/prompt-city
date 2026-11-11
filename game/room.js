@@ -61,7 +61,7 @@ export class Room {
     const id = this.sockets.get(socket); if (id == null) return;
     if (text.length > 300) return;
     let m; try { m = JSON.parse(text); } catch { return; }
-    if (m.t === 'in') this.world.input(id, { keys: m.k || {}, a: Number(m.a), fire: !!m.f, reload: !!m.r });
+    if (m.t === 'in') this.world.input(id, { keys: m.k || {}, a: Number(m.a), fire: !!m.f, reload: !!m.r, seq: Number(m.q) });
     else if (m.t === 'ping') send(socket, JSON.stringify({ t: 'pong', c: m.c, s: this.now() }));
   }
   leave(socket, send) {
@@ -91,7 +91,7 @@ export class Room {
       // each page gets the players and shots near its own Citizen, plus its own ammo and reload
       for (const [s, id] of this.sockets) {
         const p = this.world.players.get(id);
-        send(s, JSON.stringify({ ...this.world.snapshot(id), me: p ? { ammo: p.ammo, reloading: p.reloadUntil ? Math.max(0, p.reloadUntil - now) : 0 } : null }));
+        send(s, JSON.stringify({ ...this.world.snapshot(id), me: p ? { ammo: p.ammo, reloading: p.reloadUntil ? Math.max(0, p.reloadUntil - now) : 0, q: p.seq || 0 } : null }));
       }
       // every 2 seconds: the scoreboard (Tab) for everyone, and where your own crew is (the radar)
       if (this.tickNo % 40 === 0) this.board(send);

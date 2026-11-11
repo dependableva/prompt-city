@@ -1,6 +1,6 @@
 // The shooter's rules, shared by the game server (game/) and the page (site/play.html): the one map of Prompt City,
 // how a Citizen walks (W forward where it looks, S back, A / D to the sides, like in a shooter; walls stop it), how a
-// shot flies (a straight line at chest height, the first wall or player it meets), damage by stars, and the rounds.
+// shot flies (a straight line at chest height, the first wall or player it meets), the guns by stars, and the rounds.
 // The server runs the world; the page draws it in 3D and uses the same walking code to move its own Citizen without
 // waiting for the server.
 //
@@ -70,13 +70,16 @@ export const RULES = {
   radius: 12, // a Citizen is a circle this big
   speed: 165, // px a second (about 7.5 m/s)
   hp: 100,
-  damage: [14, 17, 20, 25, 34], // a bullet's damage by stars: Street, Hustler, Boss, Kingpin, Legend
-  fireMs: 280, // one shot per this long, holding the mouse button fires again
-  mag: 10,
-  reloadMs: 1600,
-  range: 720, // px a shot flies
-  spreadStill: 0.015, // radians either way, standing still
-  spreadMove: 0.06, // walking
+  // the guns, one for each number of stars: more stars, more damage a second. dmg is a bullet (a shotgun fires
+  // pellets of it in a cone), fireMs the time between shots (holding the button keeps firing), range in px, spread in
+  // radians either way standing still or walking
+  weapons: [
+    { key: 'pistol', name: 'Pistol', dmg: 16, pellets: 1, cone: 0, fireMs: 290, mag: 12, reloadMs: 1400, range: 700, spreadStill: 0.012, spreadMove: 0.045 },
+    { key: 'smg', name: 'SMG', dmg: 9, pellets: 1, cone: 0, fireMs: 135, mag: 30, reloadMs: 1800, range: 560, spreadStill: 0.03, spreadMove: 0.07 },
+    { key: 'shotgun', name: 'Shotgun', dmg: 9, pellets: 7, cone: 0.22, fireMs: 850, mag: 6, reloadMs: 2200, range: 380, spreadStill: 0.02, spreadMove: 0.04 },
+    { key: 'rifle', name: 'Assault rifle', dmg: 21, pellets: 1, cone: 0, fireMs: 240, mag: 25, reloadMs: 1900, range: 900, spreadStill: 0.012, spreadMove: 0.05 },
+    { key: 'marksman', name: 'Marksman rifle', dmg: 50, pellets: 1, cone: 0, fireMs: 520, mag: 8, reloadMs: 2300, range: 1200, spreadStill: 0.004, spreadMove: 0.05 },
+  ],
   tickMs: 50, // 20 updates a second
   roundMs: 150000,
   endMs: 4000, // the pause between rounds
@@ -85,6 +88,9 @@ export const RULES = {
   maxPlayers: 100,
   view: 1400, // px (about 64 m): a page gets the players and shots this close to its own Citizen
 };
+
+// the gun of a Citizen with these stars (1 to 5)
+export const weaponOf = (stars, rules = RULES) => rules.weapons[Math.min(4, Math.max(0, (stars || 1) - 1))];
 
 // one step of walking for dt ms: keys u / d forward and back along the look angle a, l / r to the sides (strafing);
 // walls stop the circle, sliding along them
@@ -166,7 +172,7 @@ export class World {
   add(p) {
     const team = this.teamForNew();
     const pl = { id: p.id, uid: p.uid, addr: p.addr, handle: p.handle || null, nft: p.nft, stars: Math.max(1, Math.min(5, p.stars | 0)),
-      team, x: 0, y: 0, a: 0, hp: this.rules.hp, alive: false, deadAt: 0, keys: {}, fire: false, ammo: this.rules.mag,
+      team, x: 0, y: 0, a: 0, hp: this.rules.hp, alive: false, deadAt: 0, keys: {}, fire: false, ammo: weaponOf(p.stars, this.rules).mag,
       reloadUntil: 0, nextShot: 0, kills: 0, deaths: 0, streak: 0, lastInput: this.now(), lastActive: this.now() };
     this.players.set(pl.id, pl);
     // late in a round you wait for the next one; early enough, you join the fight right away
@@ -188,9 +194,9 @@ export class World {
       if (!taken.some((o) => Math.hypot(o.x - s[0], o.y - s[1]) < 28)) pick = s;
     }
     const [x, y] = pick || spots[Math.floor(this.rand() * spots.length)];
-    Object.assign(p, { x, y, hp: this.rules.hp, alive: true, ammo: this.rules.mag, reloadUntil: 0, a: p.team === 0 ? 0 : Math.PI });
+    Object.assign(p, { x, y, hp: this.rules.hp, alive: true, ammo: weaponOf(p.stars, this.rules).mag, reloadUntil: 0, a: p.team === 0 ? 0 : Math.PI });
   }
-  input(id, { keys, a, fire, reload }) {
+  input(id, { keys, a, fire, reload, seq }) {
     const p = this.players.get(id); if (!p) return;
     const k = { u: !!keys?.u, d: !!keys?.d, l: !!keys?.l, r: !!keys?.r };
     // someone who walks, turns or shoots is playing; a page left open in another tab only keeps the line alive
@@ -198,7 +204,10 @@ export class World {
     p.keys = k;
     if (Number.isFinite(a)) p.a = a;
     p.fire = !!fire;
-    if (reload && p.ammo < this.rules.mag && !p.reloadUntil) p.reloadUntil = this.now() + this.rules.reloadMs;
+    // the page's input number: it tells the page which of its own moves this position already includes
+    if (Number.isSafeInteger(seq) && seq > 0) p.seq = seq;
+    const w = weaponOf(p.stars, this.rules);
+    if (reload && p.ammo < w.mag && !p.reloadUntil) p.reloadUntil = this.now() + w.reloadMs;
     p.lastInput = this.now();
   }
   teamsReady() {
@@ -241,20 +250,26 @@ export class World {
         continue;
       }
       [p.x, p.y] = moveStep(this.map, p.x, p.y, p.keys, p.a, dt, this.rules);
-      if (p.reloadUntil && now >= p.reloadUntil) { p.ammo = this.rules.mag; p.reloadUntil = 0; }
+      const w = weaponOf(p.stars, this.rules);
+      if (p.reloadUntil && now >= p.reloadUntil) { p.ammo = w.mag; p.reloadUntil = 0; }
       if (p.fire && !p.reloadUntil && now >= p.nextShot && this.phase !== 'end') {
-        if (p.ammo <= 0) { p.reloadUntil = now + this.rules.reloadMs; continue; }
-        p.ammo--; p.nextShot = now + this.rules.fireMs;
+        if (p.ammo <= 0) { p.reloadUntil = now + w.reloadMs; continue; }
+        p.ammo--; p.nextShot = now + w.fireMs;
         const moving = p.keys.u || p.keys.d || p.keys.l || p.keys.r;
-        const spread = moving ? this.rules.spreadMove : this.rules.spreadStill;
-        this.shoot(p, p.a + (this.rand() * 2 - 1) * spread);
-        if (p.ammo <= 0) p.reloadUntil = now + this.rules.reloadMs;
+        const spread = moving ? w.spreadMove : w.spreadStill;
+        const a = p.a + (this.rand() * 2 - 1) * spread;
+        // a shotgun's pellets fan out evenly over its cone, each a little off
+        for (let i = 0; i < w.pellets; i++) {
+          const off = w.pellets > 1 ? (i / (w.pellets - 1) - 0.5) * w.cone + (this.rand() - 0.5) * (w.cone / w.pellets) : 0;
+          this.shoot(p, a + off, w);
+        }
+        if (p.ammo <= 0) p.reloadUntil = now + w.reloadMs;
       }
     }
   }
-  shoot(p, a) {
+  shoot(p, a, w = weaponOf(p.stars, this.rules)) {
     const ox = p.x + Math.cos(a) * (this.rules.radius + 2); const oy = p.y + Math.sin(a) * (this.rules.radius + 2);
-    let dist = shotWallDistance(this.map, ox, oy, a, this.rules.range);
+    let dist = shotWallDistance(this.map, ox, oy, a, w.range);
     let victim = null;
     for (const o of this.players.values()) {
       // no friendly fire in a round; in the warmup everyone is fair game
@@ -265,7 +280,7 @@ export class World {
     // a tracer for the pages: from, to, the shooter's crew, whether it hit someone, who shot
     this.shots.push([Math.round(ox), Math.round(oy), Math.round(ox + Math.cos(a) * dist), Math.round(oy + Math.sin(a) * dist), p.team, victim ? 1 : 0, p.id]);
     if (!victim) return;
-    victim.hp -= this.rules.damage[p.stars - 1];
+    victim.hp -= w.dmg;
     if (victim.hp > 0) return;
     victim.hp = 0; victim.alive = false; victim.deadAt = this.now(); victim.deaths++; victim.streak = 0;
     p.kills++;

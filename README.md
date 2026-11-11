@@ -148,8 +148,10 @@ City by the bay, with up to 100 players online at once; when it's full, a page w
 and Tide) fight in rounds: a round ends when one crew is out or after 2:30, who's down watches the crew until the next
 one (joining with more than 30 s left puts you in right away). **W A S D** walk like in a shooter (W where you look,
 A / D sideways), the **mouse** looks and aims, **click** shoots, **R** reloads, **Tab** shows the score, **Esc** the menu.
-Shots fly level at chest height; the crosshair sits where the bullet lands. 100 HP; a bullet's damage by stars: Street
-14, Hustler 17, Boss 20, Kingpin 25, Legend 34. Someone who does nothing for 2 minutes loses the seat.
+Shots fly level at chest height; the crosshair sits where the bullet lands. 100 HP; the stars pick the gun, more stars
+more damage a second: Street a pistol (16 a bullet), Hustler an SMG (9, fast), Boss a shotgun (7 pellets of 9, close
+range), Kingpin an assault rifle (21), Legend a marksman rifle (50, two hits). The page shows its fps and ping; a computer
+that can't keep up gets the fast graphics (no shadows) by itself. Someone who does nothing for 2 minutes loses the seat.
 
 A kill in a live round pays $PROMPT like an arena kill (below). Warmup kills (before both crews have someone) don't.
 

@@ -73,7 +73,13 @@ test('shooter rules: W walks where you look, walls stop walking and shots, the b
   assert.ok(d > 200 && d < 230, `shot stopped after ${d}`);
   assert.equal(sim.blocksWalk(map, 5, 67), true, 'the bay');
   assert.equal(sim.blocksShot(map, 5, 67), false);
-  assert.deepEqual(sim.RULES.damage.map((x) => Math.ceil(100 / x)), [8, 6, 5, 4, 3]);
+  // a gun for each number of stars: pistol, SMG, shotgun, rifle, marksman rifle; more stars, more damage a second
+  const W = sim.RULES.weapons;
+  assert.deepEqual(W.map((w) => w.key), ['pistol', 'smg', 'shotgun', 'rifle', 'marksman']);
+  const dps = W.map((w) => (w.dmg * w.pellets * 1000) / w.fireMs);
+  for (let i = 1; i < 5; i++) assert.ok(dps[i] > dps[i - 1], `${W[i].key} hits harder a second than ${W[i - 1].key}`);
+  assert.deepEqual(W.map((w) => Math.ceil(100 / (w.dmg * w.pellets))), [7, 12, 2, 5, 2]);
+  assert.equal(sim.weaponOf(3).key, 'shotgun'); assert.equal(sim.weaponOf(9).key, 'marksman'); assert.equal(sim.weaponOf(0).key, 'pistol');
 });
 
 test('shooter map: one city for everyone, up to 100 online, both crews have room to spawn', () => {
@@ -99,12 +105,12 @@ test('shooter world: warmup, a live round, a kill by stars, no friendly fire, th
   assert.equal(w.phase, 'warmup');
   const b = w.add({ id: 2, uid: 12, addr: 'city_b', nft: 2, stars: 1 });
   w.step(); assert.equal(w.phase, 'live'); assert.notEqual(a.team, b.team);
-  // face to face on an open street (row 3): the Legend kills the Street in 3 shots
+  // face to face on an open street (row 3): the Legend's marksman rifle kills the Street in 2 shots
   Object.assign(a, { x: 200, y: 112, a: 0 }); Object.assign(b, { x: 300, y: 112 });
   w.input(1, { keys: {}, a: 0, fire: true });
   for (let i = 0; i < 20 && b.alive; i++) { t += 300; w.step(); }
   assert.equal(b.alive, false);
-  assert.equal(a.ammo, sim.RULES.mag - 3);
+  assert.equal(a.ammo, sim.RULES.weapons[4].mag - 2);
   assert.equal(kills.length, 1);
   assert.equal(kills[0].paid, true);
   assert.equal(kills[0].killerStars, 5);
@@ -130,10 +136,25 @@ test('shooter world: warmup, a live round, a kill by stars, no friendly fire, th
   assert.ok(s.p.some((p) => p[0] === 1));
   // a tracer says who shot and whether it hit
   assert.ok(w.shots.every((x) => x.length === 7));
+  // the Boss's shotgun: all 7 pellets hit up close (one blast leaves 37 HP), nothing at twice its range
+  const d = w.add({ id: 5, uid: 15, addr: 'city_e', nft: 5, stars: 3 });
+  t += 1; w.step();
+  Object.assign(d, { x: 200, y: 112, a: 0, alive: true, team: 1 - b.team, ammo: 6, reloadUntil: 0, nextShot: 0 });
+  Object.assign(b, { x: 300, y: 112, hp: 100, alive: true });
+  w.input(5, { keys: {}, a: 0, fire: true }); t += 1; w.step(); w.input(5, { keys: {}, a: 0, fire: false });
+  assert.equal(b.hp, 100 - 7 * 9);
+  assert.equal(w.shots.filter((x) => x[6] === 5).length, 7, 'a tracer for every pellet');
+  Object.assign(b, { x: 200 + 2 * sim.RULES.weapons[2].range, hp: 100 });
+  Object.assign(d, { nextShot: 0 }); w.input(5, { keys: {}, a: 0, fire: true }); t += 1; w.step();
+  assert.equal(b.hp, 100);
+  w.remove(5);
   // standing still with the same aim is not playing (a seat left open in another tab frees up after a while)
   const was = a.lastActive; t += 5000;
   w.input(1, { keys: {}, a: a.a, fire: false }); assert.equal(a.lastActive, was);
   w.input(1, { keys: { u: true }, a: a.a, fire: false }); assert.equal(a.lastActive, t);
+  // the page's input number comes back with its position, so the page can compare like with like
+  w.input(1, { keys: {}, a: a.a, fire: false, seq: 41 }); assert.equal(a.seq, 41);
+  w.input(1, { keys: {}, a: a.a, fire: false, seq: 'x' }); assert.equal(a.seq, 41);
 });
 
 test('shooter pass: the main server signs it, the game server reads it; a changed or late one is refused', async () => {
